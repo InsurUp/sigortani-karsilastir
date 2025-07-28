@@ -12,7 +12,7 @@ const EasyQuote = () => {
                         3 Adımda Kolay Teklif
                     </h2>
                 </div>
-
+            
                 {/* Adımlar */}
                 <div className="space-y-20">
                     {easyQuoteSteps.map((step, index) => (
@@ -56,4 +56,4 @@ const EasyQuote = () => {
     );
 };
 
-export default EasyQuote; 
+export { EasyQuote }; 

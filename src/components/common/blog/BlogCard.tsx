@@ -43,4 +43,4 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog }) => {
   );
 };
 
-export default BlogCard; 
+export { BlogCard }; 

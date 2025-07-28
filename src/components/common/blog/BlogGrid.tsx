@@ -1,6 +1,6 @@
 import React from "react";
 import { blogs } from "@/data/blogs";
-import BlogCard from "./BlogCard";
+import { BlogCard } from "@/components/common";
 import Link from "next/link";
 
 const BlogGrid: React.FC = () => {
@@ -25,4 +25,4 @@ const BlogGrid: React.FC = () => {
     );
 };
 
-export default BlogGrid; 
+export { BlogGrid }; 

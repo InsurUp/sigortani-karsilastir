@@ -6,14 +6,14 @@ const HowItWorks = () => {
     return (
         <section
             className="py-20 bg-[#FAFAFA] relative "
-            style={{ clipPath: 'polygon(0 5%, 100% 0%, 100% 100%, 0 100%)', zIndex: 1 }}
+            style={{ clipPath: 'polygon(0 8%, 100% 0%, 100% 100%, 0 100%)', zIndex: 1 }}
         >
-            <div className="container mx-auto px-4 relative z-10">
+            <div className="container max-w-[1070px]! mx-auto px-4 relative z-10">
                 <div className="grid lg:grid-cols-2 lg:gap-20 items-center">
                     {/* Sol Kolon - Başlık ve Açıklama */}
                     <div className="space-y-8">
                         <div className="space-y-6">
-                            <h2 className="text-4xl lg:text-5xl font-bold text-[#0D0D0D] mb-2 leading-tight">
+                            <h2 className="text-4xl lg:text-5xl font-bold text-[#0D0D0D] mb-3 leading-tight">
                                 Nasıl Çalışır
                             </h2>
 
@@ -41,4 +41,4 @@ const HowItWorks = () => {
     );
 };
 
-export default HowItWorks; 
+export { HowItWorks };  
