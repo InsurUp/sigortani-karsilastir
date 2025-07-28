@@ -62,4 +62,4 @@ const CustomAccordion: React.FC<AccordionProps> = ({ items }) => {
   );
 };
 
-export default CustomAccordion; 
+export { CustomAccordion };   

@@ -1,5 +1,5 @@
 import React from "react";
-import Accordion from ".";
+import { CustomAccordion } from "@/components/common";
 import { sssData } from "@/data/sss";
 
 const AccordionSection = () => {
@@ -9,10 +9,10 @@ const AccordionSection = () => {
                 <h2 style={{ fontSize: 48, fontWeight: 700, marginBottom: 40, textAlign: "center" }}>
                     Sıkça Sorulan Sorular
                 </h2>
-                <Accordion items={sssData} />
+                <CustomAccordion items={sssData} />
             </div>
         </section>
     );
 };
 
-export default AccordionSection; 
+export { AccordionSection }; 

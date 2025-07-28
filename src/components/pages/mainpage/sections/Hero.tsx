@@ -21,11 +21,11 @@ const Hero = () => {
             </div>
             
             {/* Butonlar */}
-            <div className="flex flex-row gap-4">
+            <div className="flex flex-row gap-6">
             <button className="bg-[#FAFAFA] text-[#AAAAAA] px-[15px] sm:px-[45px] py-[20px] rounded-full font-semibold border-1 hover:shadow-lg transition-all duration-200 active:scale-95 border-[#AAAAAA] text-[15px] w-1/2 sm:w-auto">
                 Bilgi Al
               </button>
-              <button className="bg-primary text-white px-[15px] sm:px-[45px] py-[20px] rounded-full hover:bg-opacity-90 active:scale-95 transition-all duration-200 font-semibold text-lg hover:shadow-lg w-1/2 sm:w-auto">
+              <button className="bg-primary text-white px-[15px] text-base sm:px-[55px] py-[20px] rounded-full hover:bg-opacity-90 active:scale-95 transition-all duration-200 font-semibold text-lg hover:shadow-lg w-1/2 sm:w-auto">
               Teklif Karşılaştır
               </button>
             </div>
@@ -112,6 +112,9 @@ const Hero = () => {
                 </Link>
               ))}
             </div>
+            <div className="col-span-3 text-center">
+              <Link href="/urunler" className="text-sm font-medium text-black">Tüm Ürünleri Gör</Link>
+            </div>
           </div>
         </div>
       </div>
@@ -119,4 +122,4 @@ const Hero = () => {
   );
 };
 
-export default Hero; 
+export { Hero }; 

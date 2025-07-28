@@ -15,7 +15,7 @@ interface CampaignCard {
     id: number;
     title: string;
     image: string;
-    badge: string; 
+    badge: string;
 }
 
 interface CampaignSliderProps {
@@ -51,7 +51,7 @@ const CampaignSlider: React.FC<CampaignSliderProps> = ({ campaigns }) => {
                     <SwiperSlide key={campaign.id} className='px-10'>
                         <div
                             className="bg-white rounded-lg cursor-pointer"
-                            style={{ boxShadow: '1px 2px 15px rgba(0,0,0,0.15)' }} 
+                            style={{ boxShadow: '1px 2px 15px rgba(0,0,0,0.15)' }}
                         >
                             <div className="flex flex-col lg:flex-row">
                                 {/* Sol kısım - Kampanya görseli */}
@@ -70,7 +70,7 @@ const CampaignSlider: React.FC<CampaignSliderProps> = ({ campaigns }) => {
                                 {/* Sağ kısım - İçerik */}
                                 <div className="lg:w-1/2 p-6 pt-[50px] flex flex-col justify-between">
                                     <div>
-                                        <h3 className="text-xl lg:text-2xl font-bold text-gray-800 mb-4">
+                                        <h3 className="text-xl lg:text-2xl font-bold text-gray-800 mb-8">
                                             {campaign.title}
                                         </h3>
 
@@ -90,7 +90,7 @@ const CampaignSlider: React.FC<CampaignSliderProps> = ({ campaigns }) => {
                                         </div>
 
                                         {/* Alt metin */}
-                                        <p className="text-lg lg:text-xl font-semibold text-gray-700 mb-6">
+                                        <p className="text-lg lg:text-xl font-semibold text-[#223140] mb-6">
                                             Fırsatları Kaçırmayın
                                         </p>
                                     </div>
@@ -117,7 +117,7 @@ const CampaignSlider: React.FC<CampaignSliderProps> = ({ campaigns }) => {
             <style jsx global>{`
         .campaign-swiper .swiper-pagination {
           position: relative;
-          margin-top: 20px;
+          margin-top: 30px;
           text-align: center;
         }
         
@@ -140,4 +140,4 @@ const CampaignSlider: React.FC<CampaignSliderProps> = ({ campaigns }) => {
     );
 };
 
-export default CampaignSlider; 
+export { CampaignSlider }; 

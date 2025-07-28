@@ -1,6 +1,6 @@
 "use client"
 import React from 'react';
-import CampaignSlider from '../../../common/campaign/CampaignSlider';
+import { CampaignSlider } from '@/components/common';
 
 // Örnek kampanya verileri
 const sampleCampaigns = [
@@ -8,19 +8,19 @@ const sampleCampaigns = [
     id: 1,
     title: "Kasko ve Trafik Sigortalarında 2 Haziran’a Kadar",
     image: "/images/campaing.png",
-    badge: "%25", 
+    badge: "%25 İndirim", 
   },
   {
     id: 2,
-    title: "Konut Sigortası Fırsatı",
+    title: "Konut Sigortası Fırsa tı",
     image: "/images/campaing.png", 
-    badge: "%30", 
+    badge: "%30 İndirim", 
   },
   {
     id: 3,
     title: "Sağlık Sigortası Özel İndirim",
     image: "/images/campaing.png",
-    badge: "%20", 
+    badge: "%20 İndirim", 
   }
 ];
 
@@ -45,4 +45,4 @@ const CampaignSection: React.FC = () => {
   );
 };
 
-export default CampaignSection; 
+export { CampaignSection }; 

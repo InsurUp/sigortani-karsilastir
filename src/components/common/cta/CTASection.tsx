@@ -9,7 +9,7 @@ const CTASection: React.FC = () => {
       style={{
         background: "linear-gradient(to right, #262163 0%, #000000 100%)",
       }}
-    >
+    > 
       <Image
         src="/images/cta.png"
         alt="CTA Görsel"
@@ -42,4 +42,4 @@ const CTASection: React.FC = () => {
   );
 };
 
-export default CTASection; 
+export { CTASection }; 
