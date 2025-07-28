@@ -15,7 +15,7 @@ const EasyQuote = () => {
             
                 {/* Adımlar */}
                 <div className="space-y-20">
-                    {easyQuoteSteps.map((step, index) => (
+                    {easyQuoteSteps.map((step) => (
                         <div key={step.id} className="relative">
                             {/* Ortadaki uzun border */}
                             <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-200 transform -translate-x-1/2 hidden lg:block"></div>

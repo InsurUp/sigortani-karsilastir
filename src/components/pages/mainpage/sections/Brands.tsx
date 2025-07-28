@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Navigation, Pagination } from 'swiper/modules';
+import { Autoplay } from 'swiper/modules';
 import { brands } from '@/data';
 
 // Swiper CSS'lerini import et

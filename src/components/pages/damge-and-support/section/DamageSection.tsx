@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import { damageDocuments } from "@/data/damage";
 import DamageCard from "./DamageCard";
-import DamageAccordion from "./DamageAccordion";
-import AccidentReportModule from "./AccidentReportModule";
+import DamageAccordion from "./DamageAccordion"; 
 
 const DamageSection: React.FC = () => {
   const [selected, setSelected] = useState(0);
