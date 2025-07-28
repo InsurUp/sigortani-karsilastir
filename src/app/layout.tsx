@@ -31,6 +31,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
+      <head>
+        <meta name="robots" content="noindex, nofollow" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${plusJakartaSans.variable} antialiased`}
       >

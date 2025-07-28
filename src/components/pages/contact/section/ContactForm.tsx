@@ -259,7 +259,7 @@ const ContactForm: React.FC = () => {
                       required
                     />
                     <label htmlFor="kvkk" className="text-sm text-gray-700">
-                      KVKK Aydınlatma Metni'ni okudum, onaylıyorum
+                      KVKK Aydınlatma Metni&apos;ni okudum, onaylıyorum
                     </label>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -273,7 +273,8 @@ const ContactForm: React.FC = () => {
                       required
                     />
                     <label htmlFor="commercial" className="text-sm text-gray-700">
-                      Ticari Elektronik İleti Metni 'ni okudum, onaylıyorum.
+                    Ticari Elektronik İleti Metni&nbsp;&#39;ni okudum, onaylıyorum.
+
                     </label>
                   </div>
                 </div>

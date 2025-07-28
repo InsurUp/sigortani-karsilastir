@@ -1,6 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
-import { howItWorksSteps } from '@/data';
+import Image from 'next/image'; 
 
 const HowItWorks = () => {
     return (
