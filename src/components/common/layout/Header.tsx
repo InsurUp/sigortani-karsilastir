@@ -13,7 +13,7 @@ function Header() {
     { name: 'Hasar ve Yardım', href: '/hasar-yardim' },
     { name: 'Blog', href: '/blog' },
     { name: 'SSS', href: '/sss' },
-    { name: 'Kampanya', href: '/kampanya' },
+    { name: 'Kampanya', href: '/kampanyalar' },
     { name: 'İletişim', href: '/iletisim' },
   ]
 

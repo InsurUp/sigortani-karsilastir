@@ -53,7 +53,19 @@ export const heroCards: HeroCard[] = [
     title: "Özel Sağlık",
     image: "/images/product/icon/ozel-saglik.png",
     alt: "Özel Sağlık Sigortası"
+  },
+  {
+    id: 8,
+    title: "Komplikasyon",
+    image: "/images/product/icon/complication.png",
+    alt: "Özel Sağlık Sigortası"
+  },  {
+    id: 8,
+    title: "Cep Telefonu",
+    image: "/images/product/icon/mobile-phone.png",
+    alt: "Özel Sağlık Sigortası"
   }
+  
 ];
 
 export interface Brand {
