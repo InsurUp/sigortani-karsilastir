@@ -6,7 +6,7 @@ const MainPageLayout = () => {
   return (
     <main>
       <Hero />
-      <Brands />
+      <Brands />  
       <HowItWorks />
       <EasyQuote />
       <CampaignSection />

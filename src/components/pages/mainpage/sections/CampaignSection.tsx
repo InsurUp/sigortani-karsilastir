@@ -1,29 +1,9 @@
 "use client"
 import React from 'react';
 import { CampaignSlider } from '@/components/common';
+import { campaigns } from '@/data/campaing';
 
-// Örnek kampanya verileri
-const sampleCampaigns = [
-  {
-    id: 1,
-    title: "Kasko ve Trafik Sigortalarında 2 Haziran’a Kadar",
-    image: "/images/campaing.png",
-    badge: "%25 İndirim", 
-  },
-  {
-    id: 2,
-    title: "Konut Sigortası Fırsa tı",
-    image: "/images/campaing.png", 
-    badge: "%30 İndirim", 
-  },
-  {
-    id: 3,
-    title: "Sağlık Sigortası Özel İndirim",
-    image: "/images/campaing.png",
-    badge: "%20 İndirim", 
-  }
-];
-
+ 
 const CampaignSection: React.FC = () => {
   return (
     <section className="py-16 bg-gray-50">
@@ -38,7 +18,7 @@ const CampaignSection: React.FC = () => {
         
         {/* Campaign Slider */}
         <div className="max-w-[992px] mx-auto">
-          <CampaignSlider campaigns={sampleCampaigns} />
+          <CampaignSlider campaigns={campaigns} />
         </div>
       </div>
     </section>

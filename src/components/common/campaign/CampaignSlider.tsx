@@ -3,43 +3,31 @@
 import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import Image from 'next/image';
+import { CampaingCard } from './CampaingCard';
+import { Campaign } from '@/data/campaing';
 
 // Swiper CSS'lerini import et
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-interface CampaignCard {
-    id: number;
-    title: string;
-    image: string;
-    badge: string;
-}
 
-interface CampaignSliderProps {
-    campaigns: CampaignCard[];
-}
-
-const CampaignSlider: React.FC<CampaignSliderProps> = ({ campaigns }) => {
+const CampaignSlider: React.FC<{ campaigns: Campaign[] }> = ({ campaigns }) => {
     return (
         <div className="relative">
             <Swiper
                 modules={[Pagination, Autoplay]}
-                spaceBetween={30}
+                spaceBetween={20}
                 slidesPerView={1}
+                autoHeight={true}
                 pagination={{
                     clickable: true,
                     el: '.swiper-pagination',
                 }}
                 loop={true}
                 breakpoints={{
-                    640: {
-                        slidesPerView: 1,
-                    },
-                    768: {
-                        slidesPerView: 1,
+                   
+                    576: {
+                        slidesPerView: 2,
                     },
                     1024: {
                         slidesPerView: 1,
@@ -48,65 +36,10 @@ const CampaignSlider: React.FC<CampaignSliderProps> = ({ campaigns }) => {
                 className="campaign-swiper"
             >
                 {campaigns.map((campaign) => (
-                    <SwiperSlide key={campaign.id} className='px-10'>
-                        <div
-                            className="bg-white rounded-lg cursor-pointer"
-                            style={{ boxShadow: '1px 2px 15px rgba(0,0,0,0.15)' }}
-                        >
-                            <div className="flex flex-col lg:flex-row">
-                                {/* Sol kısım - Kampanya görseli */}
-                                <div className="lg:w-1/2">
-                                    <div className=" w-full bg-gray-100 rounded-t-lg lg:rounded-l-lg lg:rounded-t-none flex items-center justify-center">
-                                        <Image
-                                            width={100}
-                                            height={100}
-                                            src={campaign.image}
-                                            alt={campaign.title}
-                                            className=" w-full h-full"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Sağ kısım - İçerik */}
-                                <div className="lg:w-1/2 p-6 pt-[50px] flex flex-col justify-between">
-                                    <div>
-                                        <h3 className="text-xl lg:text-2xl font-bold text-gray-800 mb-8">
-                                            {campaign.title}
-                                        </h3>
-
-                                        {/* Badge */}
-                                        <div
-                                            className="inline-block mb-4"
-                                            style={{
-                                                backgroundColor: 'rgba(237, 29, 36, 0.07)',
-                                                color: '#ED1D24',
-                                                padding: '16px 22px',
-                                                borderRadius: '5px',
-                                            }}
-                                        >
-                                            <span className="text-2xl lg:text-3xl font-extrabold">
-                                                {campaign.badge}
-                                            </span>
-                                        </div>
-
-                                        {/* Alt metin */}
-                                        <p className="text-lg lg:text-xl font-semibold text-[#223140] mb-6">
-                                            Fırsatları Kaçırmayın
-                                        </p>
-                                    </div>
-
-
-                                    {/* Hemen Keşfet butonu */}
-                                    <span className="flex items-center text-red-600 font-medium text-base hover:text-red-700 transition-colors">
-                                        Hemen Keşfet
-                                        <FontAwesomeIcon
-                                            icon={faArrowRight}
-                                            className="ml-2 text-sm"
-                                        />
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                    <SwiperSlide key={campaign.id} className='lg:px-10 '>
+                        <CampaingCard
+                            campaign={campaign}
+                        />
                     </SwiperSlide>
                 ))}
 
@@ -116,8 +49,8 @@ const CampaignSlider: React.FC<CampaignSliderProps> = ({ campaigns }) => {
 
             <style jsx global>{`
         .campaign-swiper .swiper-pagination {
-          position: relative;
-          margin-top: 30px;
+          position: relative; 
+          margin-top: 20px;
           text-align: center;
         }
         
