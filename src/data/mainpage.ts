@@ -9,61 +9,61 @@ export const heroCards: HeroCard[] = [
   {
     id: 1,
     title: "Kasko",
-    image: "/images/product/icon/kasko.png",
+    image: "/images/product/icon/kasko.svg",
     alt: "Kasko Sigortası"
   },
   {
     id: 2,
     title: "Tamamlayıcı Sağlık",
-    image: "/images/product/icon/tss.png",
+    image: "/images/product/icon/tss.svg",
     alt: "Tamamlayıcı Sağlık Sigortası"
   },
   {
     id: 3,
     title: "Trafik",
-    image: "/images/product/icon/traffic.png",
+    image: "/images/product/icon/traffic.svg",
     alt: "Trafik Sigortası"
   },
   {
     id: 4,
     title: "Konut",
-    image: "/images/product/icon/konut.png",
+    image: "/images/product/icon/konut.svg",
     alt: "Konut Sigortası"
   },
   {
     id: 5,
     title: "İMM",
-    image: "/images/product/icon/imm.png",
+    image: "/images/product/icon/imm.svg",
     alt: "İMM Sigortası"
   },
   {
     id: 6,
     title: "Seyahat Sağlık",
-    image: "/images/product/icon/seyahat-saglik.png",
+    image: "/images/product/icon/seyahat-saglik.svg",
     alt: "Seyahat Sağlık Sigortası"
   },
   {
     id: 7,
     title: "DASK",
-    image: "/images/product/icon/dask.png",
+    image: "/images/product/icon/dask.svg",
     alt: "DASK Sigortası"
   },
   {
     id: 8,
     title: "Özel Sağlık",
-    image: "/images/product/icon/ozel-saglik.png",
+    image: "/images/product/icon/ozs.svg",
     alt: "Özel Sağlık Sigortası"
   },
   {
-    id: 8,
+    id: 9,
     title: "Komplikasyon",
-    image: "/images/product/icon/complication.png",
-    alt: "Özel Sağlık Sigortası"
+    image: "/images/product/icon/complication.svg",
+    alt: "Komplikasyon Sigortası"
   },  {
-    id: 8,
+    id: 10,
     title: "Cep Telefonu",
     image: "/images/product/icon/mobile-phone.png",
-    alt: "Özel Sağlık Sigortası"
+    alt: "Cep Telefonu Sigortası"
   }
   
 ];

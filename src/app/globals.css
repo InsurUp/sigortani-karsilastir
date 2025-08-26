@@ -30,7 +30,14 @@
   0% { transform: translateX(100%); opacity: 0; }
   100% { transform: translateX(0); opacity: 1; }
 }
-
+.hero-cards-container .rounded-full{ 
+  width: 85px !important;
+  height: 85px !important;
+}
+.hero-cards-container img{ 
+  width: 85px !important;
+  height: 85px !important;
+} 
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }

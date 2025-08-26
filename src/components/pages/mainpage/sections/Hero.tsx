@@ -37,7 +37,7 @@ const Hero = () => {
             <Image src="/images/banner-shape.png" alt="banner-shape" width={500} height={550} className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]" />
 
             {/* İlk 2 kart - 2 sütun */}
-            <div className="col-span-2 grid grid-cols-2 gap-4 lg:gap-6 relative">
+            <div className="col-span-2 grid grid-cols-2 gap-4 lg:gap-6 relative  hero-cards-container">
               {heroCards.slice(0, 2).map((card) => (
                 <ProductCard key={card.id} card={card} isButton={false} />
               ))}
