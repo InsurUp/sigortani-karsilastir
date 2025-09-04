@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /
+
+# Geçici olarak sitemap'i kaldır
+# Sitemap: https://www.sigortanikarsilastir.com/sitemap.xml
+
+
+

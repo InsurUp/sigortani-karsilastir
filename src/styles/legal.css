@@ -1,0 +1,177 @@
+/* Legal Pages Styling */
+
+/* Container styling */
+section {
+  padding: 40px 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Article styling for legal documents */
+article {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  margin: 40px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  line-height: 1.7;
+}
+
+/* Headings in legal documents */
+article h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+article h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 2rem 0 1rem 0;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+article h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem 0;
+  color: #4a5568;
+}
+
+/* Paragraphs */
+article p {
+  margin-bottom: 20px;
+  text-align: justify;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+/* Strong elements */
+article strong {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Links */
+article a {
+  color: #3182ce;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+article a:hover {
+  color: #2c5aa0;
+}
+
+/* Lists */
+article ul, 
+article ol {
+  margin: 1.2rem 0;
+  padding-left: 2rem;
+}
+
+article li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+  color: #4a5568;
+}
+
+/* Tables */
+article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+article th {
+  background-color: #f7fafc;
+  font-weight: 600;
+  text-align: left;
+  color: #2d3748;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+article td {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+}
+
+/* Text alignment classes */
+.text-center {
+  text-align: center !important;
+}
+
+.ql-align-center {
+  text-align: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  article {
+    padding: 20px;
+    margin: 20px 0;
+  }
+  
+  article h1 {
+    font-size: 2rem;
+  }
+  
+  article h2 {
+    font-size: 1.5rem;
+  }
+  
+  article ul,
+  article ol {
+    padding-left: 1.5rem;
+  }
+  
+  article table {
+    font-size: 0.9rem;
+  }
+  
+  article th,
+  article td {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 10px;
+  }
+  
+  article {
+    padding: 15px;
+  }
+  
+  article h1 {
+    font-size: 1.8rem;
+  }
+  
+  article h2 {
+    font-size: 1.3rem;
+  }
+  
+  article table {
+    font-size: 0.8rem;
+  }
+  
+  article th,
+  article td {
+    padding: 0.5rem;
+  }
+}

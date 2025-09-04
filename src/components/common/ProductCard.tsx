@@ -8,6 +8,7 @@ interface ProductCardProps {
     title: string;
     image: string;
     alt: string;
+    link?: string;
   };
   isButton: boolean;
 }
@@ -16,8 +17,7 @@ function ProductCard({ card, isButton }: ProductCardProps) {
   return (
     <div key={card.id}>
       <Link
-
-        href={`/urunler/${card.title.toLowerCase().replace(/\s+/g, "-")}`}
+        href={card.link || `/urunler/${card.title.toLowerCase().replace(/\s+/g, "-")}`}
         className="bg-white rounded-[10px] p-4 lg:py-6 lg:px-4 transition-all duration-300 hover:scale-105 border border-gray-100 block"
       >
         <div className="flex flex-col items-center text-center space-y-3 h-full justify-between">
