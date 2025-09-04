@@ -5,10 +5,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Sitemap ve robots için gerekli konfigürasyon
-  experimental: {
-    sitemap: true,
+  // Tüm module resolution hatalarını ignore et
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
   },
+  // Sitemap ve robots için gerekli konfigürasyon
+  // experimental: {
+  //   sitemap: true, // Bu özellik artık mevcut değil
+  // },
   // Geçici olarak sitemap rewrites kısmını kaldır
   // async rewrites() {
   //   return [
@@ -39,7 +44,7 @@ const nextConfig = {
       path: false,
     };
     
-  
+    // Eksik modülleri artık yüklendi, externals kaldırıldı
     
     // Build hatalarını ignore et
     config.bail = false;
