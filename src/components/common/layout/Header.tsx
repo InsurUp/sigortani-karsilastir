@@ -1,19 +1,29 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useAuthStore } from '@/store/useAuthStore'
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+  
+  const { accessToken } = useAuthStore()
+  const isLoggedIn = isClient && !!accessToken
+
+  // Client-side hydration kontrolü
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const menuItems = [
     { name: 'Hakkımızda', href: '/hakkimizda' },
     { name: 'Hasar ve Yardım', href: '/hasar-yardim' },
     { name: 'Blog', href: '/blog' },
     { name: 'SSS', href: '/sss' },
-    { name: 'Kampanya', href: '/kampanyalar' },
+    { name: 'Kampanyalar', href: '/kampanyalar' },
     { name: 'İletişim', href: '/iletisim' },
   ]
 
@@ -26,7 +36,6 @@ function Header() {
     { name: 'Seyahat Sağlık', href: '/urunler/seyahat-saglik' },
     { name: 'DASK', href: '/urunler/dask' },
     { name: 'Özel Sağlık', href: '/urunler/ozel-saglik' },
-    { name: 'Komplikasyon', href: '/urunler/komplikasyon' },
     { name: 'Cep Telefonu', href: '/urunler/cep-telefonu' },
   ]
 
@@ -131,10 +140,16 @@ function Header() {
               ))}
             </ul>
             
-            {/* Giriş Yap Button */}
-            <button className="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-opacity-90 active:scale-95 transition-all duration-200 font-semibold">
-              Giriş Yap
-            </button>
+            {/* Giriş Yap / Hesabım Button */}
+            {isLoggedIn ? (
+              <Link href="/dashboard" className="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-opacity-90 active:scale-95 transition-all duration-200 font-semibold">
+                Hesabım
+              </Link>
+            ) : (
+              <Link href="/giris-yap" className="bg-secondary text-white px-6 py-2 rounded-lg hover:bg-opacity-90 active:scale-95 transition-all duration-200 font-semibold">
+                Giriş Yap
+              </Link>
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -301,11 +316,17 @@ function Header() {
                   ))}
                 </ul>
                 
-                {/* Mobile Giriş Yap Button */}
+                {/* Mobile Giriş Yap / Hesabım Button */}
                 <div className="mt-8">
-                  <button className="w-full bg-secondary text-white px-[12px] py-[8px] rounded-lg hover:bg-opacity-90 active:scale-95 transition-all duration-200 font-bold">
-                    Giriş Yap
-                  </button>
+                  {isLoggedIn ? (
+                    <Link href="/dashboard" className="block w-full bg-secondary text-white px-[12px] py-[8px] rounded-lg hover:bg-opacity-90 active:scale-95 transition-all duration-200 font-bold text-center" onClick={() => setIsMenuOpen(false)}>
+                      Hesabım
+                    </Link>
+                  ) : (
+                    <Link href="/giris-yap" className="block w-full bg-secondary text-white px-[12px] py-[8px] rounded-lg hover:bg-opacity-90 active:scale-95 transition-all duration-200 font-bold text-center" onClick={() => setIsMenuOpen(false)}>
+                      Giriş Yap
+                    </Link>
+                  )}
                 </div>
               </nav>
             </div>
