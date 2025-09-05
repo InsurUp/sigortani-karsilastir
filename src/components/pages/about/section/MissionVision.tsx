@@ -16,15 +16,15 @@ const MissionVision = () => {
               padding: "30px 40px",
             }}
           >
-            <Image
+            {/* <Image
               src={missionVisionData.mission.icon}
               alt="Misyon ikonu"
               width={40}
               height={40} 
-            />
+            /> */}
             <h2
               style={{
-                fontSize: 30,
+                fontSize: 21,
                 fontWeight: "bold",
                 marginTop: 10,
                 marginBottom: 10,
@@ -53,15 +53,15 @@ const MissionVision = () => {
               padding: "30px 40px",
             }}
           >
-            <Image
+            {/* <Image
               src={missionVisionData.vision.icon}
               alt="Vizyon ikonu"
               width={40}
               height={40} 
-            />
+            /> */}
             <h2
               style={{
-                fontSize: 30,
+                fontSize: 21,
                 fontWeight: "bold",
                 marginTop: 10,
                 marginBottom: 10,
@@ -76,9 +76,8 @@ const MissionVision = () => {
                 color: "#12141D",
                 opacity: 0.7,
               }}
-            >
-              {missionVisionData.vision.description}
-            </p>
+              dangerouslySetInnerHTML={{ __html: missionVisionData.vision.description }}
+            />
           </div>
         </div>
       </div>

@@ -80,48 +80,62 @@ export interface Brand {
 }
 
 export const brands: Brand[] = [
+  // Öncelikli büyük şirketler (ilk sırada)
   {
     id: 1,
+    name: "Anadolu Sigorta",
+    logo: "/images/brands/anadolu-sigorta.png",
+    alt: "Anadolu Sigorta Logo"
+  },
+  {
+    id: 2,
+    name: "Axa Sigorta",
+    logo: "/images/brands/axa-sigorta.png",
+    alt: "Axa Sigorta Logo"
+  },
+  {
+    id: 3,
+    name: "HDI Sigorta",
+    logo: "/images/brands/hdi-sigorta.png",
+    alt: "HDI Sigorta Logo"
+  },
+  {
+    id: 4,
+    name: "Türkiye Sigorta",
+    logo: "/images/brands/turkiye-sigorta.png",
+    alt: "Türkiye Sigorta Logo"
+  },
+  // Diğer şirketler
+  {
+    id: 5,
+    name: "Bereket Sigorta",
+    logo: "/images/brands/bereket-sigorta.png",
+    alt: "Bereket Sigorta Logo"
+  },
+  {
+    id: 6,
     name: "Doğa Sigorta",
     logo: "/images/brands/doga-sigorta.png",
     alt: "Doğa Sigorta Logo"
   },
   {
-    id: 2,
-    name: "Hepiyi Sigorta",
-    logo: "/images/brands/hepiyi.png",
-    alt: "Hepiyi Sigorta Logo"
-  },
-  {
-    id: 3,
-    name: "Neova",
-    logo: "/images/brands/neova.png",
-    alt: "Neova Logo"
-  },
-  {
-    id: 4,
+    id: 7,
     name: "Sompo Sigorta",
     logo: "/images/brands/sompo-sigorta.png",
-    alt: "HDI Logo"
+    alt: "Sompo Sigorta Logo"
   },
   {
-    id: 5,
-    name: "ACNTÜRK",
-    logo: "/images/brands/acnturk.png",
-    alt: "ACNTÜRK Logo"
+    id: 8,
+    name: "Türk Nippon Sigorta",
+    logo: "/images/brands/turk-nippon-sigorta.png",
+    alt: "Türk Nippon Sigorta Logo"
   },
   {
-    id: 6,
-    name: "Nippon Sigorta",
-    logo: "/images/brands/nippon-sigorta.png",
-    alt: "Nippon Sigorta Logo"
+    id: 9,
+    name: "Unico Sigorta",
+    logo: "/images/brands/unico-sigorta.png",
+    alt: "Unico Sigorta Logo"
   },
-  {
-    id: 7,
-    name: "Axa Sigorta",
-    logo: "/images/brands/axa-sigorta.png",
-    alt: "Axa Sigorta Logo"
-  }, 
 ];
 
 export interface HowItWorksStep {
@@ -175,26 +189,26 @@ export interface EasyQuoteStep {
 export const easyQuoteSteps: EasyQuoteStep[] = [
   {
     id: 1,
-    title: "Bilgilerini gir",
-    description: "Real-time problem solving is not just about time, it's about time. This allows you to solve problems within a specified time problem has a solution.",
+    title: "Bilgilerini Gir, AI Asistanınla Başla",
+    description: "Araç veya sigorta bilgilerini gir, sigortaya özel yapay zeka asistanımız hemen devreye girsin! Chatbotumuz veya WhatsApp entegrasyonumuzla 7/24 sorularını yanıtlar, sana en uygun teklifleri bulmana yardımcı olur.",
     image: "/images/bilgileri-gir.png",
-    alt: "Bilgilerini gir",
+    alt: "Bilgilerini Gir, AI Asistanınla Başla",
     imagePosition: 'left'
   },
   {
     id: 2,
-    title: "Teklifleri Karşılaştır",
-    description: "Real-time problem solving is not just about time, it's about time. This allows you to solve problems within a specified time problem has a solution.",
+    title: "Teklifleri Anında Karşılaştır",
+    description: "30'a varan sigorta şirketinin tekliflerini tek ekranda gör. Yapay zekamız, ihtiyaçlarına en uygun kasko, trafik veya konut sigortasını saniyeler içinde önerir. Hızlı, kolay ve tamamen senin için!",
     image: "/images/teklifleri-karsilastir.png",
-    alt: "Teklifleri Karşılaştır",
+    alt: "Teklifleri Anında Karşılaştır",
     imagePosition: 'right'
   },
   {
     id: 3,
-    title: "Poliçeni Seç",
-    description: "Real-time problem solving is not just about time, it's about time. This allows you to solve problems within a specified time problem has a solution.",
+    title: "Güvenle Seç, Anında Sigortalan",
+    description: "En iyi poliçeyi seç, 3D Secure ve SSL sertifikalı ödeme sistemiyle güvenle öde. KVKK uyumlu veri korumasıyla bilgilerin güvende, yapay zeka destekli sürecimizle anında sigortalan!",
     image: "/images/policeni-sec.png",
-    alt: "Poliçeni Seç",
+    alt: "Güvenle Seç, Anında Sigortalan",
     imagePosition: 'left'
   }
 ]; 
