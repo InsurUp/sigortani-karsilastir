@@ -1,38 +1,49 @@
 export const aboutData = {
-  image: "/images/biz-kimiz.png", // örnek görsel, gerekirse değiştirilebilir
-  title: "Biz Kimiz?",
+  image: "/images/biz-kimiz.png", 
+  title: "Biz Ne Yapıyoruz?",
   description:
-    "Sigortani Karsilastir olarak, kullanıcılarımıza en iyi sigorta tekliflerini hızlı ve kolay bir şekilde sunmayı amaçlıyoruz. Güvenilir sigorta şirketleriyle iş birliği yaparak, ihtiyaçlarınıza en uygun çözümleri karşılaştırmalı olarak sunuyoruz.",
+    "Sizin için riskleri fırsata çeviriyoruz. Sermaye yapılandırmadan sektörel trendlere kadar her detayı titizlikle inceliyor, ihtiyaçlarınıza özel sigorta ve reasürans programları tasarlıyoruz. Risk yönetimi, hasar süreçleri ve danışmanlık hizmetlerimizle, işinizin her anında yanınızda yer alıyor, en güncel ve doğru çözümleri sunuyoruz.",
+};
+
+export const aboutArticleData = {
+  title: "Hakkımızda",
+  paragraphs: [
+    "2013 yılında bir sigorta aktüeri tarafından kurulan IMC Sigorta ve Reasürans Brokerliği, Türkiye'nin ilk ve tek sigorta brokeri olmanın gururunu taşıyor. Uzman ekibimiz, sektördeki teknik ve mali dinamiklerin derinlemesine analiz ederek riskleri öngörüyor ve size özel çözümler sunuyor."
+  ]
 };
 
 export const ourGoalsData = [
   {
     icon: "/images/size-sunduklarimiz.png",
-    text: "En iyi fiyat garantisi ile sigorta teklifleri",
+    title: "Uzmanlık",
+    text: "Deneyimli kadromuz, karmaşık riskleri analiz ederek size en uygun çözümleri üretir.",
   },
   {
     icon: "/images/size-sunduklarimiz.png",
-    text: "Güvenilir ve hızlı karşılaştırma imkanı",
+    title: "Müşteri Önceliği",
+    text: "İhtiyaçlarınızı merkeze alıyor, size özel çözümlerle fark yaratıyoruz.",
   },
   {
     icon: "/images/size-sunduklarimiz.png",
-    text: "7/24 müşteri desteği",
+    title: "İnovasyon",
+    text: "Teknolojik altyapımız ve yenilikçi yaklaşımlarımızla hızlı, güvenilir ve etkili hizmet sunuyoruz.",
   },
   {
     icon: "/images/size-sunduklarimiz.png",
-    text: "Kolay ve güvenli ödeme seçenekleri",
+    title: "Güven",
+    text: "Şeffaf etik değerlerle bağış anlayışımız, sizin güveninizi kazanıyor.",
   },
 ];
 
 export const missionVisionData = {
   mission: {
     icon: "/images/mission.png",
-    title: "Misyonumuz",
-    description: "Müşterilerimize en uygun sigorta tekliflerini sunarak, güvenli ve hızlı bir karşılaştırma deneyimi yaşatmak. Sigorta süreçlerini basitleştirerek, herkesin ihtiyacına uygun çözümler bulmasını sağlamak."
+    title: "Türkiye'nin Her Yerinde Yanınızdayız",
+    description: "Genel merkezimizin yanı sıra 4 bölgede müdürlüklerimizle Türkiye genelinde hizmet sunuyoruz. Güçlü altyapımız ve uzman ekibimizle, sigorta ve reasürans hizmetlerini sizinle bir adım öteye taşıyor, güven adresi olmayı sürdürüyoruz."
   },
   vision: {
     icon: "/images/vision.png", 
-    title: "Vizyonumuz",
-    description: "Türkiye'nin en güvenilir ve kullanıcı dostu sigorta karşılaştırma platformu olmak. Teknoloji ve müşteri odaklı yaklaşımımızla, sigorta sektöründe standartları belirleyen bir marka haline gelmek."
+    title: "Sigortanızı Karşılaştırın, Güvenceye Adım Atın",
+    description: "İhtiyacınıza en uygun ve doğru sigorta çözümlerini keşfetmek için hemen <a href='/' style='color: #38A1FF; text-decoration: underline;'>sigortanizikarsilastirin.com</a> adresini ziyaret edin. IMC ile tanışın, işinizi ve geleceğinizi güvence altına alın!"
   }
 }; 

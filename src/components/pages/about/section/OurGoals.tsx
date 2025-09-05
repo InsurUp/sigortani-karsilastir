@@ -7,16 +7,16 @@ const OurGoals = () => {
     <section  className="py-20 bg-[#F0F0F0] relative "
     style={{ clipPath: 'polygon(0 5%, 100% 0%, 100% 100%, 0 100%)', zIndex: 1 }}>
       <div className="container mx-auto">
-        <h2 className="md:text-4xl text-3xl font-bold text-center mb-15">Hedefimiz Size Sunduklarımız</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 max-w-4xl mx-auto">
+        <h2 className="md:text-4xl text-3xl font-bold text-center mb-15">Neden Biz?</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 max-w-6xl mx-auto">
           {ourGoalsData.map((feature, idx) => (
             <div
               key={idx}
-              className="relative flex-1 bg-white rounded-[10px] px-5 pt-10 pb-8 flex flex-col items-center transition-transform duration-200"
+              className="relative flex-1 bg-white rounded-[10px] px-4 pt-10 pb-8 flex flex-col items-center transition-transform duration-200"
               style={{
                 paddingTop: 40,
-                paddingLeft: 20,
-                paddingRight: 20,
+                paddingLeft: 16,
+                paddingRight: 16,
                 paddingBottom: 30,
                 boxShadow: "none",
               }} 
@@ -42,11 +42,22 @@ const OurGoals = () => {
                 <Image src={feature.icon} alt="icon" width={32} height={32} />
               </div>
               <div className="mt-4 text-center">
+                <h3
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    color: "#000",
+                    marginBottom: 8,
+                  }}
+                >
+                  {feature.title}
+                </h3>
                 <span
                   style={{
-                    fontSize: 16,
+                    fontSize: 14,
                     color: "#000",
                     opacity: 0.7,
+                    lineHeight: 1.5,
                   }}
                 >
                   {feature.text}

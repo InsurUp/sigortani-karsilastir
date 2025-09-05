@@ -3,7 +3,7 @@ import Image from "next/image";
 
 const OurWe = () => {
     return (
-        <section className="py-12">
+        <section className="py-20 pt-0">
             <div className="px-4 max-w-[992px] mx-auto flex flex-col md:flex-row items-center justify-center gap-8 relative">
                 {/* Sol: Görsel */}
                 <div className="flex-shrink-0 relative">
