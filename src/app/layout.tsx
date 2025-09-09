@@ -43,6 +43,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} ${plusJakartaSans.variable} antialiased`}
       >
+        {/* Insur Chatbot Widget */}
+        <script src="https://insurai.test.onlyjs.com/chatbot/chatbot-widget.js"></script>
+        <insur-chatbot-widget></insur-chatbot-widget>
+        {/* End Insur Chatbot Widget */}
         <Header />
         {children}
         <Footer />
