@@ -1,6 +1,7 @@
 import Commander from "@/components/pages/(legal)/commander/Commander"
 import "@/styles/legal.css"
 import { Metadata } from 'next'
+import { getSiteUrl, getSiteName, getSiteHandle } from '@/utils/site'
 
 export const metadata: Metadata = {
   title: 'Ticari Elektronik İleti İzni - İletişim Onayı',
@@ -9,15 +10,15 @@ export const metadata: Metadata = {
     title: 'Ticari Elektronik İleti İzni - İletişim Onayı',
     description: 'Ticari elektronik ileti izin metnimizi inceleyin. Size ulaşacak bilgilendirmeleri ve kampanyaları kontrol altına almak için izin ayarlarınızı güncelleyebilirsiniz.',
     type: 'website',
-    url: 'https://www.sigortagen.com/ticari-elektronik-ileti-izni',
-    siteName: 'Sigortagen',
+    url: `${getSiteUrl()}/ticari-elektronik-ileti-izni`,
+    siteName: getSiteName(),
     locale: 'tr-TR',
     images: [
       {
         url: "/images/logo.svg",
         width: 1200,
         height: 630,
-        alt: "Sigortagen Logo",
+        alt: `${getSiteName()} Logo`,
       },
     ],
   },
@@ -26,11 +27,11 @@ export const metadata: Metadata = {
     title: 'Ticari Elektronik İleti İzni - İletişim Onayı',
     description: 'Ticari elektronik ileti izin metnimizi inceleyin. Size ulaşacak bilgilendirmeleri ve kampanyaları kontrol altına almak için izin ayarlarınızı güncelleyebilirsiniz.',
     images: ['/images/logo.svg'],
-    site: '@sigortagen',
-    creator: '@sigortagen',
+    site: getSiteHandle(),
+    creator: getSiteHandle(),
   },
   alternates: {
-    canonical: 'https://www.sigortagen.com/ticari-elektronik-ileti-izni',
+    canonical: `${getSiteUrl()}/ticari-elektronik-ileti-izni`,
   },
 }
 

@@ -1,4 +1,5 @@
 import { Banner } from "@/components/common/banner/Banner"
+import { getSiteUrl, getSiteName } from '@/utils/site'
 
 function CookieText() {
     return (
@@ -14,7 +15,7 @@ function CookieText() {
 
                         </p>
                         <p>
-                            <span style={{ color: "rgb(46, 48, 69)" }}>SİGORTAGEN SİGORTA ARACILIK HİZMETLERİ LTD ŞTİ ("Şirket") olarak gizliliğinize önem veriyoruz. İşbu Çerez Politikası' nın amacı, Şirket web sitesinin (</span><a href="https://www.sigortagen.com/" rel="noopener noreferrer" target="_blank" className="acerapps-text-editor-link" style={{ color: "rgb(5, 99, 193)" }}>www.sigortagen.com</a><span style={{ color: "rgb(46, 48, 69)" }}>){" "}kullanıcıları (veri sahibi) tarafından çerezlerin (cookie) kullanımı sırasında elde edilen kişisel verilerin işlenmesi ile ilgili bilgi vermektir. Kişisel verilerinizin işlenmesi ile ilgili detaylı bilgi almak isterseniz </span><a href="https://www.turkiyesigorta.com.tr/yasal-bilgilendirme/kisisel-verilerin-korunmasi" rel="noopener noreferrer" target="_blank" className="acerapps-text-editor-link" style={{ color: "inherit" }}>Kişisel Verilerin Korunması</a><span style={{ color: "rgb(46, 48, 69)" }}> bağlantısına tıklayabilirsiniz.&nbsp;</span>
+                            <span style={{ color: "rgb(46, 48, 69)" }}>{getSiteName().toUpperCase().replace('İ', 'I')} SİGORTA ARACILIK HİZMETLERİ LTD ŞTİ ("Şirket") olarak gizliliğinize önem veriyoruz. İşbu Çerez Politikası' nın amacı, Şirket web sitesinin (</span><a href={getSiteUrl()} rel="noopener noreferrer" target="_blank" className="acerapps-text-editor-link" style={{ color: "rgb(5, 99, 193)" }}>{getSiteUrl().replace('https://', '').replace('http://', '').replace('www.', '')}</a><span style={{ color: "rgb(46, 48, 69)" }}>){" "}kullanıcıları (veri sahibi) tarafından çerezlerin (cookie) kullanımı sırasında elde edilen kişisel verilerin işlenmesi ile ilgili bilgi vermektir. Kişisel verilerinizin işlenmesi ile ilgili detaylı bilgi almak isterseniz </span><a href="https://www.turkiyesigorta.com.tr/yasal-bilgilendirme/kisisel-verilerin-korunmasi" rel="noopener noreferrer" target="_blank" className="acerapps-text-editor-link" style={{ color: "inherit" }}>Kişisel Verilerin Korunması</a><span style={{ color: "rgb(46, 48, 69)" }}> bağlantısına tıklayabilirsiniz.&nbsp;</span>
                         </p>
                         <p>
                             <span style={{ color: "rgb(46, 48, 69)" }}>Kullanılmakta olan internet tarayıcısı aracılığı ile internet ağ sunucusu tarafından kullanıcıların cihazlarına gönderilen küçük veri dosyaları çerez olarak anılmakta olup, internet siteleri bu çerezler vasıtası ile kullanıcıları tanımaktadır ve çerezlerin ömrü tarayıcı ayarlarına bağlı olarak farklılaşmaktadır.&nbsp;</span>

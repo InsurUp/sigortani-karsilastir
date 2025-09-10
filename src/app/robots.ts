@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { getSiteUrl } from '@/utils/site'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
       }
     ],
     // Geçici olarak sitemap'i kaldır
-    // sitemap: 'https://www.sigortagen.com/sitemap.xml'
+    // sitemap: `${getSiteUrl()}/sitemap.xml`
   }
 }

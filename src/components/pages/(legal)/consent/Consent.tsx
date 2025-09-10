@@ -1,4 +1,5 @@
 import { Banner } from '@/components/common/banner/Banner'
+import { getSiteUrl, getSiteName } from '@/utils/site'
 
 function Consent() {
   return (
@@ -10,13 +11,13 @@ function Consent() {
 
             <div className="ql-editor">
               <p className="ql-align-center text-center">
-                <strong>SİGORTAGEN SİGORTA ARACILIK HİZMETLERİ LTD ŞTİ</strong>&nbsp;
+                <strong>SİGORTANI KARŞILAŞTIR SİGORTA ARACILIK HİZMETLERİ LTD ŞTİ</strong>&nbsp;
               </p>
               <p className="ql-align-center text-center  ">
                 <strong>SİGORTALI/SİGORTA ETTİREN AÇIK RIZA METNİ</strong>
               </p> 
               <p>
-                Türkiye’de kurulu SİGORTAGEN SİGORTA VE ARACILIK HİZMETLERİ LTD. ŞTİ. (“Şirket”) olarak; veri sorumlusu sıfatıyla,
+                Türkiye’de kurulu SİGORTANI KARŞILAŞTIR SİGORTA VE ARACILIK HİZMETLERİ LTD. ŞTİ. (“Şirket”) olarak; veri sorumlusu sıfatıyla,
               </p>
               <p>
                 duruma göre aşağıda belirtilen şekillerde elde ettiğimiz kişisel verilerinizin,
@@ -82,13 +83,13 @@ function Consent() {
                 <strong style={{ fontSize: '16px' }}>İLETİŞİM BİLGİLERİ</strong>
               </p>
               <p>
-                Sigortagen Sigorta ve Aracılık Hizmetleri LTD. ŞTİ.
+                {getSiteName()} Sigorta ve Aracılık Hizmetleri LTD. ŞTİ.
               </p>
               <p>
                 Mersis No: 0770108619900001
               </p>
               <p>
-                İletişim linki: <a href="https://www.sigortagen.com" rel="noopener noreferrer" target="_blank" className="acerapps-text-editor-link">https://www.sigortagen.com</a>
+                İletişim linki: <a href={getSiteUrl()} rel="noopener noreferrer" target="_blank" className="acerapps-text-editor-link">{getSiteUrl()}</a>
               </p>
               <p>
                 Adres: Hepkebirler Mah. Adalet Cad. No: 26 Merkez / Kastamonu

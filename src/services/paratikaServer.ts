@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getSiteUrl } from '@/utils/site';
 
 // Server-side Paratika yapılandırması - sadece backend'de erişilebilir
 const PARATIKA_CONFIG = {
@@ -8,7 +9,7 @@ const PARATIKA_CONFIG = {
   MERCHANT_USER: process.env.PARATIKA_MERCHANT_USER || 'testmerchant@paratika.com.tr',
   MERCHANT_PASSWORD: process.env.PARATIKA_MERCHANT_PASSWORD || 'test123',
   MERCHANT_ID: process.env.PARATIKA_MERCHANT_ID || '700100000',
-  RETURN_URL: process.env.PARATIKA_RETURN_URL || 'https://sigortagen.com/api/paratika/callback'
+  RETURN_URL: process.env.PARATIKA_RETURN_URL || `${getSiteUrl()}/api/paratika/callback`
 };
 
 // Kimlik bilgilerini kontrol et

@@ -2,22 +2,23 @@ import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { CircularProgress, Box, Typography } from '@mui/material';
 import TrafikQuotePage from '@/components/QuoteFlow/TrafikQuote/TrafikQuotePage';
+import { getSiteUrl, getSiteName } from '@/utils/site';
 
 export const metadata: Metadata = {
-  title: "Trafik Sigortası Teklif Al - Zorunlu Araç Koruması | Sigortagen",
+  title: `Trafik Sigortası Teklif Al - Zorunlu Araç Koruması | ${getSiteName()}`,
   description: "Zorunlu trafik sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve aracınızı yasal olarak koruyun.",
-  metadataBase: new URL('https://sigortagen.com'),
+  metadataBase: new URL(getSiteUrl()),
   alternates: {
-    canonical: "https://sigortagen.com/trafik-teklif"
+    canonical: `${getSiteUrl()}/trafik-teklif`
   },
   openGraph: {
-    title: "Trafik Sigortası Teklif Al - Zorunlu Araç Koruması | Sigortagen",
+    title: `Trafik Sigortası Teklif Al - Zorunlu Araç Koruması | ${getSiteName()}`,
     description: "Zorunlu trafik sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve aracınızı yasal olarak koruyun.",
-    url: "https://sigortagen.com/trafik-teklif",
+    url: `${getSiteUrl()}/trafik-teklif`,
     type: "website"
   },
   twitter: {
-    title: "Trafik Sigortası Teklif Al - Zorunlu Araç Koruması | Sigortagen",
+    title: `Trafik Sigortası Teklif Al - Zorunlu Araç Koruması | ${getSiteName()}`,
     description: "Zorunlu trafik sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve aracınızı yasal olarak koruyun.",
     card: "summary_large_image"
   }

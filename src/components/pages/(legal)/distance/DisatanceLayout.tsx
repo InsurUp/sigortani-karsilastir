@@ -1,4 +1,5 @@
 import { Banner } from "@/components/common/banner/Banner"
+import { getSiteUrl, getSiteName } from '@/utils/site'
 
 function DisatanceLayout() {
     return (
@@ -12,12 +13,12 @@ function DisatanceLayout() {
                         <h1 className="text-center mb-3 text-2xl font-bold text-gray-800">MESAFELİ SATIŞ SÖZLEŞMESİ</h1>
                         <h2>MADDE 1: TARAFLAR</h2>
                         <p>
-                            İşbu sözleşme <a href="http://www.sigortagen.com">www.sigortagen.com</a> internet siteleri üzerinden sigorta ve bireysel emeklilik ürünü satın almak isteyen ALICI ile SATICI arasında aşağıdaki hüküm ve koşullar dahilinde akdedilmiştir.
+                            İşbu sözleşme <a href="{getSiteUrl()}">{getSiteUrl().replace('https://', '').replace('http://', '')}</a> internet siteleri üzerinden sigorta ve bireysel emeklilik ürünü satın almak isteyen ALICI ile SATICI arasında aşağıdaki hüküm ve koşullar dahilinde akdedilmiştir.
                         </p>
 
                         <h2>MADDE 2: KONU</h2>
                         <p>
-                            İşbu mesafeli satış sözleşmesinin konusu, ARACI’ya ait <a href="http://www.sigortagen.com">www.sigortagen.com</a> (bundan sonra “Web-Sitesi” olarak anılacaktır.) internet sitesi üzerinden ARACI’nın ALICI’ya sunacağı, anlaşmalı olduğu sigorta şirketlerine ait sigorta ürünlerine ilişkin teklif, poliçe ve elektronik ortamda mesafeli olarak satış hizmetiyle ilgili tarafların 6502 sayılı Tüketicinin Korunması Hakkında Kanun, Mesafeli Sözleşmeler Yönetmeliği, 28982 sayılı Sigortacılık Kapsamında Değerlendirilecek Faaliyetlere, Tüketici Lehine Yapılan Sigorta Sözleşmeleri İle Mesafeli Akdedilen Sigorta Sözleşmelerine İlişkin Yönetmelik (beraber “Mevzuat” olarak anılacaktır.) çerçevesinde hak ve yükümlülüklerin belirlenmesidir.
+                            İşbu mesafeli satış sözleşmesinin konusu, ARACI’ya ait <a href="{getSiteUrl()}">{getSiteUrl().replace('https://', '').replace('http://', '')}</a> (bundan sonra “Web-Sitesi” olarak anılacaktır.) internet sitesi üzerinden ARACI’nın ALICI’ya sunacağı, anlaşmalı olduğu sigorta şirketlerine ait sigorta ürünlerine ilişkin teklif, poliçe ve elektronik ortamda mesafeli olarak satış hizmetiyle ilgili tarafların 6502 sayılı Tüketicinin Korunması Hakkında Kanun, Mesafeli Sözleşmeler Yönetmeliği, 28982 sayılı Sigortacılık Kapsamında Değerlendirilecek Faaliyetlere, Tüketici Lehine Yapılan Sigorta Sözleşmeleri İle Mesafeli Akdedilen Sigorta Sözleşmelerine İlişkin Yönetmelik (beraber “Mevzuat” olarak anılacaktır.) çerçevesinde hak ve yükümlülüklerin belirlenmesidir.
                         </p>
                         <p>
                             ALICI, işbu sözleşmeyi okuduğunu ve kabul ettiğini onaylamadan, sonraki adımlara geçemeyecek ve poliçe teklifi ve elektronik ortamda mesafeli olarak sigorta ürünü satın alım işlemlerini gerçekleştiremeyecektir.
@@ -67,7 +68,7 @@ function DisatanceLayout() {
                         <table cellPadding={8} cellSpacing={0}>
                             <tbody><tr>
                                 <th>Ünvan</th>
-                                <td>Sigortagen Sigorta Aracılık Hiz. Ltd. Şti.</td>
+                                <td>{getSiteName()} Sigorta Aracılık Hiz. Ltd. Şti.</td>
                             </tr>
                                 <tr>
                                     <th>Adres</th>
@@ -79,7 +80,7 @@ function DisatanceLayout() {
                                 </tr>
                                 <tr>
                                     <th>E-posta</th>
-                                    <td><a href="mailto:teklif@sigortagen.com">teklif@sigortagen.com</a></td>
+                                    <td><a href="mailto:teklif@sigortanikarsilastir.com">teklif@sigortanikarsilastir.com</a></td>
                                 </tr>
                             </tbody></table>
 

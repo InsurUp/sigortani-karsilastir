@@ -2,7 +2,7 @@
 import React from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
-import { blogs } from '@/data/blogs';
+import { blogs, blogTags } from '@/data/blogs';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -54,12 +54,17 @@ function SuggestBlog() {
                                 {/* Content Section */}
                                 <div className="lg:w-1/2 p-4 pb-2! pr-2! sm:p-6 lg:p-8 flex flex-col justify-between h-full">
                                     <div className="space-y-4">
-                                        <span
-                                            className="text-[#004CE6] bg-[#1361F5]/10 text-base px-2 py-0.5 rounded"
-                                            style={{ fontSize: 18, fontWeight: 500, borderRadius: 5, padding: '3px 8px' }}
-                                        >
-                                            {blog.category}
-                                        </span>
+                                        <div className="flex gap-2 flex-wrap">
+                                            {blog.tags.map((tag) => (
+                                                <span
+                                                    key={tag}
+                                                    className="text-[#004CE6] bg-[#1361F5]/10 text-base px-2 py-0.5 rounded font-medium"
+                                                    style={{ fontSize: 18, borderRadius: 5, padding: '6px 12px' }}
+                                                >
+                                                    {blogTags[tag as keyof typeof blogTags]?.name || tag}
+                                                </span>
+                                            ))}
+                                        </div>
                                         {/* Title */}
                                         <h3 className="text-lg sm:text-xl lg:text-2xl mt-4 font-bold text-[#223140] leading-tight line-clamp-2">
                                             {blog.title}

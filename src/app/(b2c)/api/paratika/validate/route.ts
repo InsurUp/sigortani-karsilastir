@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     let safeCallbackUrl;
     try {
       const protocol = request.nextUrl?.protocol || 'https:';
-      const host = request.nextUrl?.host || 'sigortagen.com';
+      const host = request.nextUrl?.host || 'sigortanikarsilastir.com';
       
       // Development detection için port kontrolü
       const isDevelopment = host.includes('localhost') || host.includes('127.0.0.1');
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       }
       
     } catch (error) {
-      safeCallbackUrl = 'https://sigortagen.com/api/paratika/callback';
+      safeCallbackUrl = 'https://sigortanikarsilastir.com/api/paratika/callback';
     }
     
     const finalCallbackUrl = callbackUrl || safeCallbackUrl;
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       new URL(finalCallbackUrl);
     } catch (urlError) {
       // Fallback URL kullan
-      const fallbackUrl = 'https://sigortagen.com/api/paratika/callback';
+      const fallbackUrl = 'https://sigortanikarsilastir.com/api/paratika/callback';
     }
 
     // Güvenli server-side service kullan
