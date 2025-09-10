@@ -12,7 +12,7 @@ function Banner() {
             <div className='container relative z-[1]'>
                 <div className='grid lg:grid-cols-5 gap-10 bg-white rounded-lg sm:px-10 px-5 sm:py-[40px] py-[25px]'>
                     <div className='lg:col-span-2'>
-                        <Image src="/images/product/icon/kasko.png" width={85} height={85} className='object-contain' alt='banner' />
+                        <Image src="/images/product/icon/kasko.svg" width={85} height={85} className='object-contain' alt='banner' />
                         <h1 className='text-3xl font-bold my-4'>Kasko Sigortası Teklifi Al!</h1>
                         <p className='text-sm text-[#223140]'>
                             Kasko sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.

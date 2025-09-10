@@ -1,4 +1,5 @@
 import { Banner } from "@/components/common/banner/Banner"
+import { getSiteName, getSiteUrl } from '@/utils/site'
 
 function SecurityPolicy() {
     return (
@@ -11,7 +12,7 @@ function SecurityPolicy() {
                             <strong>KULLANIM ŞARTLARI VE GİZLİLİK SÖZLEŞMESİ</strong>
                         </p>
                         <p>
-                            Sigortagen Sigorta Aracılık Hizmetleri Limited Şirketi (Şirket) bireysel emeklilik branşı ve hayat sigortacılığında, müşteri merkezli ve müşterilerimizin bilgilerinin güvenliği odaklı hizmet felsefesi ile bireysel emeklilik sözleşmeleri, hayat sigortaları ve elementer sigortacılık işlemlerini gerçekleştirmektedir. Bu doğrultuda Şirketimizin internet sitesi; www.sigortagen.com (bundan böyle "internet sitesi" olarak anılacaktır.), internet şubesi (bundan böyle "internet şubesi" olarak anılacaktır.) ve mobil şubesi üzerinden (bundan böyle "mobil şube" olarak anılacaktır.) vermiş olduğunuz bilgilerin gizliliğini korumak amacıyla aşağıda belirtilen temel kuralları benimsemektedir.&nbsp;
+                            {getSiteName()} Sigorta Aracılık Hizmetleri Limited Şirketi (Şirket) bireysel emeklilik branşı ve hayat sigortacılığında, müşteri merkezli ve müşterilerimizin bilgilerinin güvenliği odaklı hizmet felsefesi ile bireysel emeklilik sözleşmeleri, hayat sigortaları ve elementer sigortacılık işlemlerini gerçekleştirmektedir. Bu doğrultuda Şirketimizin internet sitesi; {getSiteUrl().replace('https://', '').replace('http://', '')} (bundan böyle "internet sitesi" olarak anılacaktır.), internet şubesi (bundan böyle "internet şubesi" olarak anılacaktır.) ve mobil şubesi üzerinden (bundan böyle "mobil şube" olarak anılacaktır.) vermiş olduğunuz bilgilerin gizliliğini korumak amacıyla aşağıda belirtilen temel kuralları benimsemektedir.&nbsp;
                         </p>
                         <p>
 
@@ -158,7 +159,7 @@ function SecurityPolicy() {
                             Saygılarımızla,&nbsp;
                         </p>
                         <p>
-                            Sigortagen Sigorta Aracılık Hizmetleri Limited Şirketi&nbsp;
+                            {getSiteName()} Sigorta Aracılık Hizmetleri Limited Şirketi&nbsp;
                         </p>
                         <p>
 
@@ -173,7 +174,7 @@ function SecurityPolicy() {
 
                         </p>
                         <p>
-                            Sigortagen Sigorta Aracılık Hizmetleri Limited Şirketi (Şirket) olarak, "Bilgi Güvenliği Politikamızla" varlıklarımızın gizlilik, bütünlük ve erişilebilirlik özelliklerinin korunmasını ve risklerin kabul edilebilir seviyeye indirgenmesini sağlamaktayız.&nbsp;
+                            {getSiteName()} Sigorta Aracılık Hizmetleri Limited Şirketi (Şirket) olarak, "Bilgi Güvenliği Politikamızla" varlıklarımızın gizlilik, bütünlük ve erişilebilirlik özelliklerinin korunmasını ve risklerin kabul edilebilir seviyeye indirgenmesini sağlamaktayız.&nbsp;
                         </p>
                         <p>
 
@@ -209,7 +210,7 @@ function SecurityPolicy() {
 
                         </p>
                         <p>
-                            Sigortagen Sigorta Aracılık Hizmetleri Limited Şirketi&nbsp;
+                            {getSiteName()} Sigorta Aracılık Hizmetleri Limited Şirketi&nbsp;
                         </p>
                     </article>
                 </div>

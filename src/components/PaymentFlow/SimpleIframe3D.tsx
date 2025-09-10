@@ -256,7 +256,7 @@ export default function SimpleIframe3D({
           return;
         }
 
-        // Sigortagen verify sayfası kontrolü
+        // Site verify sayfası kontrolü
         if (currentSrc && currentSrc.includes('/odeme/paratika-3d-verify')) {
           clearInterval(urlChecker);
           setCurrentStage('processing');

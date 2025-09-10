@@ -22,6 +22,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { customerApi } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { completePaymentAfter3D } from '@/services/insurupApi';
+import { getSiteUrl } from '@/utils/site';
 
 
 interface ParatikaPaymentFormProps {
@@ -232,10 +233,10 @@ export default function ParatikaPaymentForm({
             new URL(callbackUrl);
           } else {
             // Server-side fallback
-            callbackUrl = 'https://sigortagen.com/api/paratika/callback';
+            callbackUrl = `${getSiteUrl()}/api/paratika/callback`;
           }
         } catch (error) {
-          callbackUrl = 'https://sigortagen.com/api/paratika/callback';
+          callbackUrl = `${getSiteUrl()}/api/paratika/callback`;
         }
 
         const cardInfo = {

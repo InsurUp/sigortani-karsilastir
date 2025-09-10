@@ -1,6 +1,7 @@
 import Consent from "@/components/pages/(legal)/consent/Consent"; 
 import "@/styles/legal.css";
 import { Metadata } from 'next'
+import { getSiteUrl, getSiteName, getSiteHandle } from '@/utils/site'
 
 export const metadata: Metadata = {
   title: 'Açık Rıza Metni - Kişisel Verilerinizin Güvencesi',
@@ -9,15 +10,15 @@ export const metadata: Metadata = {
     title: 'Açık Rıza Metni - Kişisel Verilerinizin Güvencesi',
     description: 'Kişisel verilerinizin işlenmesiyle ilgili detaylı bilgilere Açık Rıza Metni sayfamızdan ulaşabilirsiniz. Verileriniz, güvenle ve yasal çerçevede korunmaktadır.',
     type: 'website',
-    url: 'https://www.sigortagen.com/acik-riza-metni',
-    siteName: 'Sigortagen',
+    url: `${getSiteUrl()}/acik-riza-metni`,
+    siteName: getSiteName(),
     locale: 'tr-TR',
     images: [
       {
         url: "/images/logo.svg",
         width: 1200,
         height: 630,
-        alt: "Sigortagen Logo",
+        alt: `${getSiteName()} Logo`,
       },
     ],
   },
@@ -26,11 +27,11 @@ export const metadata: Metadata = {
     title: 'Açık Rıza Metni - Kişisel Verilerinizin Güvencesi',
     description: 'Kişisel verilerinizin işlenmesiyle ilgili detaylı bilgilere Açık Rıza Metni sayfamızdan ulaşabilirsiniz. Verileriniz, güvenle ve yasal çerçevede korunmaktadır.',
     images: ['/images/logo.svg'],
-    site: '@sigortagen',
-    creator: '@sigortagen',
+    site: getSiteHandle(),
+    creator: getSiteHandle(),
   },
   alternates: {
-    canonical: 'https://www.sigortagen.com/acik-riza-metni',
+    canonical: `${getSiteUrl()}/acik-riza-metni`,
   },
 }
 

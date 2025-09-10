@@ -2,22 +2,23 @@ import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { CircularProgress, Box, Typography } from '@mui/material';
 import SeyahatQuotePage from '@/components/QuoteFlow/SeyahatQuote/SeyahatQuotePage';
+import { getSiteUrl, getSiteName } from '@/utils/site';
 
 export const metadata: Metadata = {
-  title: "Seyahat Sigortası Teklif Al - Yükünüz Güvende | Sigortanı Karsılaştır",
+  title: `Seyahat Sigortası Teklif Al - Yükünüz Güvende | ${getSiteName()}`,
   description: "Yük ve eşyalarınızı taşımacılık sırasında oluşabilecek risklere karşı korumak için en uygun seyahat sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve güvenle taşıyın.",
-  metadataBase: new URL('https://sigortagen.com'),
+  metadataBase: new URL(getSiteUrl()),
   alternates: {
-    canonical: "https://sigortanikarsilastir.com/seyahat-sigortasi-teklif"
+    canonical: `${getSiteUrl()}/seyahat-teklif`
   },
   openGraph: {
-    title: "Seyahat Sigortası Teklif Al - Yükünüz Güvende | Sigortanı Karsılaştır",
+    title: `Seyahat Sigortası Teklif Al - Yükünüz Güvende | ${getSiteName()}`,
     description: "Yük ve eşyalarınızı taşımacılık sırasında oluşabilecek risklere karşı korumak için en uygun seyahat sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve güvenle taşıyın.",
-    url: "https://sigortanikarsilastir.com/seyahat-sigortasi-teklif",
+    url: `${getSiteUrl()}/seyahat-teklif`,
     type: "website"
   },
   twitter: {
-    title: "Seyahat Sigortası Teklif Al - Yükünüz Güvende | Sigortanı Karsılaştır",
+    title: `Seyahat Sigortası Teklif Al - Yükünüz Güvende | ${getSiteName()}`,
     description: "Yük ve eşyalarınızı taşımacılık sırasında oluşabilecek risklere karşı korumak için en uygun seyahat sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve güvenle taşıyın.",
     card: "summary_large_image"
   }

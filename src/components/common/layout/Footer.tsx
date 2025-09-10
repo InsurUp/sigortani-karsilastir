@@ -9,14 +9,14 @@ const footerLinks = [
     { href: "/blog", label: "Blog" },
   ],
   [
-    { href: "/kasko", label: "Kasko Sigortası" },
-    { href: "/trafik", label: "Trafik Sigortası" },
-    { href: "/dask", label: "DASK" },
+    { href: "/urunler/kasko", label: "Kasko Sigortası" },
+    { href: "/urunler/trafik", label: "Trafik Sigortası" },
+    { href: "/urunler/dask", label: "DASK" },
   ],
   [
     { href: "/iletisim", label: "İletişim" },
-    { href: "/gizlilik", label: "Gizlilik Politikası" },
-    { href: "/kullanim", label: "Kullanım Şartları" },
+    { href: "/gizlilik-sozlesmesi", label: "Gizlilik Politikası" },
+    { href: "/mesafeli-satis-sozlesmesi", label: "Kullanım Şartları" },
   ],
 ];
 

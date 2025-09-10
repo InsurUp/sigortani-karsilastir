@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
       try {
         return NextResponse.redirect(new URL('/odeme/paratika-3d-verify?success=1', request.url), 302);
       } catch (urlError) {
-        return NextResponse.redirect('https://sigortagen.com/odeme/paratika-3d-verify?success=1', 302);
+        return NextResponse.redirect('https://sigortanikarsilastir.com/odeme/paratika-3d-verify?success=1', 302);
       }
     }
     
@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
       try {
         return NextResponse.redirect(new URL('/odeme/hata?error=3D+doğrulama+başarısız', request.url), 302);
       } catch (urlError) {
-        return NextResponse.redirect('https://sigortagen.com/odeme/hata?error=3D+doğrulama+başarısız', 302);
+        return NextResponse.redirect('https://sigortanikarsilastir.com/odeme/hata?error=3D+doğrulama+başarısız', 302);
       }
     }
     
@@ -235,13 +235,13 @@ export async function GET(request: NextRequest) {
       try {
         return NextResponse.redirect(new URL('/odeme/paratika-3d-verify?success=1', request.url), 302);
       } catch (urlError) {
-        return NextResponse.redirect('https://sigortagen.com/odeme/paratika-3d-verify?success=1', 302);
+        return NextResponse.redirect('https://sigortanikarsilastir.com/odeme/paratika-3d-verify?success=1', 302);
       }
     } else {
       try {
         return NextResponse.redirect(new URL('/odeme/hata', request.url), 302);
       } catch (urlError) {
-        return NextResponse.redirect('https://sigortagen.com/odeme/hata', 302);
+        return NextResponse.redirect('https://sigortanikarsilastir.com/odeme/hata', 302);
       }
     }
 
@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
     try {
       return NextResponse.redirect(new URL('/odeme/hata', request.url), 302);
     } catch (urlError) {
-      return NextResponse.redirect('https://sigortagen.com/odeme/hata', 302);
+      return NextResponse.redirect('https://sigortanikarsilastir.com/odeme/hata', 302);
     }
   }
 } 

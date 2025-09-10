@@ -2,22 +2,23 @@ import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { CircularProgress, Box, Typography } from '@mui/material';
 import TssQuotePage from '@/components/QuoteFlow/TssQuote/TssQuotePage';
+import { getSiteUrl, getSiteName } from '@/utils/site';
 
 export const metadata: Metadata = {
-  title: "TSS Sigortası Teklif Al - Tamamlayıcı Sağlık | Sigortagen",
+  title: `TSS Sigortası Teklif Al - Tamamlayıcı Sağlık | ${getSiteName()}`,
   description: "SGK anlaşmalı tamamlayıcı sağlık sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve sağlığınızı güvence altına alın.",
-  metadataBase: new URL('https://sigortagen.com'),
+  metadataBase: new URL(getSiteUrl()),
   alternates: {
-    canonical: "https://sigortagen.com/tss-teklif"
+    canonical: `${getSiteUrl()}/tss-teklif`
   },
   openGraph: {
-    title: "TSS Sigortası Teklif Al - Tamamlayıcı Sağlık | Sigortagen",
+    title: `TSS Sigortası Teklif Al - Tamamlayıcı Sağlık | ${getSiteName()}`,
     description: "SGK anlaşmalı tamamlayıcı sağlık sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve sağlığınızı güvence altına alın.",
-    url: "https://sigortagen.com/tss-teklif",
+    url: `${getSiteUrl()}/tss-teklif`,
     type: "website"
   },
   twitter: {
-    title: "TSS Sigortası Teklif Al - Tamamlayıcı Sağlık | Sigortagen",
+    title: `TSS Sigortası Teklif Al - Tamamlayıcı Sağlık | ${getSiteName()}`,
     description: "SGK anlaşmalı tamamlayıcı sağlık sigortası tekliflerini hızlıca alın. Online poliçe oluşturun ve sağlığınızı güvence altına alın.",
     card: "summary_large_image"
   }

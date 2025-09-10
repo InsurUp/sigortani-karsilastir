@@ -29,7 +29,7 @@ export async function GET() {
       success: true, 
       message: 'Test callback başarıyla kaydedildi!',
       data: callbackResult,
-      nextStep: 'Şimdi https://sigortagen.com/odeme/paratika-3d-verify sayfasına gidin'
+      nextStep: 'Şimdi https://sigortanikarsilastir.com/odeme/paratika-3d-verify sayfasına gidin'
     });
 
   } catch (error) {

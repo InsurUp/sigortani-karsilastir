@@ -4,20 +4,20 @@ import { CircularProgress, Box, Typography } from '@mui/material';
 import ImmQuotePage from '@/components/QuoteFlow/ImmQuote/ImmQuotePage';
 
 export const metadata: Metadata = {
-  title: "İMM Sigortası Teklif Al - İhtiyari Mali Mesuliyet | Sigortagen",
+  title: "İMM Sigortası Teklif Al - İhtiyari Mali Mesuliyet | Sigortanı Karşılaştır",
   description: "İhtiyari mali mesuliyet sigortası tekliflerini hızlıca alın ve online poliçe oluşturun.",
-  metadataBase: new URL('https://sigortagen.com'),
+  metadataBase: new URL('https://sigortanikarsilastir.com'),
   alternates: {
-    canonical: "https://sigortagen.com/imm-teklif"
+    canonical: "https://sigortanikarsilastir.com/imm-teklif"
   },
   openGraph: {
-    title: "İMM Sigortası Teklif Al - İhtiyari Mali Mesuliyet | Sigortagen",
+    title: "İMM Sigortası Teklif Al - İhtiyari Mali Mesuliyet | Sigortanı Karşılaştır",
     description: "İhtiyari mali mesuliyet sigortası tekliflerini hızlıca alın ve online poliçe oluşturun.",
-    url: "https://sigortagen.com/imm-teklif",
+    url: "https://sigortanikarsilastir.com/imm-teklif",
     type: "website"
   },
   twitter: {
-    title: "İMM Sigortası Teklif Al - İhtiyari Mali Mesuliyet | Sigortagen",
+    title: "İMM Sigortası Teklif Al - İhtiyari Mali Mesuliyet | Sigortanı Karşılaştır",
     description: "İhtiyari mali mesuliyet sigortası tekliflerini hızlıca alın ve online poliçe oluşturun.",
     card: "summary_large_image"
   }

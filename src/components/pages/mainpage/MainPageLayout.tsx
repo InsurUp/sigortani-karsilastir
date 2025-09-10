@@ -1,5 +1,5 @@
 import React from 'react'
-import { Hero, Brands, HowItWorks, EasyQuote, AIFeatures, CampaignSection } from './sections'
+import { Hero, Brands, HowItWorks, EasyQuote, AIFeatures, Testimonials, CampaignSection, AllBrands } from './sections'
 import { AccordionSection, BlogGrid, CTASection } from '@/components/common'
 
 const MainPageLayout = () => {
@@ -10,6 +10,8 @@ const MainPageLayout = () => {
       <HowItWorks />
       <EasyQuote />
       <AIFeatures />
+      <Testimonials />
+      <AllBrands />
       <CampaignSection />
       <AccordionSection />
       <BlogGrid />
