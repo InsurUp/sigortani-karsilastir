@@ -52,8 +52,47 @@ const CustomAccordion: React.FC<AccordionProps> = ({ items }) => {
           >
             {item.question}
           </AccordionSummary>
-          <AccordionDetails sx={{ color: "#4F4F4F", fontSize: 18, opacity: 0.7, mb: 0, pt: 1, pb: 2 }}>
-            {item.answer}
+          <AccordionDetails 
+            sx={{ 
+              color: "#4F4F4F", 
+              fontSize: 18, 
+              opacity: 0.7, 
+              mb: 0, 
+              pt: 1, 
+              pb: 2,
+              '& ul': {
+                paddingLeft: '20px',
+                marginBottom: '16px',
+              },
+              '& li': {
+                marginBottom: '8px',
+                listStyleType: 'disc',
+                color: '#4F4F4F',
+              },
+              '& ol': {
+                paddingLeft: '20px',
+                marginBottom: '16px',
+              },
+              '& ol li': {
+                listStyleType: 'decimal',
+                marginBottom: '8px',
+              },
+              '& p': {
+                marginBottom: '12px',
+              },
+            }}
+          >
+            <div 
+              dangerouslySetInnerHTML={{ 
+                __html: item.answer
+                  .replace(/•/g, '&bull;')
+                  .replace(/\n/g, '<br/>')
+                  .replace(/<br\/>(\s*<[uo]l>)/g, '$1') // ul/ol öncesindeki br'leri kaldır
+                  .replace(/(<\/[uo]l>)\s*<br\/>/g, '$1') // ul/ol sonrasındaki br'leri kaldır
+                  .replace(/<br\/>(\s*<li>)/g, '$1') // li öncesindeki br'leri kaldır
+                  .replace(/(<\/li>)\s*<br\/>/g, '$1') // li sonrasındaki br'leri kaldır
+              }}
+            />
           </AccordionDetails>
         </Accordion>
       ))}

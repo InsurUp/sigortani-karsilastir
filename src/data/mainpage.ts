@@ -12,35 +12,35 @@ export const heroCards: HeroCard[] = [
     title: "Kasko",
     image: "/images/product/icon/kasko.svg",
     alt: "Kasko Sigortası",
-    link: "/urunler/kasko-sigortasi/teklif"
+    link: "/kasko-teklif"
   },
   {
     id: 2,
     title: "Tamamlayıcı Sağlık",
     image: "/images/product/icon/tss.svg",
     alt: "Tamamlayıcı Sağlık Sigortası",
-    link: "/urunler/tamamlayici-saglik-sigortasi/teklif"
+    link: "/tss-teklif"
   },
   {
     id: 3,
     title: "Trafik",
     image: "/images/product/icon/traffic.svg",
     alt: "Trafik Sigortası",
-    link: "/urunler/trafik-sigortasi/teklif"
+    link: "/trafik-teklif"
   },
   {
     id: 4,
     title: "Konut",
     image: "/images/product/icon/konut.svg",
     alt: "Konut Sigortası",
-    link: "/urunler/konut-sigortasi/teklif"
+    link: "/konut-teklif"
   },
   {
     id: 5,
     title: "İMM",
     image: "/images/product/icon/imm.svg",
     alt: "İMM Sigortası",
-    link: "/urunler/imm-sigortasi/teklif"
+    link: "/imm-teklif"
   },
   {
     id: 6,
@@ -54,7 +54,7 @@ export const heroCards: HeroCard[] = [
     title: "DASK",
     image: "/images/product/icon/dask.svg",
     alt: "DASK Sigortası",
-    link: "/urunler/zorunlu-deprem-sigortasi/teklif"
+    link: "/dask-teklif"
   }
 ];
 
@@ -70,57 +70,141 @@ export const brands: Brand[] = [
   {
     id: 1,
     name: "Anadolu Sigorta",
-    logo: "/images/brands/anadolu-sigorta.png",
+    logo: "/images/brands/anadolu.svg",
     alt: "Anadolu Sigorta Logo"
   },
   {
     id: 2,
     name: "Axa Sigorta",
-    logo: "/images/brands/axa-sigorta.png",
+    logo: "/images/brands/axa.png",
     alt: "Axa Sigorta Logo"
   },
   {
     id: 3,
-    name: "HDI Sigorta",
-    logo: "/images/brands/hdi-sigorta.png",
-    alt: "HDI Sigorta Logo"
+    name: "Allianz Sigorta",
+    logo: "/images/brands/allianz.png",
+    alt: "Allianz Sigorta Logo"
   },
   {
     id: 4,
     name: "Türkiye Sigorta",
-    logo: "/images/brands/turkiye-sigorta.png",
+    logo: "/images/brands/turkiye.png",
     alt: "Türkiye Sigorta Logo"
   },
   // Diğer şirketler
   {
     id: 5,
-    name: "Bereket Sigorta",
-    logo: "/images/brands/bereket-sigorta.png",
-    alt: "Bereket Sigorta Logo"
+    name: "HDI Sigorta",
+    logo: "/images/brands/hdi.png",
+    alt: "HDI Sigorta Logo"
   },
   {
     id: 6,
-    name: "Doğa Sigorta",
-    logo: "/images/brands/doga-sigorta.png",
-    alt: "Doğa Sigorta Logo"
+    name: "Bereket Sigorta",
+    logo: "/images/brands/bereket.svg",
+    alt: "Bereket Sigorta Logo"
   },
   {
     id: 7,
-    name: "Sompo Sigorta",
-    logo: "/images/brands/sompo-sigorta.png",
-    alt: "Sompo Sigorta Logo"
+    name: "Doğa Sigorta",
+    logo: "/images/brands/doga.png",
+    alt: "Doğa Sigorta Logo"
   },
   {
     id: 8,
-    name: "Türk Nippon Sigorta",
-    logo: "/images/brands/turk-nippon-sigorta.png",
-    alt: "Türk Nippon Sigorta Logo"
+    name: "Sompo Sigorta",
+    logo: "/images/brands/sompo.png",
+    alt: "Sompo Sigorta Logo"
   },
   {
     id: 9,
+    name: "Türk Nippon Sigorta",
+    logo: "/images/brands/turk-nippon.png",
+    alt: "Türk Nippon Sigorta Logo"
+  },
+  {
+    id: 10,
     name: "Unico Sigorta",
-    logo: "/images/brands/unico-sigorta.png",
+    logo: "/images/brands/unico.png",
     alt: "Unico Sigorta Logo"
+  },
+  {
+    id: 11,
+    name: "Bupa Sigorta",
+    logo: "/images/brands/bupa.png",
+    alt: "Bupa Sigorta Logo"
+  },
+  {
+    id: 12,
+    name: "Koru Sigorta",
+    logo: "/images/brands/koru.jpg",
+    alt: "Koru Sigorta Logo"
+  },
+  {
+    id: 13,
+    name: "Corpus Sigorta",
+    logo: "/images/brands/corpus.png",
+    alt: "Corpus Sigorta Logo"
+  },
+  {
+    id: 14,
+    name: "Zurich Sigorta",
+    logo: "/images/brands/zurich.png",
+    alt: "Zurich Sigorta Logo"
+  },
+  {
+    id: 15,
+    name: "Quick Sigorta",
+    logo: "/images/brands/quick.png",
+    alt: "Quick Sigorta Logo"
+  },
+  {
+    id: 16,
+    name: "Ankara Sigorta",
+    logo: "/images/brands/ankara.png",
+    alt: "Ankara Sigorta Logo"
+  },
+  {
+    id: 17,
+    name: "Ethica Sigorta",
+    logo: "/images/brands/ethica.svg",
+    alt: "Ethica Sigorta Logo"
+  },
+  {
+    id: 18,
+    name: "Magdeburger Sigorta",
+    logo: "/images/brands/magdeburger.png",
+    alt: "Magdeburger Sigorta Logo"
+  },
+  {
+    id: 19,
+    name: "Ray Sigorta",
+    logo: "/images/brands/raysigorta.png",
+    alt: "Ray Sigorta Logo"
+  },
+  {
+    id: 20,
+    name: "AK Sigorta",
+    logo: "/images/brands/ak.png",
+    alt: "AK Sigorta Logo"
+  },
+  {
+    id: 21,
+    name: "Mapfre Sigorta",
+    logo: "/images/brands/mapfre.png",
+    alt: "Mapfre Sigorta Logo"
+  },
+  {
+    id: 22,
+    name: "Referans Sigorta",
+    logo: "/images/brands/referans.png",
+    alt: "Referans Sigorta Logo"
+  },
+  {
+    id: 23,
+    name: "Hepiyi Sigorta",
+    logo: "/images/brands/hepiyi.png",
+    alt: "Hepiyi Sigorta Logo"
   },
 ];
 

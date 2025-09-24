@@ -172,6 +172,7 @@ export default function LoginPage() {
         {/* Auth Form */}
         {!showVerification ? (
           <AuthForm
+            isRegistering={true}
             onSuccess={(token, phone) => {
               setTempToken(token);
               setPhoneNumber(phone);

@@ -63,12 +63,20 @@ export interface ProductData {
   pricing?: PricingInfo;
   attentionPoints?: AttentionPoints;
   offerSteps: OfferStep[];
+  banner: {
+    title: string;
+    description: string;
+  };
 }
 
 export const productData: Record<string, ProductData> = {
   dask: {
     slug: 'zorunlu-deprem-sigortasi',
     name: 'DASK Sigortası',
+    banner: {
+      title: 'DASK Sigortası Teklifi Al!',
+      description: 'DASK sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.'
+    },
     intro: {
       title: 'DASK Sigortanı Anında Bul, Evini Güvenceye Al!',
       description: 'Evini deprem risklerine karşı korumak mı istiyorsun? Sigortanı Karşılaştır ile 30\'a varan sigorta şirketinin DASK tekliflerini saniyeler içinde karşılaştır, yapay zeka asistanımızla sana özel poliçeyi bul ve 3D Secure ile güvenle sigortalan!'
@@ -190,6 +198,10 @@ export const productData: Record<string, ProductData> = {
   kasko: {
     slug: 'kasko-sigortasi',
     name: 'Kasko Sigortası',
+    banner: {
+      title: 'Kasko Sigortası Teklifi Al!',
+      description: 'Kasko sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.'
+    },
     intro: {
       title: 'Kasko Sigortanı Hızla Bul, Güvenle Yola Çık!',
       description: 'Aracını korumak için en uygun kasko sigortasını mı arıyorsun? Sigortanı Karşılaştır ile 30\'a varan sigorta şirketinin kasko tekliflerini saniyeler içinde karşılaştır, yapay zeka asistanımızla sana özel poliçeyi bul ve 3D Secure ile güvenle sigortalan!'
@@ -286,6 +298,10 @@ export const productData: Record<string, ProductData> = {
   trafik: {
     slug: 'trafik-sigortasi',
     name: 'Trafik Sigortası',
+    banner: {
+      title: 'Trafik Sigortası Teklifi Al!',
+      description: 'Trafik sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.'
+    },
     intro: {
       title: 'Trafik Sigortanı Anında Bul, Güvenle Yola Çık!',
       description: 'Zorunlu trafik sigortanı hızlı ve kolay yaptırmak ister misin? Sigortanı Karşılaştır ile 30\'a varan sigorta şirketinin tekliflerini saniyeler içinde karşılaştır, yapay zeka asistanımızla sana özel poliçeyi bul ve 3D Secure ile güvenle sigortalan!'
@@ -386,6 +402,10 @@ export const productData: Record<string, ProductData> = {
   konut: {
     slug: 'konut-sigortasi',
     name: 'Konut Sigortası',
+    banner: {
+      title: 'Konut Sigortası Teklifi Al!',
+      description: 'Konut sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.'
+    },
     intro: {
       title: 'Konut Sigortanı Anında Bul, Evini Güvenceye Al!',
       description: 'Evinizi yangın, hırsızlık veya doğal afetlere karşı korumak mı istiyorsunuz? Sigortanı Karşılaştır ile 30\'a varan sigorta şirketinin konut sigortası tekliflerini saniyeler içinde karşılaştır, yapay zeka asistanımızla sana özel poliçeyi bul ve 3D Secure ile güvenle sigortalan!'
@@ -486,6 +506,10 @@ export const productData: Record<string, ProductData> = {
   imm: {
     slug: 'imm-sigortasi',
     name: 'İMM Sigortası',
+    banner: {
+      title: 'İMM Sigortası Teklifi Al!',
+      description: 'İMM sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.'
+    },
     intro: {
       title: 'İMM Sigortanı Hızla Bul, Güvenle Yola Çık!',
       description: 'Trafikte daha fazla koruma mı istiyorsun? Sigortanı Karşılaştır ile 30\'a varan sigorta şirketinin İhtiyari Mali Mesuliyet (İMM) tekliflerini saniyeler içinde karşılaştır, yapay zeka asistanımızla sana özel poliçeyi bul ve 3D Secure ile güvenle sigortalan!'
@@ -586,6 +610,10 @@ export const productData: Record<string, ProductData> = {
   saglik: {
     slug: 'tamamlayici-saglik-sigortasi',
     name: 'Tamamlayıcı Sağlık Sigortası',
+    banner: {
+      title: 'Sağlık Sigortası Teklifi Al!',
+      description: 'Sağlık sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.'
+    },
     intro: {
       title: 'Tamamlayıcı Sağlık Sigortanı Anında Bul, Güvenle Tedavi Ol!',
       description: 'Sağlığını korumak için uygun fiyatlı bir tamamlayıcı sağlık sigortası mı arıyorsun? Sigortanı Karşılaştır ile 30\'a varan sigorta şirketinin tekliflerini saniyeler içinde karşılaştır, yapay zeka asistanımızla sana özel poliçeyi bul ve 3D Secure ile güvenle sigortalan!'
@@ -727,6 +755,10 @@ export const getProductData = (slug: string): ProductData | null => {
 export const defaultProductData: ProductData = {
   slug: 'default',
   name: 'Sigorta',
+  banner: {
+    title: 'Sigorta Teklifi Al!',
+    description: 'Sigorta teklifi almak için lütfen aşağıdaki formu doldurunuz.'
+  },
   intro: {
     title: 'Sigortanı Anında Bul, Güvenceye Al!',
     description: 'En uygun sigorta tekliflerini karşılaştır ve güvenle sigortalan!'

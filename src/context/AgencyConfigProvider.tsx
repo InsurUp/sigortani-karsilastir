@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'; // MUI import
 import LoadingOverlay from '../components/common/LoadingOverlay';
 import { fetchWithAuth } from '../services/fetchWithAuth';
 import { useAuthStore } from '../store/useAuthStore';
+import { agencyConfig } from '../config/agencyConfig';
 
 
 // Agency config context type
@@ -239,63 +240,31 @@ export const AgencyConfigProvider: React.FC<AgencyConfigProviderProps> = ({ chil
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        // Doğru dosya adını kullanıyoruz (büyük/küçük harf duyarlı)
-        const url = '/defaultAgencyConfig.json';
-        
-        // Window location origin kullanarak dinamik base URL
-        const baseUrl = window.location.origin;
-        
-        const fullUrl = `${baseUrl}${url}`;
-
-        const response = await fetch(fullUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache'
-          },
-          // Vercel'de CORS sorunlarını önlemek için
-          credentials: 'same-origin'
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Config yüklenemedi: ${response.status} ${response.statusText}`);
-        }
-
-        const data = (await response.json()) as AgencyConfigContextType;
-
-        // Process placeholders in legal content
-        if (data.legal) {
-          if (data.legal.kvkk) {
-            data.legal.kvkk.content = processPlaceholders(data.legal.kvkk.content, data);
-          }
-          if (data.legal.privacyPolicy) {
-            data.legal.privacyPolicy.content = processPlaceholders(
-              data.legal.privacyPolicy.content,
-              data
-            );
-          }
-          if (data.legal.commercialElectronicMessages) {
-            data.legal.commercialElectronicMessages.content = processPlaceholders(
-              data.legal.commercialElectronicMessages.content,
-              data
-            );
-          }
-          // Note: Cookie policy content is not processed currently, add if needed
-        }
-
-        setConfig(data);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu';
-        setError(`Agency config yüklenirken bir hata oluştu: ${errorMessage}`);
-      } finally {
-        setLoading(false);
+    // Config'i direkt import edilen değerle set et
+    const data = agencyConfig as AgencyConfigContextType;
+    
+    // Process placeholders in legal content
+    if (data.legal) {
+      if (data.legal.kvkk) {
+        data.legal.kvkk.content = processPlaceholders(data.legal.kvkk.content, data);
       }
-    };
+      if (data.legal.privacyPolicy) {
+        data.legal.privacyPolicy.content = processPlaceholders(
+          data.legal.privacyPolicy.content,
+          data
+        );
+      }
+      if (data.legal.commercialElectronicMessages) {
+        data.legal.commercialElectronicMessages.content = processPlaceholders(
+          data.legal.commercialElectronicMessages.content,
+          data
+        );
+      }
+      // Note: Cookie policy content is not processed currently, add if needed
+    }
 
-    fetchConfig();
+    setConfig(data);
+    setLoading(false);
   }, []);
 
   // Set CSS variables when config is loaded

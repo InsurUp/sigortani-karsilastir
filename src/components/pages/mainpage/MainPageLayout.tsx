@@ -13,7 +13,7 @@ const MainPageLayout = () => {
       {/* <Testimonials /> */}
       <UserStories />
       <AllBrands />
-      <CampaignSection />
+      {/* <CampaignSection /> */}
       <AccordionSection />
       <BlogGrid />
       <CTASection />

@@ -1,7 +1,8 @@
 import { Banner, BlogCard } from '@/components/common'
 import React from 'react'
 import Link from 'next/link'
-import { Blog, blogs, blogTags } from '@/data/blogs'
+import { Blog, blogs, blogTags, BlogContentSection } from '@/data/blogs'
+import { BlogSSSAccordion } from './BlogSSSAccordion'
 import Image from 'next/image'
 
 interface BlogDetailLayoutProps {
@@ -78,9 +79,154 @@ function BlogDetailLayout({ blog }: BlogDetailLayoutProps) {
                         <h1 className="text-4xl mb-0 font-bold leading-tight">{blog.title}</h1>
 
                         <article className='blog-detail-content'>
-                            <p>
-                                {blog.content}
-                            </p>
+                            {blog.fullContent ? (
+                                (() => {
+                                    const sections = blog.fullContent;
+                                    const faqSections = [];
+                                    const otherSections = [];
+                                    
+                                    // SSS bölümünü tespit et
+                                    let inFAQSection = false;
+                                    let faqItems = [];
+                                    let currentQuestion = '';
+                                    
+                                    sections.forEach((section, index) => {
+                                        if (section.type === 'heading' && section.content === 'Sıkça Sorulan Sorular') {
+                                            inFAQSection = true;
+                                            otherSections.push({ ...section, type: 'heading' });
+                                            return;
+                                        }
+                                        
+                                        if (inFAQSection) {
+                                            if (section.type === 'paragraph' && !section.content.includes('Hayır,') && !section.content.includes('Genellikle') && !section.content.includes('Satıcı,') && !section.content.includes('Plaka değişikliği') && !section.content.includes('Satış öncesi')) {
+                                                // Bu bir soru
+                                                currentQuestion = section.content.replace('?', '').trim();
+                                            } else if (section.type === 'highlight' && currentQuestion) {
+                                                // Bu bir cevap
+                                                faqItems.push({
+                                                    question: currentQuestion + '?',
+                                                    answer: section.content
+                                                });
+                                                currentQuestion = '';
+                                            } else if (section.type === 'paragraph' && section.content.includes('İkinci el araç alım satımında güven')) {
+                                                // SSS bölümü bitti
+                                                inFAQSection = false;
+                                                otherSections.push(section);
+                                            }
+                                        } else {
+                                            otherSections.push(section);
+                                        }
+                                    });
+                                    
+                                    return (
+                                        <>
+                                            {otherSections.map((section, index) => {
+                                                switch (section.type) {
+                                                    case 'paragraph':
+                                                        // HTML içerik kontrolü
+                                                        if (section.content.includes('<div className=') || section.content.includes('<table')) {
+                                                            return (
+                                                                <div key={index} className="my-6" dangerouslySetInnerHTML={{ __html: section.content }} />
+                                                            );
+                                                        }
+                                                        return (
+                                                            <p key={index} className="mb-4 leading-relaxed">
+                                                                {section.content}
+                                                            </p>
+                                                        );
+                                                    case 'heading':
+                                                        const HeadingTag = `h${section.level || 2}` as keyof JSX.IntrinsicElements;
+                                                        const headingClasses = {
+                                                            2: "text-2xl font-bold mb-4 mt-8",
+                                                            3: "text-xl font-semibold mb-3 mt-6",
+                                                            4: "text-lg font-semibold mb-2 mt-4"
+                                                        };
+                                                        return (
+                                                            <HeadingTag 
+                                                                key={index} 
+                                                                className={headingClasses[section.level as keyof typeof headingClasses] || headingClasses[2]}
+                                                            >
+                                                                {section.content}
+                                                            </HeadingTag>
+                                                        );
+                                                    case 'list':
+                                                        return (
+                                                            <ul key={index} className="mb-4 list-disc list-inside space-y-2">
+                                                                {section.items?.map((item, itemIndex) => (
+                                                                    <li key={itemIndex} className="leading-relaxed">
+                                                                        {item}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        );
+                                                    case 'cta':
+                                                        return (
+                                                            <div key={index} className="my-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                                                                <p className="mb-3 font-medium text-gray-800">
+                                                                    {section.content}
+                                                                </p>
+                                                                <Link 
+                                                                    href={section.ctaLink || '/trafik-teklif'}
+                                                                    className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                                                                >
+                                                                    {section.ctaText || 'Teklif Al'}
+                                                                </Link>
+                                                            </div>
+                                                        );
+                                        case 'highlight':
+                                            const highlightClasses = {
+                                                info: "text-gray-700",
+                                                warning: "text-yellow-700",
+                                                success: "text-green-700"
+                                            };
+                                            return (
+                                                <div 
+                                                    key={index} 
+                                                    className={`my-3 ${highlightClasses[section.highlightType || 'info']}`}
+                                                >
+                                                    <p className="font-medium">
+                                                        {section.content}
+                                                    </p>
+                                                </div>
+                                            );
+                                        case 'image':
+                                            return (
+                                                <div key={index} className="my-6">
+                                                    <div className="text-center">
+                                                        <Image 
+                                                            src={section.imageSrc || '/images/blog-gorsel.png'}
+                                                            alt={section.imageAlt || 'Blog resmi'}
+                                                            width={800}
+                                                            height={400}
+                                                            className="mx-auto rounded-lg shadow-md"
+                                                        />
+                                                        {section.imageCaption && (
+                                                            <p className="text-sm text-gray-600 mt-2 italic">
+                                                                {section.imageCaption}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        default:
+                                            return null;
+                                                }
+                                            })}
+                                            
+                                            {/* SSS Accordion */}
+                                            {faqItems.length > 0 && (
+                                                <div className="mt-8">
+                                                    <BlogSSSAccordion items={faqItems} />
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()
+                            ) : (
+                                <p className="mb-4 leading-relaxed">
+                                    {blog.content}
+                                </p>
+                            )}
                         </article>
                         <div className="flex items-center gap-2 text-sm text-gray-500 mt-5">
                             <span>Paylaş:</span>
