@@ -31,8 +31,8 @@ export default function QuoteComparisonPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 form-background">
-        <div className="flex min-h-screen items-center justify-center pb-8">
+      <div className="min-h-screen bg-gray-50 form-background pt-20">
+        <div className="flex  items-center justify-center pb-8">
           <Container maxWidth="lg">
             <Paper elevation={3} sx={{ p: { xs: 2, sm: 3, md: 4 }, borderRadius: 2 }}>
               <QuoteComparisonStep

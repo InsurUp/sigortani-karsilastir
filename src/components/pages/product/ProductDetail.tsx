@@ -23,28 +23,28 @@ async function ProductDetail({ params }: ProductDetailProps) {
     if (!productData) {
       notFound()
     }
+
+    return (
+      <main>
+        <Banner productData={productData} />
+        <ProductIntro />
+        <OfferSteps />
+        <Article />
+        <Guaranties />
+        <WhyChooseUs />
+        <PricingTable />
+        <KaskoPricingTabs />
+        <TrafikPricingTabs />
+        <AttentionPoints />
+        <ProductCTA />
+        <AccordionSection />
+        <BlogGrid />
+        <CTASection />
+      </main>
+    )
   } catch (error) {
     notFound()
   }
-
-  return (
-    <main>
-      <Banner />
-      <ProductIntro />
-      <OfferSteps />
-      <Article />
-      <Guaranties />
-      <WhyChooseUs />
-      <PricingTable />
-      <KaskoPricingTabs />
-      <TrafikPricingTabs />
-      <AttentionPoints />
-      <ProductCTA />
-      <AccordionSection />
-      <BlogGrid />
-      <CTASection />
-    </main>
-  )
 }
 
 export default ProductDetail

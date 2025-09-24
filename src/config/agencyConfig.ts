@@ -1,0 +1,528 @@
+export const agencyConfig = {
+  agency: {
+    id: "01965871-9f3c-7e4b-97f1-3b57e56a8046",
+    name: "Sigortanı Karşılaştır",
+    legalName: "Sigortanı Karşılaştır",
+    browserTitle: "Sigortanı Karşılaştır - Geleceğini Düşünenler İçin En İyi Sigorta Ürünleri!",
+    faviconPath: "",
+    logo: {
+      path: "",
+      alt: ""
+    },
+    contact: {
+      phone: {
+        primary: "444 22 37",
+        secondary: ""
+      },
+      email: {
+        primary: "teklif@Sigortanı Karşılaştır.com",
+        secondary: ""
+      },
+      address: "Zühtüpaşa Mah. Recep Peker Cad. Site Varol Apt. No:42 D:30 Kadıköy / İSTANBUL",
+      workingHours: {
+        type: "weekdays",
+        custom: "Pazartesi - Cuma: 09:00 - 18:00",
+        options: {
+          weekdays: "Pazartesi - Cuma: 09:00 - 18:00",
+          weekdaysAndSaturday: "Pazartesi - Cuma: 09:00 - 18:00, Cumartesi: 09:00 - 14:00",
+          allWeek: "Haftanın 7 günü: 09:00 - 18:00"
+        }
+      }
+    },
+    socialMedia: {
+      facebook: "https://www.facebook.com/Sigortanı Karşılaştır/",
+      instagram: "https://www.instagram.com/Sigortanı Karşılaştır/",
+      twitter: "https://x.com/Sigortanı Karşılaştır",
+      linkedin: "https://www.linkedin.com/company/Sigortanı Karşılaştır/",
+      youtube: "",
+      whatsapp: "05068552237"
+    }
+  },
+  theme: {
+    primaryColor: "#262163",
+    secondaryColor: "#262163",
+    accentColor: "#262163"
+  },
+  auth: {
+    sessionDurationMinutes: 90,
+    rememberMeDurationDays: 7,
+    autoLogoutWarningMinutes: 5,
+    extendSessionOnActivity: true
+  },
+  homepage: {
+    hero: {
+      headline: "Yarını Düşünme",
+      subtext: "En uygun fiyat garantisi ve en güvenilir hizmet"
+    },
+    products: {
+      title: "Sigorta Ürünleri",
+      subtext: "Size en uygun sigorta ürünlerini hemen keşfedin",
+      items: [
+        {
+          id: "kasko",
+          name: "Kasko",
+          isActive: true,
+          order: 1,
+          link: "/kasko-teklif-al",
+          icon: "Car"
+        },
+        {
+          id: "trafik",
+          name: "Trafik Sigortası",
+          isActive: true,
+          order: 2,
+          link: "/trafik-teklif-al",
+          icon: "Car"
+        },
+        {
+          id: "dask",
+          name: "DASK",
+          isActive: true,
+          order: 3,
+          link: "/dask-teklif-al",
+          icon: "Home"
+        },
+        {
+          id: "konut",
+          name: "Konut Sigortası",
+          isActive: true,
+          order: 4,
+          link: "/konut-teklif-al",
+          icon: "Home"
+        },
+        {
+          id: "tss",
+          name: "Tamamlayıcı Sağlık",
+          isActive: true,
+          order: 5,
+          link: "/tss-teklif-al",
+          icon: "Heart"
+        },
+        {
+          id: "imm",
+          name: "İMM",
+          isActive: false,
+          order: 6,
+          link: "/imm-teklif-al",
+          icon: "Shield"
+        }
+      ]
+    },
+    threeSteps: {
+      title: "3 Adımda Sigorta İşlemlerinizi Kolayca Tamamlayın!",
+      subtext: "Hızlı ve kolay bir şekilde sigorta işlemlerinizi tamamlayın",
+      steps: [
+        {
+          id: 1,
+          title: "Teklif Alın",
+          description: "Birkaç basit bilgi girerek hemen teklifinizi alın",
+          icon: "Search"
+        },
+        {
+          id: 2,
+          title: "Karşılaştırın",
+          description: "En avantajlı teklifi bulun ve karşılaştırın",
+          icon: "FileSearch"
+        },
+        {
+          id: 3,
+          title: "Satın Alın",
+          description: "Güvenli ödeme seçenekleriyle poliçenizi hemen satın alın",
+          icon: "CheckCircle"
+        }
+      ]
+    },
+    whyChooseUs: {
+      title: "Neden Bizi Tercih Etmelisiniz?",
+      subtext: "Sigorta sektöründeki uzun yıllara dayanan tecrübemizle size en iyi hizmeti sunuyoruz",
+      reasons: [
+        {
+          id: 1,
+          title: "Uzman Destek",
+          description: "Alanında uzman danışmanlarımız her adımda yanınızda",
+          icon: "Users"
+        },
+        {
+          id: 2,
+          title: "En İyi Fiyatlar",
+          description: "Çok sayıda sigorta şirketinden en uygun teklifleri sunuyoruz",
+          icon: "Coins"
+        },
+        {
+          id: 3,
+          title: "7/24 Hizmet",
+          description: "Acil durumlar için 7/24 kesintisiz hizmet garantisi",
+          icon: "Clock"
+        },
+        {
+          id: 4,
+          title: "Hızlı İşlemler",
+          description: "Dijital altyapımız sayesinde poliçeniz anında hazır",
+          icon: "Zap"
+        }
+      ]
+    },
+    partners: {
+      title: "Sigorta Şirketi Partnerlerimiz",
+      subtext: "En güvenilir sigorta şirketleriyle çalışıyoruz",
+      companies: [
+        {
+          name: "Doğa Sigorta",
+          insuranceCompanyId: 43,
+          products: {
+            kasko: [
+              {
+                id: 1592,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            trafik: [
+              {
+                id: 1593,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            tss: [
+              {
+                id: 3217,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            dask: [
+              {
+                id: 1595,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            konut: [
+              {
+                id: 2223,
+                displayMode: "FULL_ACCESS"
+              }
+            ]
+          }
+        },
+        {
+          name: "Anadolu Sigorta",
+          insuranceCompanyId: 7,
+          products: {
+            kasko: [
+              {
+                id: 2218,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            trafik: [
+              {
+                id: 2205,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            tss: [
+              {
+                id: 3259,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            dask: [],
+            konut: [
+              {
+                id: 3251,
+                displayMode: "FULL_ACCESS"
+              }
+            ]
+          }
+        },
+        {
+          name: "AXA Sigorta",
+          insuranceCompanyId: 95,
+          products: {
+            kasko: [
+              {
+                id: 2408,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            trafik: [
+              {
+                id: 2409,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            tss: [
+              {
+                id: 1448,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            dask: [],
+            konut: []
+          }
+        },
+        {
+          name: "Türkiye Sigorta",
+          insuranceCompanyId: 116,
+          products: {
+            kasko: [
+              {
+                id: 3113,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            trafik: [
+              {
+                id: 2404,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            tss: [
+              {
+                id: 2308,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            dask: [
+              {
+                id: 2406,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            konut: [
+              {
+                id: 3294,
+                displayMode: "FULL_ACCESS"
+              }
+            ]
+          }
+        },
+        {
+          name: "HDI",
+          insuranceCompanyId: 54,
+          products: {
+            kasko: [
+              {
+                id: 3279,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            trafik: [
+              {
+                id: 3240,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            dask: [
+              {
+                id: 27,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            konut: [
+              {
+                id: 2459,
+                displayMode: "FULL_ACCESS"
+              }
+            ]
+          }
+        },
+        {
+          name: "Sompo Japan Sigorta",
+          insuranceCompanyId: 61,
+          products: {
+            kasko: [
+              {
+                id: 3180,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            trafik: [
+              {
+                id: 3219,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            dask: [
+              {
+                id: 2258,
+                displayMode: "FULL_ACCESS"
+              }
+            ],
+            tss: [
+              {
+                id: 2763,
+                displayMode: "FULL_ACCESS"
+              },
+              {
+                id: 2764,
+                displayMode: "FULL_ACCESS"
+              }
+            ]
+          }
+        },
+        {
+          name: "Unico Sigorta",
+          insuranceCompanyId: 17,
+          products: {
+            kasko: [
+              {
+                id: 3118,
+                displayMode: "CONTACT_TO_BUY"
+              }
+            ],
+            trafik: [
+              {
+                id: 3312,
+                displayMode: "CONTACT_TO_BUY"
+              }
+            ]
+          }
+        },
+        {
+          name: "Bereket Sigorta",
+          insuranceCompanyId: 57,
+          products: {
+            kasko: [
+              {
+                id: 1505,
+                displayMode: "CONTACT_TO_BUY"
+              }
+            ],
+            trafik: [
+              {
+                id: 1503,
+                displayMode: "CONTACT_TO_BUY"
+              }
+            ],
+            dask: [
+              {
+                id: 1506,
+                displayMode: "CONTACT_TO_BUY"
+              }
+            ],
+            konut: [
+              {
+                id: 1501,
+                displayMode: "CONTACT_TO_BUY"
+              }
+            ]
+          }
+        },
+        {
+          name: "Nippon Sigorta",
+          insuranceCompanyId: 51,
+          products: {
+            kasko: [],
+            trafik: [],
+            tss: [
+              {
+                id: 2307,
+                displayMode: "CONTACT_TO_BUY"
+              }
+            ]
+          }
+        }
+      ],
+      logosDirectory: "/assets/logos/partners/"
+    },
+    faq: {
+      title: "Sık Sorulan Sorular",
+      subtext: "Merak ettiğiniz tüm sorulara cevaplar",
+      questions: [
+        {
+          id: 1,
+          question: "Sigorta teklifini nasıl alırım?",
+          answer: "Web sitemizden ilgili sigorta türünü seçerek birkaç basit bilgi girmeniz yeterli. Hemen ardından karşılaştırmalı teklifler alabilirsiniz."
+        },
+        {
+          id: 2,
+          question: "Poliçemi satın aldıktan sonra ne kadar sürede aktif olur?",
+          answer: "Satın alma işleminiz tamamlandıktan hemen sonra poliçeniz aktif hale gelir ve e-posta adresinize gönderilir."
+        },
+        {
+          id: 3,
+          question: "Hasar durumunda ne yapmalıyım?",
+          answer: "Hasar durumunda 7/24 ulaşabileceğiniz hasar hattımızı arayabilir veya web sitemizdeki hasar bildirim formunu doldurabilirsiniz."
+        },
+        {
+          id: 4,
+          question: "Taksitli ödeme yapabilir miyim?",
+          answer: "Evet, kredi kartı ile yapacağınız ödemelerde sigorta şirketinin sunduğu taksit seçeneklerinden faydalanabilirsiniz."
+        },
+        {
+          id: 5,
+          question: "Poliçemi iptal etmek istiyorum, ne yapmalıyım?",
+          answer: "Poliçe iptal işlemleri için müşteri hizmetlerimizi arayabilir veya ofisimizi ziyaret edebilirsiniz. İade koşulları poliçe türüne göre değişiklik gösterebilir."
+        }
+      ]
+    },
+    contactUs: {
+      title: "Bize Ulaşın",
+      subtext: "Sorularınız için 7-24  burada yanınızdayız",
+      formEnabled: true,
+      formFields: {
+        name: true,
+        email: true,
+        phone: true,
+        subject: true,
+        message: true
+      }
+    }
+  },
+  legal: {
+    kvkk: {
+      title: "KVKK Aydınlatma Metni",
+      content: "Veri Sorumlusu ve İletişim: {{agency.legalName}} olarak, kişisel verilerinizin gizliliği ve güvenliğine önem veriyoruz. 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) uyarınca, veri sorumlusu sıfatıyla, kişisel verilerinizin işlenme amaçları, yöntemi, hukuki dayanakları ve haklarınız konusunda sizi bilgilendirmek isteriz.\n\nŞirket İletişim Bilgileri: Adres: {{agency.contact.address}} – E-posta: {{agency.contact.email.primary}} – Tel: {{agency.contact.phone.primary}}.\n\n### Kişisel Verilerin İşlenme Amaçları\n• **Sigorta Hizmetlerinin Sunulması:** Talep ettiğiniz sigorta ürünlerinin (sağlık, kasko, trafik, DASK, konut vb.) tekliflerini hazırlamak, poliçelerinizi düzenlemek ve sigorta sözleşmenizin kurulmasını sağlamak.\n• **Poliçe ve Hasar İşlemleri:** Poliçenizin yürütülmesi, yenilenmesi, hasar bildirimi ve tazminat değerlendirmesi gibi sigorta kapsamındaki hak ve yükümlülüklerin yerine getirilmesi.\n• **Müşteri Hizmetleri ve İyileştirme:** Müşteri ilişkilerini yönetmek, çağrı merkezi desteği sağlamak, memnuniyet ve şikâyet süreçlerini yürütmek ve hizmet kalitemizi geliştirmek.\n• **Yasal Yükümlülüklerin Yerine Getirilmesi:** {{agency.legalName}}'nin tabi olduğu mevzuat gereği yapması gereken bildirim, raporlama, faturalandırma, denetim gibi yükümlülükleri yerine getirmek (örneğin Sigorta Bilgi ve Gözetim Merkezi'ne bildirimler, resmi mercilere yasal raporlamalar).\n• **Pazarlama ve Kampanya İletişimi:** Açık rızanızın bulunması hâlinde, ürün ve hizmetlerimize ilişkin kampanya, promosyon ve pazarlama içeriklerini sizlerle paylaşmak.\n\n### Kişisel Verilerin Aktarılması\nKişisel verileriniz, yukarıdaki amaçlar doğrultusunda gerekli olduğu ölçüde ve KVKK'ya uygun şekilde;\n• **Sigorta Kuruluşları** (teklif aldığımız/düzenlediğimiz sigorta ve reasürans şirketleri),\n• **Yetkili Kamu Kurumları** (SBGM, ilgili bakanlıklar, mahkemeler, düzenleyici otoriteler),\n• **Hizmet Alınan İş Ortakları** (BT, bulut, yazılım, arşivleme, baskı vb. firmalar) ile paylaşılabilir. Paylaşım sırasında KVKK'nın 8. ve 9. maddelerine uygun güvenlik önlemleri alınır.\n\n### Kişisel Verilerin Toplanma Yöntemi ve Hukuki Sebepleri\nVerileriniz web sitemiz, mobil uygulamamız, çağrı merkezimiz, e-posta ve fiziksel evraklar aracılığıyla otomatik ya da kısmen otomatik yolla toplanabilir. KVKK'nın 5/2 ve 6/3 maddelerine giren durumlarda açık rıza aranmaksızın; diğer hallerde ise açık rızanızla işlenir.\n\n### İlgili Kişinin Hakları\nKVKK'nın 11. maddesi uyarınca; verilerinizin işlenip işlenmediğini öğrenme, düzeltilmesini veya silinmesini talep etme, aktarıldığı üçüncü kişileri bilme, otomatik sistemlerce aleyhte sonuç çıkmasına itiraz etme ve zarar hâlinde tazminat isteme gibi haklara sahipsiniz.\n\n#### Başvuru\nBu haklarınızı kullanmak için talebinizi yazılı olarak {{agency.contact.address}} adresine gönderebilir veya {{agency.contact.email.primary}} adresine e-posta gönderebilirsiniz. Başvurular en geç 30 gün içinde sonuçlandırılır.",
+      lastUpdated: "2025-04-29"
+    },
+    privacyPolicy: {
+      title: "Açık Rıza Metni",
+      content: "Sigorta hizmetlerimiz kapsamında bazı kişisel verilerinizin işlenmesi için açık rızanız gerekmektedir. Talep ettiğiniz ürün ve hizmetleri sunabilmemiz amacıyla aşağıdaki konularda onayınıza ihtiyaç duyuyoruz: \n\n**1) Özel Nitelikli Veri İşleme İzni:** Sağlık bilgilerim gibi özel nitelikli kişisel verilerim de dâhil olmak üzere, tüm kişisel verilerimin {{agency.legalName}} tarafından talep ettiğim sigorta ürün ve hizmetlerinin (ör. sağlık, kasko, trafik, DASK, konut sigortaları) sağlanması amacıyla işlenmesine açık rıza veriyorum.\n\n**2) Veri Paylaşım İzni:** Kişisel verilerimin bu amaçla, {{agency.legalName}}'nin anlaşmalı olduğu sigorta şirketleri ve gerekli hallerde ilgili diğer iş ortaklarıyla yurt içinde veya yurt dışında paylaşılmasına açık rıza veriyorum.\n\nYukarıdaki maddeleri okuyup anlayarak kendi irademle onay veriyorum. Açık rızam dâhilinde kişisel verilerimin işleneceğini ve paylaşılacağını kabul ederim. Rızamın kapsamındaki işlemler hakkında bilgilendirildim ve dilediğim zaman bu rızamı geri çekme hakkına sahip olduğumu biliyorum.",
+      lastUpdated: "2025-04-29"
+    },
+    commercialElectronicMessages: {
+      title: "Pazarlama Faaliyetleri Kapsamında Kişisel Verilerin İşlenmesi (Ticari İleti Metni)",
+      content: "Müşteri olarak sizleri kampanyalar, yeni ürün ve hizmetler hakkında bilgilendirebilmek ve avantajlardan haberdar edebilmek isteriz. İzniniz olması durumunda, {{agency.legalName}} zaman zaman sizinle iletişime geçerek bu tür pazarlama içerikli bilgileri paylaşacaktır.\n\n**Onay Beyanı:** {{agency.legalName}}'nin ürün ve hizmetlerine ilişkin kampanya, promosyon, indirim ve duyurular hakkında beni bilgilendirmesi amacıyla, tarafıma e-posta, SMS, telefon araması ve benzeri iletişim kanalları yoluyla ticari elektronik iletiler göndermesine onay veriyorum. Ayrıca, bu onayımı dilediğim zaman geri çekebileceğim konusunda bilgilendirildim. Tarafıma gönderilen iletilerde yer alan ret seçeneğini kullanarak veya {{agency.contact.email.primary}} adresine e-posta göndererek ya da {{agency.contact.phone.primary}} numarasını arayarak {{agency.legalName}} ile iletişime geçmek suretiyle ticari ileti iznini iptal edebileceğim.\n\n**Not:** Bu metni onaylayarak, {{agency.legalName}}'nin yukarıda belirtilen pazarlama faaliyetleri kapsamında benimle iletişime geçmesine izin vermiş oluyorsunuz. İzniniz olmadan tarafınıza herhangi bir ticari elektronik ileti gönderilmeyecektir. Yukarıdaki yöntemlerle bize ulaşarak gelecekte dilediğiniz zaman ileti tercihlerinizi güncelleyebilir veya tamamen iptal edebilirsiniz.",
+      lastUpdated: "2025-04-29"
+    },
+    cookiePolicy: {
+      title: "Çerez Politikası",
+      content: "## Çerez Politikası\n\nAşağıda web sitemizde kullandığımız çerezlerin türleri, amaçları ve yönetim yöntemleri detaylı olarak açıklanmıştır.\n\n### Çerez Nedir?\nÇerez (cookie), bir web sitesinin kullanıcı cihazına yerleştirdiği küçük metin dosyasıdır; oturum bilgileri, kullanıcı tercihleri ve kimlik doğrulama verilerini saklayabilir.\n\n### Çerez Türleri\n#### Oturum Çerezleri\n- Tarayıcı kapatıldığında silinen geçici çerezlerdir.\n- Çok sayfalı formlarda bilgi bütünlüğünü sağlar.\n\n#### Kalıcı Çerezler\n- Belirli bir süreden sonra silinen veya manuel silinene kadar kalan çerezlerdir.\n- Dil tercihleri ve tema ayarları gibi kullanıcı tercihlerini hatırlar.\n\n#### Birinci Taraf ve Üçüncü Taraf Çerezleri\n- **Birinci Taraf:** Site sahibi tarafından yerleştirilir.\n- **Üçüncü Taraf:** Reklam ve analiz amaçlı, harici hizmet sağlayıcılar tarafından yerleştirilir.\n\n### Çerez Kullanım Amaçları\n#### Zorunlu Çerezler\n- Site güvenliği, kimlik doğrulama ve temel işlevler için zorunludur.\n\n#### İşlevsel Çerezler\n- Kullanıcı deneyimini iyileştirmek için tercihleri saklar.\n\n#### Performans ve Analiz Çerezleri\n- Site trafiğini izler, Google Analytics gibi araçlarla veri toplar.\n\n#### Reklam ve Pazarlama Çerezleri\n- İlgi alanınıza göre reklam özelleştirmesi ve yeniden pazarlama sağlar.\n\n### Tarayıcı Ayarlarıyla Çerez Yönetimi\nTarayıcı ayarlarından çerez izinlerini kabul etme, reddetme veya silme seçenekleri yönetilebilir.\n\n### Üçüncü Taraf Hizmetler\nGoogle Analytics, Facebook Pixel, YouTube ve LinkedIn Insights gibi üçüncü taraf çerezleri kullanabilir.\n\n### Politika Güncellemeleri\nBu politika, mevzuat ve teknoloji değişiklikleri doğrultusunda güncellenebilir.",
+      lastUpdated: "2025-04-29"
+    }
+  },
+  footer: {
+    copyright: "2025 NASYON SİGORTA ARACILIK HİZMETLERİ LİMİTED ŞİRKETİ. Tüm hakları saklıdır.",
+    navLinks: [
+      {
+        title: "Hakkımızda",
+        link: "/hakkimizda"
+      },
+      {
+        title: "Ürünler",
+        link: "/urunler"
+      },
+      {
+        title: "İletişim",
+        link: "/iletisim"
+      },
+      {
+        title: "KVKK Aydınlatma Metni",
+        link: "/kvkk"
+      },
+      {
+        title: "Açık Rıza Metni",
+        link: "/acik-riza-metni"
+      },
+      {
+        title: "Ticari İleti Metni",
+        link: "/ticari-elektronik-ileti-izni"
+      },
+      {
+        title: "Çerez Politikası",
+        link: "/cerez-politikasi"
+      }
+    ],
+    showPartnerLogos: true,
+    showSocialMedia: true
+  }
+};

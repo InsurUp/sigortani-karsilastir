@@ -75,8 +75,8 @@ export default function SeyahatQuotePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 form-background">
-        <div className="flex min-h-screen items-center justify-center pb-8">
+      <div className="min-h-screen bg-gray-50 form-background pt-20">
+        <div className="flex  items-center justify-center pb-8">
           <Container maxWidth="lg">
             <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
               {isMobile ? (

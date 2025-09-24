@@ -10,12 +10,7 @@ const footerSections = [
       { href: "/iletisim", label: "İletişim" },
       { href: "/blog", label: "Blog" },
       { href: "/sss", label: "SSS" },
-      { href: "/kasko-deger-hesaplama", label: "Kasko Değer Hesaplama" },
-      { href: "/otv-kdv-hesaplama", label: "ÖTV ve KDV Hesaplama" },
-      { href: "/mtv-hesaplama", label: "MTV Hesaplama" },
-      { href: "/arac-yakit-tuketimi-hesaplama", label: "Araç Yakıt Tüketimi Hesaplama" },
-      { href: "/dask-adres-kodu-sorgulama", label: "DASK Adres Kodu Sorgulama" },
-      { href: "/kampanyalar", label: "Kampanyalar" },
+      // { href: "/kampanyalar", label: "Kampanyalar" },
       { href: "/police-hasar", label: "Poliçe ve Hasar" },
     ]
   },
@@ -23,11 +18,11 @@ const footerSections = [
     title: "Ürünler",
     isProducts: true,
     column1: [
-      { href: "/urunler/kasko-sigortasi", label: "Kasko" },
-      { href: "/urunler/trafik-sigortasi", label: "Trafik" },
-      { href: "/urunler/imm-sigortasi", label: "İMM" },
-      { href: "/urunler/zorunlu-deprem-sigortasi", label: "DASK" },
-      { href: "/urunler/konut-sigortasi", label: "Konut" },
+      { href: "/urunler/kasko", label: "Kasko" },
+      { href: "/urunler/trafik", label: "Trafik" },
+      { href: "/urunler/imm", label: "İMM" },
+      { href: "/urunler/dask", label: "DASK" },
+      { href: "/urunler/konut", label: "Konut" },
     ],
     column2: [
       { href: "/urunler/tamamlayici-saglik-sigortasi", label: "TSS" },
@@ -156,7 +151,7 @@ const Footer: React.FC = () => {
       {/* Alt Kısım */}
       <div className="mt-12 bg-black text-center">
         <p className="text-white text-[15px] py-8">
-          © 2025 Starkgen. Tüm hakları saklıdır.
+          © 2025 Sigortanı Karşılaştır. Tüm hakları saklıdır.
         </p>
       </div>
     </footer>

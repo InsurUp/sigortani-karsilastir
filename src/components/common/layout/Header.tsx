@@ -23,7 +23,7 @@ function Header() {
     { name: 'Ürünler', type: 'dropdown' },
     { name: 'Poliçe ve Hasar', href: '/police-hasar' },
     { name: 'Bilgi Merkezi', type: 'dropdown' },
-    { name: 'Kampanyalar', href: '/kampanyalar' },
+    // { name: 'Kampanyalar', href: '/kampanyalar' },
   ]
 
   const bilgiMerkeziItems = [

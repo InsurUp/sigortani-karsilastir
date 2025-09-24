@@ -5,17 +5,54 @@ import TextField from '@mui/material/TextField'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Button from '@mui/material/Button'
+import { ProductData } from '@/data/products'
 
-function Banner() {
+interface BannerProps {
+  productData?: ProductData
+}
+
+function Banner({ productData }: BannerProps) {
+    // Varsayılan değerler
+    const defaultData = {
+        icon: "/images/product/icon/kasko.svg",
+        title: "Kasko Sigortası Teklifi Al!",
+        description: "Kasko sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.",
+        bgImage: "/images/product/banner/kasko_bg.webp"
+    }
+
+    // Ürün verilerinden dinamik değerleri al
+    const icon = productData?.slug === 'kasko' ? "/images/product/icon/kasko.svg" : 
+                 productData?.slug === 'trafik' ? "/images/product/icon/trafik.svg" :
+                 productData?.slug === 'dask' ? "/images/product/icon/dask.svg" :
+                 productData?.slug === 'konut' ? "/images/product/icon/konut.svg" :
+                 productData?.slug === 'imm' ? "/images/product/icon/imm.svg" :
+                 productData?.slug === 'saglik' ? "/images/product/icon/saglik.svg" :
+                 defaultData.icon
+
+    const title = productData?.banner?.title || defaultData.title
+    const description = productData?.banner?.description || defaultData.description
+    const bgImage = productData?.slug === 'kasko' ? "/images/product/banner/kasko_bg.webp" :
+                    productData?.slug === 'trafik' ? "/images/product/banner/trafik_bg.webp" :
+                    productData?.slug === 'dask' ? "/images/product/banner/dask_bg.webp" :
+                    productData?.slug === 'konut' ? "/images/product/banner/konut_bg.webp" :
+                    productData?.slug === 'imm' ? "/images/product/banner/imm_bg.webp" :
+                    productData?.slug === 'saglik' ? "/images/product/banner/saglik_bg.webp" :
+                    defaultData.bgImage
+
     return (
-        <section className='relative md:py-[100px] py-[50px] bg-[#D9EDFA] before:content-[""] before:absolute before:inset-0 before:z-0 before:bg-[url("/images/product/banner/kasko_bg.webp")] before:bg-cover before:bg-center before:pointer-events-none'>
+        <section 
+            className='relative md:py-[100px] py-[50px] bg-[#D9EDFA] before:content-[""] before:absolute before:inset-0 before:z-0 before:bg-cover before:bg-center before:pointer-events-none'
+            style={{
+                backgroundImage: `url("${bgImage}")`
+            }}
+        >
             <div className='container relative z-[1]'>
                 <div className='grid lg:grid-cols-5 gap-10 bg-white rounded-lg sm:px-10 px-5 sm:py-[40px] py-[25px]'>
                     <div className='lg:col-span-2'>
-                        <Image src="/images/product/icon/kasko.svg" width={85} height={85} className='object-contain' alt='banner' />
-                        <h1 className='text-3xl font-bold my-4'>Kasko Sigortası Teklifi Al!</h1>
+                        <Image src={icon} width={85} height={85} className='object-contain' alt='banner' />
+                        <h1 className='text-3xl font-bold my-4'>{title}</h1>
                         <p className='text-sm text-[#223140]'>
-                            Kasko sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.
+                            {description}
                         </p>
                     </div>
                     <div className='lg:col-span-3'>
