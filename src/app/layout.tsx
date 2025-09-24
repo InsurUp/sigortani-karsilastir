@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 
 import "./globals.css";
 import { Header, Footer } from "@/components/common";
@@ -44,7 +45,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} ${plusJakartaSans.variable} antialiased`}
       >
         {/* Insur Chatbot Widget */}
-        <script src="https://insurai.test.onlyjs.com/chatbot/chatbot-widget.js"></script>
+        <Script src="https://insurai.test.onlyjs.com/chatbot/chatbot-widget.js" strategy="afterInteractive" />
         <insur-chatbot-widget></insur-chatbot-widget>
         {/* End Insur Chatbot Widget */}
         <Header />

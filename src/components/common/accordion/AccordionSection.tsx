@@ -4,9 +4,9 @@ import { sssData } from "@/data/sss";
 
 const AccordionSection = () => {
     return (
-        <section style={{ background: "#EFF7FC", padding: "45px 0" }}>
-            <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 16px" }}>
-                <h2 style={{ fontSize: 48, fontWeight: 700, marginBottom: 40, textAlign: "center" }}>
+        <section className="py-20 bg-[#EFF7FC]">
+            <div className="container max-w-[900px]">
+                <h2 className="text-3xl md:text-4xl font-bold text-[#0D0D0D] mb-12 text-center">
                     Sıkça Sorulan Sorular
                 </h2>
                 <CustomAccordion items={sssData} />

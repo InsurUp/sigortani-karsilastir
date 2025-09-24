@@ -107,7 +107,6 @@ export const useAuthStore = create<AuthState>()(
         });
         get().startSessionTimer();
       },
-      
       logout: () => {
         get().clearSessionTimers();
         set({ 

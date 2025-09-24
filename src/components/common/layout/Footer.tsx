@@ -2,22 +2,49 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-const footerLinks = [
-  [
-    { href: "/hakkimizda", label: "Hakkımızda" },
-    { href: "/sss", label: "Sıkça Sorulan Sorular" },
-    { href: "/blog", label: "Blog" },
-  ],
-  [
-    { href: "/urunler/kasko", label: "Kasko Sigortası" },
-    { href: "/urunler/trafik", label: "Trafik Sigortası" },
-    { href: "/urunler/dask", label: "DASK" },
-  ],
-  [
-    { href: "/iletisim", label: "İletişim" },
-    { href: "/gizlilik-sozlesmesi", label: "Gizlilik Politikası" },
-    { href: "/mesafeli-satis-sozlesmesi", label: "Kullanım Şartları" },
-  ],
+const footerSections = [
+  {
+    title: "Bilgi Merkezi",
+    links: [
+      { href: "/hakkimizda", label: "Hakkımızda" },
+      { href: "/iletisim", label: "İletişim" },
+      { href: "/blog", label: "Blog" },
+      { href: "/sss", label: "SSS" },
+      { href: "/kasko-deger-hesaplama", label: "Kasko Değer Hesaplama" },
+      { href: "/otv-kdv-hesaplama", label: "ÖTV ve KDV Hesaplama" },
+      { href: "/mtv-hesaplama", label: "MTV Hesaplama" },
+      { href: "/arac-yakit-tuketimi-hesaplama", label: "Araç Yakıt Tüketimi Hesaplama" },
+      { href: "/dask-adres-kodu-sorgulama", label: "DASK Adres Kodu Sorgulama" },
+      { href: "/kampanyalar", label: "Kampanyalar" },
+      { href: "/police-hasar", label: "Poliçe ve Hasar" },
+    ]
+  },
+  {
+    title: "Ürünler",
+    isProducts: true,
+    column1: [
+      { href: "/urunler/kasko-sigortasi", label: "Kasko" },
+      { href: "/urunler/trafik-sigortasi", label: "Trafik" },
+      { href: "/urunler/imm-sigortasi", label: "İMM" },
+      { href: "/urunler/zorunlu-deprem-sigortasi", label: "DASK" },
+      { href: "/urunler/konut-sigortasi", label: "Konut" },
+    ],
+    column2: [
+      { href: "/urunler/tamamlayici-saglik-sigortasi", label: "TSS" },
+      { href: "/urunler/ozel-saglik", label: "Özel Sağlık" },
+      { href: "/urunler/seyahat-saglik", label: "Seyahat Sağlık" },
+      { href: "/urunler/cep-telefonu", label: "Cep Telefonu" },
+    ]
+  },
+  {
+    title: "Kurumsal",
+    links: [
+      { href: "/gizlilik-sozlesmesi", label: "Gizlilik Politikası" },
+      { href: "/mesafeli-satis-sozlesmesi", label: "Kullanım Şartları" },
+      { href: "/cerez-politikasi", label: "Çerez Politikası" },
+      { href: "/kvkk-aydinlatma", label: "KVKK Aydınlatma Metni" },
+    ]
+  },
 ];
 
 const Footer: React.FC = () => {
@@ -52,20 +79,75 @@ const Footer: React.FC = () => {
                 <i className="fa-brands fa-facebook"></i>
               </a>
             </div>
+            {/* Güven Rozetleri */}
+            <div className="flex flex-row gap-4 items-center mt-4">
+              <Image
+                src="/images/footer/trgo.png"
+                alt="TRGO"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+              <Image
+                src="/images/footer/shield.png"
+                alt="Shield"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+              <Image
+                src="/images/footer/etbis.png"
+                alt="ETBİS"
+                width={80}
+                height={42}
+                className="object-contain"
+              />
+            </div>
           </div>
+          
           {/* Sağ Kolon */}
-          <div className="flex flex-1 justify-end md:gap-20 gap-8">
-            {footerLinks.map((col, i) => (
+          <div className="flex flex-1 justify-end md:gap-12 gap-6">
+            {footerSections.map((section, i) => (
               <div key={i} className="flex flex-col">
-                {col.map((link, j) => (
-                  <Link
-                    key={j}
-                    href={link.href}
-                    className="text-black text-[16px] mb-5 last:mb-0 hover:underline transition-all"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                <h3 className="text-black text-[18px] font-bold mb-4">
+                  {section.title}
+                </h3>
+                {section.isProducts ? (
+                  <div className="flex gap-8">
+                    <div className="flex flex-col">
+                      {section.column1.map((link, j) => (
+                        <Link
+                          key={j}
+                          href={link.href}
+                          className="text-black text-[16px] mb-3 last:mb-0 hover:underline transition-all"
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="flex flex-col">
+                      {section.column2.map((link, j) => (
+                        <Link
+                          key={j}
+                          href={link.href}
+                          className="text-black text-[16px] mb-3 last:mb-0 hover:underline transition-all"
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  section.links.map((link, j) => (
+                    <Link
+                      key={j}
+                      href={link.href}
+                      className="text-black text-[16px] mb-3 last:mb-0 hover:underline transition-all"
+                    >
+                      {link.label}
+                    </Link>
+                  ))
+                )}
               </div>
             ))}
           </div>

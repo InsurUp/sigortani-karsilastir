@@ -15,13 +15,13 @@ const AllBrands = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
           {allBrands.map((brand) => (
             <div
               key={brand.id}
-              className="group bg-white rounded-lg p-8 hover:shadow-lg transition-all duration-300 cursor-pointer"
+              className="group bg-white rounded-lg p-4 hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
-              <div className="flex flex-col items-center justify-center h-24">
+              <div className="flex flex-col items-center justify-center h-20">
                 <Image
                   src={brand.logo}
                   alt={brand.alt}

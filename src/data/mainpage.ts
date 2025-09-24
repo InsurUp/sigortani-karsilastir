@@ -12,35 +12,35 @@ export const heroCards: HeroCard[] = [
     title: "Kasko",
     image: "/images/product/icon/kasko.svg",
     alt: "Kasko Sigortası",
-    link: "/kasko-teklif"
+    link: "/urunler/kasko-sigortasi/teklif"
   },
   {
     id: 2,
     title: "Tamamlayıcı Sağlık",
     image: "/images/product/icon/tss.svg",
     alt: "Tamamlayıcı Sağlık Sigortası",
-    link: "/tss-teklif"
+    link: "/urunler/tamamlayici-saglik-sigortasi/teklif"
   },
   {
     id: 3,
     title: "Trafik",
     image: "/images/product/icon/traffic.svg",
     alt: "Trafik Sigortası",
-    link: "/trafik-teklif"
+    link: "/urunler/trafik-sigortasi/teklif"
   },
   {
     id: 4,
     title: "Konut",
     image: "/images/product/icon/konut.svg",
     alt: "Konut Sigortası",
-    link: "/konut-teklif"
+    link: "/urunler/konut-sigortasi/teklif"
   },
   {
     id: 5,
     title: "İMM",
     image: "/images/product/icon/imm.svg",
     alt: "İMM Sigortası",
-    link: "/imm-teklif"
+    link: "/urunler/imm-sigortasi/teklif"
   },
   {
     id: 6,
@@ -54,22 +54,8 @@ export const heroCards: HeroCard[] = [
     title: "DASK",
     image: "/images/product/icon/dask.svg",
     alt: "DASK Sigortası",
-    link: "/dask-teklif"
-  },
-  {
-    id: 8,
-    title: "Özel Sağlık",
-    image: "/images/product/icon/ozs.svg",
-    alt: "Özel Sağlık Sigortası",
-    link: "/ozel-saglik-teklif"
-  },  {
-    id: 10,
-    title: "Cep Telefonu",
-    image: "/images/product/icon/mobile-phone.png",
-    alt: "Cep Telefonu Sigortası",
-    link: "/cep-telefonu-teklif"
+    link: "/urunler/zorunlu-deprem-sigortasi/teklif"
   }
-  
 ];
 
 export interface Brand {

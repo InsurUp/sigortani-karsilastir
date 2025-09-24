@@ -10,9 +10,9 @@ const BlogGrid: React.FC = () => {
         .slice(0, 3);
 
     return (
-        <section className="py-15">
-            <div className="container mx-auto">
-                <h2 className="text-5xl font-bold mb-6 text-center">Bloglar</h2>
+        <section className="py-20 bg-white">
+            <div className="container max-w-[1200px]">
+                <h2 className="text-3xl md:text-4xl font-bold text-[#0D0D0D] mb-12 text-center">Bloglar</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {latestBlogs.map((blog) => (
                         <Link key={blog.id} href={`/blog/${blog.id}`} className="block h-full">
