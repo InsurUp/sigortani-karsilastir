@@ -31,6 +31,11 @@ function Header() {
     { name: 'İletişim', href: '/iletisim' },
     { name: 'Blog', href: '/blog' },
     { name: 'SSS', href: '/sss' },
+    { name: 'Kasko Değer Hesaplama', href: '/kasko-deger-hesaplama' },
+    { name: 'ÖTV ve KDV Hesaplama', href: '/otv-kdv-hesaplama' },
+    { name: 'MTV Hesaplama', href: '/mtv-hesaplama' },
+    { name: 'Araç Yakıt Tüketimi Hesaplama', href: '/arac-yakit-tuketimi-hesaplama' },
+    { name: 'DASK Adres Kodu Sorgulama', href: '/dask-adres-kodu-sorgulama' },
   ]
 
   const productCategories = [
@@ -38,33 +43,25 @@ function Header() {
       title: 'Aracım',
       icon: '/images/product/icon/kasko.svg',
       items: [
-        { name: 'Kasko', href: '/urunler/kasko' },
-        { name: 'Trafik', href: '/urunler/trafik' },
-        { name: 'İMM', href: '/urunler/imm' },
+        { name: 'Kasko', href: '/urunler/kasko-sigortasi' },
+        { name: 'Trafik', href: '/urunler/trafik-sigortasi' },
+        { name: 'İMM', href: '/urunler/imm-sigortasi' },
       ]
     },
     {
       title: 'Evim',
       icon: '/images/product/icon/konut.svg',
       items: [
-        { name: 'Konut', href: '/urunler/konut' },
-        { name: 'DASK', href: '/urunler/dask' },
+        { name: 'Konut', href: '/urunler/konut-sigortasi' },
+        { name: 'DASK', href: '/urunler/zorunlu-deprem-sigortasi' },
       ]
     },
     {
       title: 'Sağlığım',
       icon: '/images/product/icon/tss.svg',
       items: [
-        { name: 'Özel Sağlık', href: '/urunler/ozel-saglik' },
-        { name: 'Tamamlayıcı Sağlık', href: '/urunler/tamamlayici-saglik' },
+        { name: 'Tamamlayıcı Sağlık', href: '/urunler/tamamlayici-saglik-sigortasi' },
         { name: 'Seyahat Sağlık', href: '/urunler/seyahat-saglik' },
-      ]
-    },
-    {
-      title: 'Diğer',
-      icon: '/images/product/icon/telefon.svg',
-      items: [
-        { name: 'Cep Telefonu', href: '/urunler/cep-telefonu' },
       ]
     }
   ]
@@ -129,7 +126,8 @@ function Header() {
                         <div className="absolute top-full left-0 pt-2 z-[99999]">
                           <div className="w-96 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
                           <div className="grid grid-cols-2 gap-4">
-                            {productCategories.map((category) => (
+                            {/* Aracım ve Evim kategorileri */}
+                            {productCategories.slice(0, 2).map((category) => (
                               <div key={category.title} className="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition-colors">
                                 <div className="flex items-center justify-between mb-3">
                                   <h3 className="text-sm font-bold text-gray-800">{category.title}</h3>
@@ -149,6 +147,39 @@ function Header() {
                                 </ul>
                               </div>
                             ))}
+                            {/* Sağlığım kategorisi - 2 sütun genişliğinde */}
+                            <div className="col-span-2 border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                              <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-bold text-gray-800">{productCategories[2].title}</h3>
+                                <Image src={productCategories[2].icon} alt={productCategories[2].title} width={24} height={24} className="w-6 h-6" />
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <ul className="space-y-2">
+                                  {productCategories[2].items.slice(0, Math.ceil(productCategories[2].items.length / 2)).map((product) => (
+                                    <li key={product.name}>
+                                      <Link
+                                        href={product.href}
+                                        className="block px-2 py-1 text-sm font-medium text-black hover:text-secondary transition-colors duration-200"
+                                      >
+                                        {product.name}
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
+                                <ul className="space-y-2">
+                                  {productCategories[2].items.slice(Math.ceil(productCategories[2].items.length / 2)).map((product) => (
+                                    <li key={product.name}>
+                                      <Link
+                                        href={product.href}
+                                        className="block px-2 py-1 text-sm font-medium text-black hover:text-secondary transition-colors duration-200"
+                                      >
+                                        {product.name}
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
                           </div>
                           </div>
                         </div>
@@ -156,7 +187,7 @@ function Header() {
 
                       {item.name === 'Bilgi Merkezi' && isBilgiMerkeziDropdownOpen && (
                         <div className="absolute top-full left-0 pt-2 z-[99999]">
-                          <div className="w-48 bg-white border border-gray-200 rounded-lg shadow-lg">
+                          <div className="bg-white border border-gray-200 rounded-lg shadow-lg" style={{ width: '240px' }}>
                             <ul className="py-2">
                             {bilgiMerkeziItems.map((dropItem) => (
                               <li key={dropItem.name}>

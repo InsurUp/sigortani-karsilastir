@@ -21,10 +21,13 @@ function InsuranceCompanies() {
           {allBrands.map((brand) => (
             <div
               key={brand.id}
-              className="group border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer bg-white hover:border-gray-300"
+              className={`group border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300 bg-white hover:border-gray-300 ${
+                brand.serviceLink ? 'cursor-pointer' : 'cursor-default opacity-60'
+              }`}
               onClick={() => {
-                // Boş link - ileride doldurulacak
-                console.log(`Clicked on ${brand.name}`);
+                if (brand.serviceLink) {
+                  window.open(brand.serviceLink, '_blank', 'noopener,noreferrer');
+                }
               }}
             >
               <div className="flex items-center justify-center h-16">
@@ -33,7 +36,9 @@ function InsuranceCompanies() {
                   alt={brand.alt}
                   width={120}
                   height={60}
-                  className="object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300"
+                  className={`object-contain filter transition-all duration-300 ${
+                    brand.serviceLink ? 'grayscale group-hover:grayscale-0' : 'grayscale'
+                  }`}
                 />
               </div>
             </div>
