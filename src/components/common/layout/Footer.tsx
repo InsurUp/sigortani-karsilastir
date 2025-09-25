@@ -37,7 +37,7 @@ const footerSections = [
       { href: "/gizlilik-sozlesmesi", label: "Gizlilik Politikası" },
       { href: "/mesafeli-satis-sozlesmesi", label: "Kullanım Şartları" },
       { href: "/cerez-politikasi", label: "Çerez Politikası" },
-      { href: "/kvkk-aydinlatma", label: "KVKK Aydınlatma Metni" },
+      { href: "/kvkk", label: "KVKK Aydınlatma Metni" },
     ]
   },
 ];
