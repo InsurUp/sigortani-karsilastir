@@ -474,10 +474,15 @@ export default function QuoteComparisonStep({
                 );
 
                 // Kullanıcıya sadece ACTIVE filtrelenmiş quotes'ları göster (immediate display)
-                setQuotes(sortQuotes(filteredQuotes));
-                setBestOffers(getBestOffers(filteredQuotes));
-
-                // Loading kontrolü için WAITING quotes'ları kontrol et
+        setQuotes(sortQuotes(filteredQuotes));
+        setBestOffers(getBestOffers(filteredQuotes));
+        
+        // İlk teklif geldiğinde loading modal'ı bilgilendir
+        if (filteredQuotes.length > 0) {
+          setFirstQuoteReceived();
+        }
+        
+        // Loading kontrolü için WAITING quotes'ları kontrol et
                 const relevantWaitingQuotes = processedQuotes.filter(q => 
                     allowedProductIds.includes(q.productId) && q.state === 'WAITING'
                 );
@@ -522,10 +527,11 @@ export default function QuoteComparisonStep({
                         });
                     }
 
-                    if (pollInterval) {
-                        clearInterval(pollInterval);
-                    }
-                    setIsLoading(false);
+          if (pollInterval) {
+            clearInterval(pollInterval);
+          }
+          setIsLoading(false);
+          setIsPollingActive(false);
                     return;
                 }
 
@@ -936,7 +942,7 @@ export default function QuoteComparisonStep({
                         fontWeight: 'medium',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         zIndex: 1,
-                        backgroundColor: '#ff9315',
+                        backgroundColor: '#ef2027',
                         color: 'white',
                         '& .MuiChip-label': {
                           color: 'white'

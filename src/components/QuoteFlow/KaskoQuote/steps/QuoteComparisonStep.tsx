@@ -45,6 +45,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import { API_ENDPOINTS } from '@/config/api';
 import QuoteComparisonModal, { QuoteForComparison } from '@/components/common/QuoteComparisonModal';
+import { useLoadingStore } from '@/store/loadingStore';
+import { LoadingScreen } from '@/components/common/loader';
 
 // DataLayer helper functions
 declare global {
@@ -543,6 +545,10 @@ export default function QuoteComparisonStep({
   const router = useRouter();
   const [proposalId, setProposalId] = useState<string | null>(initialProposalId || null);
   const [bestOffers, setBestOffers] = useState<ProcessedQuote[]>([]);
+  const [isPollingActive, setIsPollingActive] = useState(true);
+  const [shouldCompleteLoading, setShouldCompleteLoading] = useState(false);
+  const [hasStoppedGlobalLoading, setHasStoppedGlobalLoading] = useState(false);
+  const { isLoading: globalIsLoading, setFirstQuoteReceived, stopLoading: stopGlobalLoading } = useLoadingStore();
 
   // URL'deki proposalId öncelikli olmalı, localStorage sadece fallback
   const proposalIdToUse = initialProposalId || (params?.proposalId as string | undefined) || proposalId || localStorage.getItem('proposalIdForKasko');
@@ -568,6 +574,15 @@ export default function QuoteComparisonStep({
 
     return 'FULL_ACCESS'; // Varsayılan mod
   };
+
+  // ProposalId değiştiğinde loading state'lerini reset et
+  useEffect(() => {
+    if (proposalId) {
+      setIsLoading(true);
+      setShouldCompleteLoading(false);
+      setHasStoppedGlobalLoading(false);
+    }
+  }, [proposalId]);
 
   useEffect(() => {
     // URL'den gelen proposalId öncelikli
@@ -931,6 +946,18 @@ export default function QuoteComparisonStep({
         setQuotes(sortQuotes(filteredQuotes));
         setBestOffers(getBestOffers(filteredQuotes));
         
+        // İlk teklif geldiğinde loading modal'ı bilgilendir
+        if (filteredQuotes.length > 0 && !hasStoppedGlobalLoading) {
+          setFirstQuoteReceived();
+          setShouldCompleteLoading(true);
+          setHasStoppedGlobalLoading(true);
+          
+          // 4.3 saniye sonra global loading'i durdur (4s completion + 300ms wait)
+          setTimeout(() => {
+            stopGlobalLoading();
+          }, 4300);
+        }
+        
         // Loading kontrolü için WAITING quotes'ları kontrol et
         const relevantWaitingQuotes = processedQuotes.filter(q => 
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
@@ -989,6 +1016,8 @@ export default function QuoteComparisonStep({
             clearInterval(pollInterval);
           }
           setIsLoading(false);
+          setIsPollingActive(false);
+          stopGlobalLoading(); // Global loading'i durdur
           return;
         }
 
@@ -1213,6 +1242,18 @@ export default function QuoteComparisonStep({
     }
   };
 
+  // Loading durumunda SADECE loading göster, hiçbir içerik gösterme
+  if (isLoading || globalIsLoading) {
+    return (
+      <LoadingScreen
+        key={proposalId || 'loading'}
+        productType="kasko"
+        duration={60}
+        shouldComplete={shouldCompleteLoading}
+      />
+    );
+  }
+
   return (
     <>
       <Box sx={{ mb: 4 }}>
@@ -1289,26 +1330,7 @@ export default function QuoteComparisonStep({
         </Alert>
       )}
 
-      {isLoading ? (
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          my: 8,
-          gap: 3
-        }}>
-          <CircularProgress size={48} thickness={4} />
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="medium" gutterBottom>
-              Teklifler Hazırlanıyor
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Anlaşmalı şirketlerimizden size özel teklifler alınıyor...
-            </Typography>
-          </Box>
-        </Box>
-      ) : quotes.length === 0 ? (
+      {quotes.length === 0 ? (
         <Alert 
           severity="info" 
           sx={{ 
@@ -1389,7 +1411,7 @@ export default function QuoteComparisonStep({
                         fontWeight: 'medium',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         zIndex: 1,
-                        backgroundColor: '#ff9315',
+                        backgroundColor: '#ef2027',
                         color: 'white',
                         '& .MuiChip-label': {
                           color: 'white'
@@ -1777,7 +1799,7 @@ export default function QuoteComparisonStep({
                               size="small"
                               variant="outlined"
                               sx={{
-                                backgroundColor: '#ff9315',
+                                backgroundColor: '#ef2027',
                                 color: 'white',
                                 '& .MuiChip-label': {
                                   color: 'white',

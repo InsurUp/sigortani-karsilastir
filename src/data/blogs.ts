@@ -62,8 +62,8 @@ export const blogs: Blog[] = [
     title: "2. El Araç Alım Satımında Trafik Sigortası ve Noter Süreci: 2025 Rehberi",
     href: "/blog/2-el-arac-alim-satiminda-trafik-sigortasi-noter-sureci",
     desc: "İkinci el araç alım satımında noter işlemleri ve zorunlu trafik sigortası süreçleri. 2025 yılındaki yeni düzenlemeler ve dikkat edilmesi gerekenler...",
-    image: "/images/blog-gorsel.png",
-    detail_image: "/images/blog/blog-detail.png",
+    image: "/images/blog/ikinci-el-arac-alim-satim.png",
+    detail_image: "/images/blog/ikinci-el-arac-alim-satim.png",
     content: "İkinci el araç alım satımı, hem alıcı hem de satıcı için dikkatli planlama gerektiren bir süreçtir. Noter işlemleri ve zorunlu trafik sigortası, bu sürecin en kritik adımlarıdır. Özellikle 5 Aralık 2024 tarihinde yürürlüğe giren yeni düzenlemeler, trafik sigortası süreçlerini değiştirdi.",
     fullContent: [
       {
@@ -331,8 +331,8 @@ export const blogs: Blog[] = [
     title: "2025 Türkiye Trafik Cezaları: Bilmeniz Gerekenler ve Güvenli Sürüş İpuçları",
     href: "/blog/2025-turkiye-trafik-cezalari-bilmeniz-gerekenler",
     desc: "2025 yılında Türkiye'de trafik cezaları, güncel ceza miktarları ve güvenli sürüş ipuçları. Trafik sigortası ve kasko önerileri...",
-    image: "/images/blog-gorsel.png",
-    detail_image: "/images/blog/blog-detail.png",
+    image: "/images/blog/turkiye-trafik-cezalari.png",
+    detail_image: "/images/blog/turkiye-trafik-cezalari.png",
     content: "Trafik kuralları, hem sürücülerin hem de yayaların güvenliğini sağlamak için hayati öneme sahiptir. Ancak, bu kurallara uyulmadığında trafik cezaları kaçınılmaz olabilir. 2025 yılında Türkiye'de trafik cezaları, Hazine ve Maliye Bakanlığı tarafından belirlenen %43,93 yeniden değerleme oranı doğrultusunda güncellendi.",
     fullContent: [
       {
@@ -534,8 +534,8 @@ export const blogs: Blog[] = [
     title: "2025 Trafik Sigortası Rehberi: Teminatlar, İndirimler ve Akıllı Karar Verme",
     href: "/blog/2025-trafik-sigortasi-rehberi-teminatlar-indirimler",
     desc: "2025 yılında trafik sigortası teminatları, hasarsızlık indirimleri ve sürprim oranları. En uygun trafik sigortası nasıl bulunur?",
-    image: "/images/blog-gorsel.png",
-    detail_image: "/images/blog/blog-detail.png",
+    image: "/images/blog/trafik-sigortasi-rehberi.png",
+    detail_image: "/images/blog/trafik-sigortasi-rehberi.png",
     content: "Trafik sigortası, Karayolları Motorlu Araçlar Zorunlu Mali Sorumluluk Sigortası'nın kısa adıdır. Sürücülerin, kazaya karıştıklarında karşı tarafa verdikleri maddi, bedeni ve manevi zararları poliçe kapsamındaki teminatlar dahilinde karşılar.",
     fullContent: [
       {
@@ -705,8 +705,8 @@ export const blogs: Blog[] = [
     title: "Çocuk Sağlık Sigortası Nedir? 2025 Rehberi",
     href: "/blog/cocuk-saglik-sigortasi-nedir-2025-rehberi",
     desc: "Çocuk sağlık sigortası nedir, nasıl yaptırılır? 0-18 yaş arası çocuklar için sağlık sigortası çeşitleri, fiyatları ve avantajları...",
-    image: "/images/blog-gorsel.png",
-    detail_image: "/images/blog/blog-detail.png",
+    image: "/images/blog/cocuk-saglik.png",
+    detail_image: "/images/blog/cocuk-saglik.png",
     content: "Çocuklarının sağlığı, her ebeveyn için önceliklidir. Ancak, artan sağlık hizmeti maliyetleri ve devlet hastanelerindeki yoğunluk, kaliteli sağlık hizmetine erişimi zorlaştırabilir. Çocuk sağlık sigortası, çocuğunuzun rutin kontrollerini, testlerini ve tedavi masraflarını karşılayarak bu yükü hafifletir.",
     fullContent: [
       {
@@ -946,8 +946,8 @@ export const blogs: Blog[] = [
     title: "Engelli Raporu ile Araç Alımı ve Şartları: 2025 Rehberi",
     href: "/blog/engelli-raporu-ile-arac-alimi-sartlari-2025-rehberi",
     desc: "Engelli raporu ile araç alımı şartları, ÖTV muafiyeti, gerekli belgeler ve noter süreci. 2025 yılında engelli bireyler için araç alım rehberi...",
-    image: "/images/blog-gorsel.png",
-    detail_image: "/images/blog/blog-detail.png",
+    image: "/images/blog/engelli-raporu.png",
+    detail_image: "/images/blog/engelli-raporu.png",
     content: "Engelli bireylerin yaşam kalitesini artırmak ve ulaşım ihtiyaçlarını kolaylaştırmak için Türkiye'de ÖTV (Özel Tüketim Vergisi) muafiyeti gibi önemli teşvikler sunuluyor. Engelli raporu ile araç alımı, bu teşviklerden yararlanarak daha uygun maliyetlerle araç sahibi olma imkanı sağlıyor.",
     fullContent: [
       {
@@ -1226,11 +1226,11 @@ export const blogs: Blog[] = [
   },
   {
     id: 6,
-    title: "🏠 Ev Eşya Sigortası: Evinizi ve Eşyalarınızı Güvence Altına Almanın Kolay Yolu",
+    title: "Ev Eşya Sigortası: Evinizi ve Eşyalarınızı Güvence Altına Almanın Kolay Yolu",
     href: "/blog/ev-esya-sigortasi-evinizi-esyalarinizi-guvence-altina-almanin-kolay-yolu",
     desc: "Ev eşya sigortası nedir, nasıl yapılır? Yangın, hırsızlık, su baskını gibi risklere karşı evinizdeki eşyalarınızı koruyun. En uygun ev eşya sigortası teklifleri...",
-    image: "/images/blog-gorsel.png",
-    detail_image: "/images/blog/blog-detail.png",
+    image: "/images/blog/ev-esya-sigortasi.png",
+    detail_image: "/images/blog/ev-esya-sigortasi.png",
     content: "Ev Eşya Sigortası; evinizde bulunan mobilya, elektronik cihazlar, beyaz eşyalar ve kişisel eşyaları; yangın, su baskını, hırsızlık gibi risklere karşı koruma altına alan bir sigorta türüdür. Bu sigorta, evin yapısal değil; taşınabilir eşyalarına odaklanır ve zarar durumunda maddi kayıpların karşılanmasına yardımcı olur.",
     fullContent: [
       {
@@ -1545,8 +1545,8 @@ export const blogs: Blog[] = [
     title: "Pert Kasko ve Ağır Hasarlı Araçlara Kasko Sigortası Hakkında Bilmeniz Gerekenler",
     href: "/blog/pert-kasko-agir-hasarli-araclara-kasko-sigortasi-hakkinda-bilmeniz-gerekenler",
     desc: "Pert kasko nedir, nasıl çalışır? Ağır hasarlı araçlara kasko yaptırılabilir mi? Pert kasko fiyatları ve teminatları hakkında detaylı bilgi...",
-    image: "/images/blog-gorsel.png",
-    detail_image: "/images/blog/blog-detail.png",
+    image: "/images/blog/pert-kasko.png",
+    detail_image: "/images/blog/pert-kasko.png",
     content: "Pert araç, bir kaza veya hasar sonucunda tamir maliyetinin aracın piyasa değerini aşması nedeniyle ekonomik olarak onarılması mümkün olmayan araçları ifade eder. Sigorta şirketleri, aracın hasar durumunu ve tamir masraflarını detaylı bir eksper raporu ile değerlendirerek \"pert\" kararını verir.",
     fullContent: [
       {
@@ -1793,8 +1793,8 @@ export const blogs: Blog[] = [
     title: "SGK'lılara Özel: Tamamlayıcı Sağlık Sigortası ile Özel Hastanede Ek Ücret Ödemeyin",
     href: "/blog/sgk-lilara-ozel-tamamlayici-saglik-sigortasi-ile-ozel-hastanede-ek-ucret-odemeyin",
     desc: "Tamamlayıcı Sağlık Sigortası nedir, kimler yaptırabilir? SGK'lılar için TSS avantajları, kapsamı ve fiyatları. Özel hastanede ek ücret ödemeden hizmet alın...",
-    image: "/images/blog-gorsel.png",
-    detail_image: "/images/blog/blog-detail.png",
+    image: "/images/blog/sgklilara-ozel.png",
+    detail_image: "/images/blog/sgklilara-ozel.png",
     content: "Tamamlayıcı Sağlık Sigortası (TSS), SGK güvencesi olan bireylerin özel hastanelerde fark ücreti ödemeden sağlık hizmeti alabilmesini sağlayan bir sağlık sigortası türüdür. SGK'nın karşılamadığı ya da sınırlı olarak karşıladığı özel hastane masraflarının farkını sigorta şirketi karşılar.",
     fullContent: [
       {

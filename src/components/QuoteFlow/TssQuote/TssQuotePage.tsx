@@ -21,7 +21,8 @@ import HealthInfoStep from './steps/HealthInfoStep';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import MobileStepper from '@/components/QuoteFlow/MobileStepper';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useAgencyConfig, getCoverageGroupIds } from '@/context/AgencyConfigProvider';
+import { useAgencyConfig } from '@/context/AgencyConfigProvider';
+import { getCoverageGroupIds } from '@/utils/insuranceCompanies';
 import '../../../styles/form-style.css';
 
 // Props tipleri (Geçici olarak buraya eklendi)

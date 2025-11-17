@@ -24,7 +24,8 @@ import { VehicleUtilizationStyle, VehicleFuelType } from '../../../../types/enum
 import { useRouter } from 'next/navigation';
 import { API_ENDPOINTS } from '@/config/api';
 import { fetchWithAuth } from '../../../../services/fetchWithAuth';
-import { useAgencyConfig, getCoverageGroupIds } from '../../../../context/AgencyConfigProvider';
+import { useAgencyConfig } from '../../../../context/AgencyConfigProvider';
+import { getCoverageGroupIds } from '@/utils/insuranceCompanies';
 import "../../../../styles/form-style.css"
 
 interface Vehicle {
@@ -516,7 +517,7 @@ export default function AssetInfoStep({
           plateNumber: v.plate ? `${v.plate.city || ''} ${v.plate.code || ''}`.trim() || 'Plakasız' : 'Plakasız',
           vehicleType: v.type || 'car',
           utilizationStyle: v.utilizationStyle || VehicleUtilizationStyle.Unknown,
-          fuelType: v.fuel?.type ? parseInt(v.fuel.type.toString(), 10) : VehicleFuelType.Diesel, 
+          fuelType: v.fuel?.type ? parseInt(v.fuel.type.toString(), 10) : VehicleFuelType.Gasoline, 
           engineNumber: v.engineNumber || '',
           chassisNumber: v.chassisNumber || '',
           documentSerial: v.documentSerial || { code: '', number: '' },
@@ -832,14 +833,20 @@ export default function AssetInfoStep({
       </Typography>
       <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 12px)' } }}>
         <Autocomplete
-          options={vehicleBrands
-            .filter(brand => brand.text !== 'İŞ MAKİNASI' && brand.text !== 'DİĞER')
-            .sort((a, b) => a.text.localeCompare(b.text, 'tr-TR'))
-            .map(brand => ({ ...brand, label: brand.label || brand.text }))}
+          options={[
+            ...vehicleBrands.filter(brand => brand.value === '600').map(brand => ({ ...brand, label: brand.label || brand.text })),
+            ...vehicleBrands
+              .filter(brand => {
+                const upperText = brand.text.toUpperCase().replace(/\s/g, '');
+                return brand.value !== '600' &&
+                       upperText !== 'İŞMAKİNASI' && 
+                       upperText !== 'DİĞER';
+              })
+              .sort((a, b) => a.text.localeCompare(b.text, 'tr-TR'))
+              .map(brand => ({ ...brand, label: brand.label || brand.text }))
+          ]}
           getOptionLabel={(option) => option.label || option.text || ''}
           value={vehicleBrands
-            .filter(brand => brand.text !== 'İŞ MAKİNASI' && brand.text !== 'DİĞER')
-            .sort((a, b) => a.text.localeCompare(b.text, 'tr-TR'))
             .map(brand => ({ ...brand, label: brand.label || brand.text }))
             .find(brand => brand.value === formik.values.brandCode) || null}
           onChange={(_, newValue) => {

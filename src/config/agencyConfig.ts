@@ -43,6 +43,18 @@ export const agencyConfig = {
     secondaryColor: "#262163",
     accentColor: "#262163"
   },
+  coverageGroupIds: {
+    kasko: [
+      "68ff33ef85427175168098e5"
+    ],
+    trafik: [],
+    dask: [],
+    konut: ["68ff3538a409fcf6b6821902"],
+    tss: [
+      "68ff347e9944df26b83fe388"
+    ],
+    imm: [],
+  },
   auth: {
     sessionDurationMinutes: 90,
     rememberMeDurationDays: 7,

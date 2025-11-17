@@ -24,6 +24,8 @@ import { useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import { API_ENDPOINTS } from '@/config/api';
 import { useAgencyConfig, getCoverageGroupIds } from '@/context/AgencyConfigProvider';
+import { useLoadingStore } from '@/store/loadingStore';
+import { FullScreenLoading } from '@/components/common/loader';
 import '../../../../styles/form-style.css';
 
 // DataLayer helper functions
@@ -261,7 +263,9 @@ export default function AssetInfoStep({
 
   const { customerId: customerIdFromStore, accessToken } = useAuthStore();
   const agencyConfig = useAgencyConfig();
+  const { startLoading } = useLoadingStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmittingProposal, setIsSubmittingProposal] = useState(false); // Sadece proposal API için
   const [isModelsLoading, setIsModelsLoading] = useState(false); // Model yükleme için ayrı state
   const [modelError, setModelError] = useState<string | null>(null); // Model hata mesajı için state
   const [error, setError] = useState<string | null>(null);
@@ -628,206 +632,7 @@ export default function AssetInfoStep({
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values) => {
-      try {
-        setIsLoading(true);
-
-        // Token kontrolü
-        const tokenToUse = await refreshAccessToken();
-
-        if (selectionType === 'existing' && selectedVehicleId) {
-          const selectedVehicle = vehicles.find((v) => v.id === selectedVehicleId);
-          if (selectedVehicle) {
-            localStorage.setItem('selectedVehicleForKasko', JSON.stringify(selectedVehicle));
-            
-            try {
-              const storedCustomerId = localStorage.getItem('customerId') || customerIdFromStore || '';
-
-              if (!storedCustomerId || storedCustomerId === 'undefined') {
-                throw new Error('Müşteri ID bilgisi bulunamadı');
-              }
-
-              const proposalData = {
-                $type: 'kasko',
-                vehicleId: selectedVehicle.id,
-                productBranch: 'KASKO',
-                insurerCustomerId: storedCustomerId,
-                insuredCustomerId: storedCustomerId,
-                coverageGroupIds: getCoverageGroupIds(agencyConfig, 'kasko'),
-                channel: 'WEBSITE',
-              };
-
-              const proposalUrl = API_ENDPOINTS.PROPOSALS_CREATE;
-              const proposalResponse = await fetchWithAuth(proposalUrl, {
-                method: 'POST',
-                headers: {
-                  Authorization: `Bearer ${tokenToUse}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(proposalData),
-              });
-
-              if (!(proposalResponse as any).ok) {
-                const proposalErrorText = await (proposalResponse as any).text();
-                throw new Error(
-                  `Kasko teklifi oluşturulurken bir hata oluştu: ${proposalErrorText}`
-                );
-              }
-
-              const proposalResult = await (proposalResponse as any).json();
-
-              if (proposalResult && proposalResult.proposalId) {
-                localStorage.setItem('proposalIdForKasko', proposalResult.proposalId);
-              } else if (proposalResult && proposalResult.id) {
-                localStorage.setItem('proposalIdForKasko', proposalResult.id);
-              } else {
-              }
-
-              router.push(`/kasko/quote-comparison/${proposalResult.proposalId}`);
-            } catch (proposalError) {
-              setNotificationMessage(`Kasko teklifi oluşturulurken bir hata oluştu: ${(proposalError as Error).message}`);
-              setNotificationSeverity('error');
-              setShowNotification(true);
-            }
-          }
-        } else {
-          // Yeni araç ekleme ve kasko teklifi oluşturma işlemleri
-          const storedCustomerId = localStorage.getItem('customerId') || customerIdFromStore;
-
-          if (!storedCustomerId || storedCustomerId === 'undefined') {
-            setNotificationMessage('Müşteri ID bulunamadı. Lütfen tekrar giriş yapın.');
-            setNotificationSeverity('error');
-            setShowNotification(true);
-            setIsLoading(false);
-            return;
-          }
-
-          const vehicleData = {
-            customerId: storedCustomerId,
-            plate: {
-              city: parseInt(values.plateCity) || 0,
-              code: vehicleType === 'plated' ? values.plateCode : '',
-            },
-            modelYear: parseInt(values.year),
-            brandReference: values.brandCode,
-            modelTypeReference: values.modelCode,
-            utilizationStyle: parseInt(values.usageType),
-            fuel: {
-              type: parseInt(values.fuelType),
-              customLpg: false,
-              customLpgPrice: null,
-            },
-            engine: values.engineNo,
-            chassis: values.chassisNo,
-            ...(values.documentSerialCode && values.documentSerialNumber && {
-              documentSerial: {
-                code: values.documentSerialCode,
-                number: values.documentSerialNumber,
-              },
-            }),
-            registrationDate: values.registrationDate,
-            seatNumber: parseInt(values.seatCount),
-            accessories: [],
-            kaskoOldPolicy: null,
-            trafikOldPolicy: null,
-            lossPayeeClause: null,
-          };
-
-          try {
-            const vehicleResponse = await fetchWithAuth(API_ENDPOINTS.CUSTOMER_VEHICLES_BY_ID(storedCustomerId), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${tokenToUse}`,
-              },
-              body: JSON.stringify(vehicleData),
-            });
-
-            if (!(vehicleResponse as any).ok) {
-              throw new Error('Araç kaydı oluşturulurken bir hata oluştu');
-            }
-
-            const vehicleResult = await (vehicleResponse as any).json();
-            const vehicleId = vehicleResult.id;
-
-            if (!vehicleId) {
-              throw new Error('Araç ID alınamadı');
-            }
-
-            // Araç kaydı başarılı olduktan sonra teklif oluşturma isteği
-            const proposalData = {
-              $type: 'kasko',
-              vehicleId: vehicleId,
-              productBranch: 'KASKO',
-              insurerCustomerId: storedCustomerId,
-              insuredCustomerId: storedCustomerId,
-              coverageGroupIds: getCoverageGroupIds(agencyConfig, 'kasko'),
-              channel: 'WEBSITE',
-            };
-
-            const proposalResponse = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${tokenToUse}`,
-              },
-              body: JSON.stringify(proposalData),
-            });
-
-            if (!(proposalResponse as any).ok) {
-              throw new Error('Kasko teklifi oluşturulurken bir hata oluştu');
-            }
-
-            const proposalResult = await (proposalResponse as any).json();
-            console.log('Kasko Proposal Result:', proposalResult);
-            
-            if (proposalResult && proposalResult.proposalId) {
-              localStorage.setItem('proposalIdForKasko', proposalResult.proposalId);
-              
-              setNotificationMessage('Kasko teklifi başarıyla oluşturuldu');
-              setNotificationSeverity('success');
-              setShowNotification(true);
-              
-              // DataLayer push (trafik'teki gibi)
-              pushToDataLayer({
-                event: "kasko_formsubmit",
-                form_name: "kasko_step2"
-              });
-              
-              setTimeout(() => {
-                router.push(`/kasko/quote-comparison/${proposalResult.proposalId}`);
-              }, 1000);
-              return;
-            } else if (proposalResult && proposalResult.id) {
-              localStorage.setItem('proposalIdForKasko', proposalResult.id);
-              
-              setNotificationMessage('Kasko teklifi başarıyla oluşturuldu');
-              setNotificationSeverity('success');
-              setShowNotification(true);
-              
-              // DataLayer push (trafik'teki gibi)
-              pushToDataLayer({
-                event: "kasko_formsubmit", 
-                form_name: "kasko_step2"
-              });
-              
-              setTimeout(() => {
-                router.push(`/kasko/quote-comparison/${proposalResult.id}`);
-              }, 1000);
-              return;
-            }
-          } catch (error) {
-            setNotificationMessage(`Kasko teklifi oluşturulurken bir hata oluştu: ${(error as Error).message}`);
-            setNotificationSeverity('error');
-            setShowNotification(true);
-          }
-        }
-      } catch (error) {
-        setNotificationMessage(`İşlem sırasında bir hata oluştu: ${(error as Error).message}`);
-        setNotificationSeverity('error');
-        setShowNotification(true);
-      } finally {
-        setIsLoading(false);
-      }
+      // Bu onSubmit artık kullanılmıyor - handleExistingVehicleProposal ve handleNewVehicleProposal kullanılıyor
     },
   });
 
@@ -1490,7 +1295,7 @@ export default function AssetInfoStep({
 
   const handleExistingVehicleProposal = async () => {
     try {
-      setIsLoading(true);
+      setIsSubmittingProposal(true);
       
       const tokenToUse = accessToken ?? (await refreshAccessToken());
 
@@ -1541,19 +1346,20 @@ export default function AssetInfoStep({
         if (newProposalId) {
           localStorage.setItem('proposalIdForKasko', newProposalId);
           
-          setNotificationMessage('Kasko teklifi başarıyla oluşturuldu!');
-          setNotificationSeverity('success');
-          setShowNotification(true);
-          
           pushToDataLayer({
             event: "kasko_formsubmit",
             form_name: "kasko_step2"
           });
           
-          // onNext çağrısı ile step geçişi
-          setTimeout(() => {
-            router.push(`/kasko/quote-comparison/${newProposalId}`);
-          }, 1000);
+          // Global loading başlat - sayfa geçişinde kesinti olmaması için
+          startLoading('kasko', {
+            title: 'Kasko Sigortası',
+            description: 'Teklifleriniz hazırlanıyor. Sigorta şirketlerinden gelen fırsatları senin için özenle bir araya getiriyoruz.',
+            loadingText: 'Sana özel en uygun teklif seçeneklerini kaçırma!',
+          }, newProposalId);
+          
+          // Direkt yönlendir
+          router.push(`/kasko/quote-comparison/${newProposalId}`);
           return; // İşlem başarılı, fonksiyondan çık
         } else {
           setNotificationMessage('Teklif oluşturuldu ancak teklif numarası alınamadı.');
@@ -1571,13 +1377,13 @@ export default function AssetInfoStep({
       setNotificationSeverity('error');
       setShowNotification(true);
     } finally {
-      setIsLoading(false);
+      setIsSubmittingProposal(false);
     }
   };
 
   const handleNewVehicleProposal = async () => {
     try {
-      setIsLoading(true);
+      setIsSubmittingProposal(true);
       
       const tokenToUse = accessToken ?? (await refreshAccessToken());
 
@@ -1693,19 +1499,20 @@ export default function AssetInfoStep({
         if (newProposalId) {
           localStorage.setItem('proposalIdForKasko', newProposalId);
           
-          setNotificationMessage('Kasko teklifi başarıyla oluşturuldu!');
-          setNotificationSeverity('success');
-          setShowNotification(true);
-          
           pushToDataLayer({
             event: "kasko_formsubmit",
             form_name: "kasko_step2"
           });
           
-          // onNext çağrısı ile step geçişi
-          setTimeout(() => {
-            router.push(`/kasko/quote-comparison/${newProposalId}`);
-          }, 1000);
+          // Global loading başlat - sayfa geçişinde kesinti olmaması için
+          startLoading('kasko', {
+            title: 'Kasko Sigortası',
+            description: 'Teklifleriniz hazırlanıyor. Sigorta şirketlerinden gelen fırsatları senin için özenle bir araya getiriyoruz.',
+            loadingText: 'Sana özel en uygun teklif seçeneklerini kaçırma!',
+          }, newProposalId);
+          
+          // Direkt yönlendir
+          router.push(`/kasko/quote-comparison/${newProposalId}`);
           return; // İşlem başarılı, fonksiyondan çık
         } else {
           setNotificationMessage('Teklif oluşturuldu ancak teklif numarası alınamadı.');
@@ -1723,12 +1530,12 @@ export default function AssetInfoStep({
       setNotificationSeverity('error');
       setShowNotification(true);
     } finally {
-      setIsLoading(false);
+      setIsSubmittingProposal(false);
     }
   };
 
   // Devam et butonunun disabled durumunu güncelle
-  const isNextButtonDisabled = isLoading || 
+  const isNextButtonDisabled = isLoading || isSubmittingProposal || 
     (activeStep === 0 && 
       ((selectionType === 'existing' && !selectedVehicleId) ||
        (selectionType === 'new' && 
@@ -1793,6 +1600,8 @@ export default function AssetInfoStep({
         </Alert>
       </Snackbar>
 
+      {isSubmittingProposal && <FullScreenLoading productType="kasko" />}
+      
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />

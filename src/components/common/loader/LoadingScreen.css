@@ -1,0 +1,112 @@
+.loading-container {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: white;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  text-align: center;
+  padding-top: 120px;
+  padding-bottom: 200px;
+}
+
+.insurance-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 40px;
+  fill: #007aff;
+}
+
+.goat-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 40px;
+}
+
+/* Dönen mavi halka - spinner only */
+.loader {
+  width: 70px;
+  height: 70px;
+  border: 6px solid #e5e5e5;
+  border-top-color: #262163;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Dönen mavi halka - küçük versiyon (30px) */
+.loader-small {
+  width: 30px;
+  height: 30px;
+  border: 4px solid #e5e5e5;
+  border-top-color: #262163;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.progress-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.progress-circle svg {
+  transform: rotate(-90deg);
+  width: 100px;
+  height: 100px;
+}
+
+.progress-circle circle {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.progress-bg {
+  stroke: #eee;
+}
+
+.progress-bar {
+  stroke: #262163;
+  /* CSS'te başlangıç değeri %0 - stroke-dashoffset 282.743 (tam circumference) */
+  stroke-dasharray: 282.743;
+  stroke-dashoffset: 282.743;
+  /* Smooth transition devre dışı - animasyon requestAnimationFrame ile yapılıyor */
+  transition: none;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .loading-container {
+    padding-inline: 25px;
+  }
+  .loading-titles {
+    font-size: 1.2rem !important;
+    margin-bottom: 0 !important;
+  }
+}

@@ -29,6 +29,8 @@ import { fetchWithAuth, CustomerProfile } from '../../../../services/fetchWithAu
 import { useRouter } from 'next/navigation';
 import { API_ENDPOINTS } from '@/config/api';
 import { useFormik } from 'formik';
+import { useLoadingStore } from '@/store/loadingStore';
+import { getLoadingContent } from '@/config/loadingContent';
 
 // DataLayer helper functions
 declare global {
@@ -355,6 +357,7 @@ export default function PropertyInfoStep({
 }: PropertyInfoStepProps) {
   const { accessToken, customerId } = useAuthStore();
   const router = useRouter();
+  const { startLoading } = useLoadingStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false); // Adres yükleme için ayrı state
   const [isUavtLoading, setIsUavtLoading] = useState(false); // UAVT sorgulama için ayrı state
@@ -1084,6 +1087,10 @@ const fetchApartments = async (buildingValue: string) => {
           coverageGroupIds: null,
           };
 
+        // Loading'i başlat
+        const loadingContent = getLoadingContent('dask');
+        startLoading('dask', loadingContent);
+
         const proposalResponse = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
             method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -1099,11 +1106,8 @@ const fetchApartments = async (buildingValue: string) => {
 
         if (proposalResult && proposalResult.proposalId) {
           localStorage.setItem('daskProposalId', proposalResult.proposalId);
-          setNotificationMessage('DASK Teklifi başarıyla oluşturuldu! Teklifler sayfasına yönlendiriliyorsunuz...'); // Bildirim mesajı güncellendi
-          setNotificationSeverity('success');
-          setShowNotification(true);
-          // onNext(); // Yönlendirme ile değiştirildi
-          router.push(`/dask/quote-comparison/${proposalResult.proposalId}`); // Yönlendirme eklendi
+          // Yönlendirme - loading modal devam edecek
+          router.push(`/dask/quote-comparison/${proposalResult.proposalId}`);
         } else {
           throw new Error('DASK Teklif ID alınamadı.');
         }

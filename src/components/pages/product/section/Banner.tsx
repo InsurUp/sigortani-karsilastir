@@ -1,17 +1,37 @@
+'use client'
+
 import Image from 'next/image'
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import Box from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import FormHelperText from '@mui/material/FormHelperText'
 import Button from '@mui/material/Button'
+import { useRouter } from 'next/navigation'
+import { validateTCKNFull, validateTurkishPhoneStrict } from '@/utils/validators'
 import { ProductData } from '@/data/products'
+import { OFFLINE_FORM_CONFIG, resolveOfflineFormConfig } from '@/constants/offlineForms'
 
 interface BannerProps {
   productData?: ProductData
 }
 
 function Banner({ productData }: BannerProps) {
+    const router = useRouter()
+    const [formValues, setFormValues] = useState({
+        identityNumber: '',
+        phoneNumber: '',
+        acceptKvkk: false,
+        acceptCommercial: false,
+    })
+    const [formErrors, setFormErrors] = useState<{
+        identityNumber?: string
+        phoneNumber?: string
+        acceptKvkk?: string
+    }>({})
+    const [isSubmitting, setIsSubmitting] = useState(false)
+
     // Varsayılan değerler
     const defaultData = {
         icon: "/images/product/icon/kasko.svg",
@@ -19,6 +39,13 @@ function Banner({ productData }: BannerProps) {
         description: "Kasko sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.",
         bgImage: "/images/product/banner/kasko_bg.webp"
     }
+
+    const resolvedForm = useMemo(() => {
+        return resolveOfflineFormConfig(productData?.slug, productData?.name)
+    }, [productData?.slug, productData?.name])
+
+    const activeFormConfig = resolvedForm?.config
+    const activeFormKey = resolvedForm?.key
 
     // Ürün verilerinden dinamik değerleri al
     const icon = productData?.slug === 'kasko' ? "/images/product/icon/kasko.svg" : 
@@ -39,6 +66,75 @@ function Banner({ productData }: BannerProps) {
                     productData?.slug === 'saglik' ? "/images/product/banner/saglik_bg.webp" :
                     defaultData.bgImage
 
+    const handleInputChange = (field: 'identityNumber' | 'phoneNumber') => (event: React.ChangeEvent<HTMLInputElement>) => {
+        const rawValue = event.target.value
+        const digitsOnly = rawValue.replace(/\D/g, '')
+        setFormValues(prev => ({
+            ...prev,
+            [field]: field === 'phoneNumber' ? digitsOnly.slice(0, 10) : digitsOnly.slice(0, 11)
+        }))
+        if (formErrors[field]) {
+            setFormErrors(prev => ({ ...prev, [field]: undefined }))
+        }
+    }
+
+    const handleCheckboxChange = (field: 'acceptKvkk' | 'acceptCommercial') => (_: React.ChangeEvent<HTMLInputElement>, checked: boolean) => {
+        setFormValues(prev => ({ ...prev, [field]: checked }))
+        if (field === 'acceptKvkk' && formErrors.acceptKvkk) {
+            setFormErrors(prev => ({ ...prev, acceptKvkk: undefined }))
+        }
+    }
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+
+        if (!activeFormConfig || !activeFormKey) {
+            return
+        }
+
+        const validationErrors: typeof formErrors = {}
+
+        const tcValidation = validateTCKNFull(formValues.identityNumber)
+        if (!tcValidation.isValid) {
+            validationErrors.identityNumber = tcValidation.message || 'Geçerli bir T.C. Kimlik No giriniz.'
+        }
+
+        const phoneValidation = validateTurkishPhoneStrict(formValues.phoneNumber)
+        if (!phoneValidation.isValid) {
+            validationErrors.phoneNumber = phoneValidation.message || 'Geçerli bir telefon numarası giriniz.'
+        }
+
+        if (!formValues.acceptKvkk) {
+            validationErrors.acceptKvkk = 'Devam etmek için KVKK onayını vermeniz gerekir.'
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+            setFormErrors(validationErrors)
+            return
+        }
+
+        try {
+            setIsSubmitting(true)
+            if (typeof window !== 'undefined') {
+                const payload = {
+                    identityNumber: formValues.identityNumber,
+                    phoneNumber: formValues.phoneNumber,
+                    acceptKvkk: formValues.acceptKvkk,
+                    acceptCommercial: formValues.acceptCommercial,
+                    createdAt: Date.now(),
+                }
+                localStorage.setItem(activeFormConfig.storageKey, JSON.stringify(payload))
+            }
+            const searchParams = new URLSearchParams({
+                kaynak: 'banner',
+                urun: activeFormKey,
+            })
+            router.push(`${activeFormConfig.targetPath}?${searchParams.toString()}`)
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
     return (
         <section 
             className='relative md:py-[100px] py-[50px] bg-[#D9EDFA] before:content-[""] before:absolute before:inset-0 before:z-0 before:bg-cover before:bg-center before:pointer-events-none'
@@ -56,13 +152,22 @@ function Banner({ productData }: BannerProps) {
                         </p>
                     </div>
                     <div className='lg:col-span-3'>
-                        <Box className='bg-[#262163] ' sx={{ p: { xs: '30px 25px', md: '45px 50px 30px' }, borderRadius: '10px' }}>
+                        <Box
+                            component='form'
+                            onSubmit={handleSubmit}
+                            className='bg-[#262163] '
+                            sx={{ p: { xs: '30px 25px', md: '45px 50px 30px' }, borderRadius: '10px' }}
+                        >
                             <div className='grid grid-cols-1 sm:grid-cols-2 gap-[25px]'>
                                 <TextField
                                     fullWidth
                                     placeholder='TC Kimlik No'
                                     variant='outlined'
-                                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                                    value={formValues.identityNumber}
+                                    onChange={handleInputChange('identityNumber')}
+                                    error={Boolean(formErrors.identityNumber)}
+                                    helperText={formErrors.identityNumber}
+                                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 11 }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             backgroundColor: '#fff',
@@ -97,7 +202,11 @@ function Banner({ productData }: BannerProps) {
                                     fullWidth
                                     placeholder='Telefon Numarası'
                                     variant='outlined'
-                                    inputProps={{ inputMode: 'tel' }}
+                                    value={formValues.phoneNumber}
+                                    onChange={handleInputChange('phoneNumber')}
+                                    error={Boolean(formErrors.phoneNumber)}
+                                    helperText={formErrors.phoneNumber}
+                                    inputProps={{ inputMode: 'tel', maxLength: 10 }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             backgroundColor: '#fff',
@@ -134,6 +243,8 @@ function Banner({ productData }: BannerProps) {
                                     <FormControlLabel
                                         control={
                                             <Checkbox
+                                                checked={formValues.acceptKvkk}
+                                                onChange={handleCheckboxChange('acceptKvkk')}
                                                 sx={{
                                                     color: '#fff',
                                                     '&.Mui-checked': { color: '#fff' },
@@ -147,9 +258,16 @@ function Banner({ productData }: BannerProps) {
                                             '& .MuiFormControlLabel-label': { fontSize: '12px' },
                                         }}
                                     />
+                                    {formErrors.acceptKvkk && (
+                                        <FormHelperText sx={{ color: '#ffb4b4', mt: -1, mb: 1 }}>
+                                            {formErrors.acceptKvkk}
+                                        </FormHelperText>
+                                    )}
                                     <FormControlLabel
                                         control={
                                             <Checkbox
+                                                checked={formValues.acceptCommercial}
+                                                onChange={handleCheckboxChange('acceptCommercial')}
                                                 sx={{
                                                     color: '#fff',
                                                     '&.Mui-checked': { color: '#fff' },
@@ -167,6 +285,8 @@ function Banner({ productData }: BannerProps) {
                                 <Button
                                     variant='contained'
                                     fullWidth
+                                    type='submit'
+                                    disabled={isSubmitting || !activeFormConfig}
                                     sx={{
                                         height: 50,
                                         borderRadius: '7px',
@@ -179,7 +299,7 @@ function Banner({ productData }: BannerProps) {
                                     }}
                                     className='md:w-auto w-full'
                                 >
-                                    Gönder
+                                    {isSubmitting ? 'Yönlendiriliyor...' : 'Gönder'}
                                 </Button>
                             </div>
                         </Box>

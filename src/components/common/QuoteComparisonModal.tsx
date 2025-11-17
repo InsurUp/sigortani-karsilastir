@@ -305,7 +305,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
                       label={quote.coverageGroupName}
                       size="small"
                       sx={{
-                        backgroundColor: '#ff9315',
+                        backgroundColor: '#ef2027',
                         color: 'white',
                         fontSize: '0.7rem',
                         height: 20,
@@ -391,7 +391,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
                             label={quote.coverageGroupName}
                             size="small"
                             sx={{
-                              backgroundColor: '#ff9315',
+                              backgroundColor: '#ef2027',
                               color: 'white',
                               fontSize: '0.55rem',
                               height: 16,
@@ -476,7 +476,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
                                 label={quote.coverageGroupName}
                                 size="small"
                                 sx={{
-                                  backgroundColor: '#ff9315',
+                                  backgroundColor: '#ef2027',
                                   color: 'white',
                                   fontSize: '0.7rem',
                                   height: 20
@@ -609,7 +609,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
                             <Chip
                               label={quote.coverageGroupName}
                               size="small"
-                              sx={{ backgroundColor: '#ff9315', color: 'white', fontSize: '0.55rem', height: 14 }}
+                              sx={{ backgroundColor: '#ef2027', color: 'white', fontSize: '0.55rem', height: 14 }}
                             />
                           )}
                         </Box>

@@ -1090,8 +1090,21 @@ const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ onClose, initialData,
   // Marka seçimi için sıralanmış options
   const sortedBrandOptions = [
     { value: '', label: 'Seçiniz' },
+    // Motosiklet markasını en üste koy (value: 600)
     ...vehicleBrands
-      .filter(brand => brand.text !== 'İŞ MAKİNASI' && brand.text !== 'DİĞER')
+      .filter(brand => brand.value === '600')
+      .map((brand) => ({
+        value: brand.value,
+        label: brand.text,
+      })),
+    // Diğer markaları alfabetik sırayla ekle
+    ...vehicleBrands
+      .filter(brand => {
+        const upperText = brand.text.toUpperCase().replace(/\s/g, '');
+        return brand.value !== '600' &&
+               upperText !== 'İŞMAKİNASI' && 
+               upperText !== 'DİĞER';
+      })
       .sort((a, b) => a.text.localeCompare(b.text, 'tr'))
       .map((brand) => ({
         value: brand.value,

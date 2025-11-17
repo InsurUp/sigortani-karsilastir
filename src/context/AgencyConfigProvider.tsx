@@ -374,14 +374,15 @@ export const AgencyConfigProvider: React.FC<AgencyConfigProviderProps> = ({ chil
   );
 };
 
-// Helper function to get coverage group IDs for a specific branch
-export const getCoverageGroupIds = (agencyConfig: AgencyConfigContextType | null, branch: string): string[] | null => {
-  if (!agencyConfig?.coverageGroupIds) {
-    return null;
-  }
-
-  const coverageIds = agencyConfig.coverageGroupIds[branch as keyof typeof agencyConfig.coverageGroupIds];
-  return coverageIds && coverageIds.length > 0 ? coverageIds : null;
-};
-
 export { useAuthConfig };
+
+// Helper function to get coverage group IDs for a product type
+export const getCoverageGroupIds = (
+  config: AgencyConfigContextType | null,
+  productType: 'kasko' | 'trafik' | 'dask' | 'konut' | 'tss' | 'imm'
+): string[] => {
+  if (!config || !config.coverageGroupIds) {
+    return [];
+  }
+  return config.coverageGroupIds[productType] || [];
+};

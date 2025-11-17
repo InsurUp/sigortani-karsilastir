@@ -24,6 +24,8 @@ import { VehicleUtilizationStyle, VehicleFuelType } from '../../../../types/enum
 import { useRouter } from 'next/navigation';
 import { API_ENDPOINTS } from '../../../../config/api';
 import { fetchWithAuth } from '../../../../services/fetchWithAuth';
+import { useLoadingStore } from '@/store/loadingStore';
+import { getLoadingContent } from '@/config/loadingContent';
 
 // DataLayer helper functions
 declare global {
@@ -259,6 +261,7 @@ export default function AssetInfoStep({
   const [vehicleModels, setVehicleModels] = useState<Array<{ value: string; text: string; label?: string }>>([]);
   const [plateCities, setPlateCities] = useState<Array<{ value: string; text: string; label?: string }>>([]);
   const router = useRouter();
+  const { startLoading } = useLoadingStore();
 
   const getCustomerIdFromAuthStorage = (): string | null => {
     const authStorageItem = localStorage.getItem('auth-storage');
@@ -409,10 +412,11 @@ export default function AssetInfoStep({
           const response: any = await fetchWithAuth(API_ENDPOINTS.VEHICLE_BRANDS);
           if (response.ok) {
             const data: BrandData[] = await response.json();
-            // Markaları alfabetik sıraya göre sırala
-            const sortedBrands = data.sort((a, b) => 
-              a.text.localeCompare(b.text, 'tr-TR')
-            );
+            // Motosiklet markasını en üste koy (value: 600), diğerlerini alfabetik sırala
+            const motorcycleBrands = data.filter(brand => brand.value === '600');
+            const otherBrands = data.filter(brand => brand.value !== '600')
+              .sort((a, b) => a.text.localeCompare(b.text, 'tr-TR'));
+            const sortedBrands = [...motorcycleBrands, ...otherBrands];
             setVehicleBrands(sortedBrands.map((brand: BrandData) => ({ ...brand, label: brand.text })));
           } else {
           }
@@ -520,7 +524,7 @@ export default function AssetInfoStep({
           plateNumber: v.plate ? `${v.plate.city || ''} ${v.plate.code || ''}`.trim() || 'Plakasız' : 'Plakasız',
           vehicleType: v.type || 'car',
           utilizationStyle: v.utilizationStyle || VehicleUtilizationStyle.Unknown,
-          fuelType: v.fuel?.type ? parseInt(v.fuel.type.toString(), 10) : VehicleFuelType.Diesel, 
+          fuelType: v.fuel?.type ? parseInt(v.fuel.type.toString(), 10) : VehicleFuelType.Gasoline, 
           engineNumber: v.engineNumber || '',
           chassisNumber: v.chassisNumber || '',
           documentSerial: v.documentSerial || { code: '', number: '' },
@@ -838,14 +842,18 @@ export default function AssetInfoStep({
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, width: '100%' }}>
         <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 12px)' } }}>
           <Autocomplete
-            options={vehicleBrands
-              .filter(brand => brand.text !== 'İŞ MAKİNASI' && brand.text !== 'DİĞER')
-              .sort((a, b) => a.text.localeCompare(b.text, 'tr-TR'))
-              .map(brand => ({ ...brand, label: brand.label || brand.text }))}
+            options={[
+              ...vehicleBrands.filter(brand => brand.value === '600').map(brand => ({ ...brand, label: brand.label || brand.text })),
+              ...vehicleBrands
+                .filter(brand => {
+                  const upperText = brand.text.toUpperCase().replace(/\s/g, '');
+                  return brand.value !== '600' && upperText !== 'İŞMAKİNASI' && upperText !== 'DİĞER';
+                })
+                .sort((a, b) => a.text.localeCompare(b.text, 'tr-TR'))
+                .map(brand => ({ ...brand, label: brand.label || brand.text }))
+            ]}
             getOptionLabel={(option) => option.label || option.text || ''}
             value={vehicleBrands
-              .filter(brand => brand.text !== 'İŞ MAKİNASI' && brand.text !== 'DİĞER')
-              .sort((a, b) => a.text.localeCompare(b.text, 'tr-TR'))
               .map(brand => ({ ...brand, label: brand.label || brand.text }))
               .find(brand => brand.value === formik.values.brandCode) || null}
             onChange={(_, newValue) => {
@@ -1280,6 +1288,9 @@ export default function AssetInfoStep({
         coverageGroupIds: null,
       };
 
+      // Loading'i başlat
+      const loadingContent = getLoadingContent('trafik');
+      startLoading('trafik', loadingContent);
 
       const response = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
         method: 'POST',
@@ -1299,20 +1310,13 @@ export default function AssetInfoStep({
         if (proposalId) {
           localStorage.setItem('proposalIdForTrafik', proposalId);
           
-          setNotificationMessage('Trafik sigorta teklifi başarıyla oluşturuldu!');
-          setNotificationSeverity('success');
-          setShowNotification(true);
-          
-          
           pushToDataLayer({
             event: "trafik_formsubmit",
             form_name: "trafik_step2"
           });
           
-          // Router push'tan önce kısa bir delay ekleyelim
-          setTimeout(() => {
-            router.push(`/trafik/quote-comparison/${proposalId}`);
-          }, 1000);
+          // Yönlendirme - loading modal devam edecek
+          router.push(`/trafik/quote-comparison/${proposalId}`);
           return; // İşlem başarılı, fonksiyondan çık
         } else {
           throw new Error('Teklif oluşturuldu ancak yanıt verisinden teklif ID okunamadı.');
@@ -1420,6 +1424,9 @@ export default function AssetInfoStep({
         coverageGroupIds: null,
       };
       
+      // Loading'i başlat
+      const loadingContent = getLoadingContent('trafik');
+      startLoading('trafik', loadingContent);
       
       const proposalResponse = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
         method: 'POST',

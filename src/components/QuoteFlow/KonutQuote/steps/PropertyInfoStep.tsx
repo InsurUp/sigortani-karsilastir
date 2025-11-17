@@ -38,7 +38,10 @@ import { useRouter } from 'next/navigation';
 import { API_ENDPOINTS } from '@/config/api';
 import { useFormik } from 'formik';
 import { formatNumberWithDots, removeNumberFormatting, handleFormattedNumberChange } from '../../../../utils/numberFormat';
-import { useAgencyConfig, getCoverageGroupIds } from '../../../../context/AgencyConfigProvider';
+import { useAgencyConfig } from '@/context/AgencyConfigProvider';
+import { getCoverageGroupIds } from '@/utils/insuranceCompanies';
+import { useLoadingStore } from '@/store/loadingStore';
+import { getLoadingContent } from '@/config/loadingContent';
 
 // DataLayer helper functions
 declare global {
@@ -484,6 +487,7 @@ export default function PropertyInfoStep({
   const agencyConfig = useAgencyConfig();
   const router = useRouter();
   const theme = useTheme();
+  const { startLoading } = useLoadingStore();
   
   // Eğer config'de konut için coverageGroupIds varsa teminat alanlarını gizle
   const shouldShowCoverageFields = !getCoverageGroupIds(agencyConfig, 'konut');
@@ -997,8 +1001,9 @@ export default function PropertyInfoStep({
           insurerCustomerId: customerId,
           insuredCustomerId: customerId,
           ...(coverageGroupIds ? {
-            // Eğer coverageGroupIds varsa sadece coverageGroupIds gönder, coverage gönderme
-            coverageGroupIds: coverageGroupIds
+            // Eğer coverageGroupIds varsa sadece coverageGroupIds gönder, coverage null
+            coverageGroupIds: coverageGroupIds,
+            coverage: null
           } : {
             // Eğer coverageGroupIds yoksa coverage bilgilerini gönder
             coverage: {
@@ -1009,12 +1014,17 @@ export default function PropertyInfoStep({
               camBedeli: { "$type": "DECIMAL", value: parseInt(values.windowPrice, 10) },
               enflasyon: { "$type": "PERCENT", value: getInflationPercentage(values.inflationValue) },
               productBranch: "KONUT"
-            }
+            },
+            coverageGroupIds: null
           }),
           channel: "WEBSITE"
         };
         
         console.log('Konut proposalPayload:', JSON.stringify(proposalPayload, null, 2));
+
+        // Loading'i başlat
+        const loadingContent = getLoadingContent('konut');
+        startLoading('konut', loadingContent);
 
         const proposalResponse = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
           method: 'POST',
@@ -1031,11 +1041,8 @@ export default function PropertyInfoStep({
 
         if (proposalResult && proposalResult.proposalId) {
           localStorage.setItem('KonutProposalId', proposalResult.proposalId);
-          setNotificationMessage('Konut Teklifi başarıyla oluşturuldu! Teklifler sayfasına yönlendiriliyorsunuz...'); // Bildirim mesajı güncellendi
-          setNotificationSeverity('success');
-          setShowNotification(true);
-          // onNext(); // Yönlendirme ile değiştirildi
-          router.push(`/konut-teklif/quote-comparison/${proposalResult.proposalId}`); // Yönlendirme eklendi
+          // Yönlendirme - loading modal devam edecek
+          router.push(`/konut-teklif/quote-comparison/${proposalResult.proposalId}`);
         } else {
           throw new Error('Konut Teklif ID alınamadı.');
         }

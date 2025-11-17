@@ -48,6 +48,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import { useParams, useRouter } from 'next/navigation';
+import { useLoadingStore } from '@/store/loadingStore';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { fetchWithAuth } from '../../../../services/fetchWithAuth';
 import { useAgencyConfig } from '../../../../context/AgencyConfigProvider';
@@ -267,6 +268,8 @@ export default function QuoteComparisonStep({
   const [showOnlyBestOffers, setShowOnlyBestOffers] = useState(false);
   const [hoveredQuote, setHoveredQuote] = useState<string | null>(null);
   const theme = useTheme();
+  const [isPollingActive, setIsPollingActive] = useState(true);
+  const { setFirstQuoteReceived } = useLoadingStore();
   const agencyConfig = useAgencyConfig();
   const params = useParams();
   const router = useRouter();
@@ -451,6 +454,11 @@ export default function QuoteComparisonStep({
         // Kullanıcıya sadece ACTIVE filtrelenmiş quotes'ları göster (immediate display)
         setQuotes(sortQuotes(filteredQuotes));
         
+        // İlk teklif geldiğinde loading modal'ı bilgilendir
+        if (filteredQuotes.length > 0) {
+          setFirstQuoteReceived();
+        }
+        
         // Loading kontrolü için WAITING quotes'ları kontrol et
         const relevantWaitingQuotes = processedQuotes.filter(q => 
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
@@ -500,6 +508,7 @@ export default function QuoteComparisonStep({
             clearInterval(pollInterval);
           }
           setIsLoading(false);
+          setIsPollingActive(false);
           return;
         }
 

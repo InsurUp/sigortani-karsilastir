@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 import { useFormik, FormikValues } from 'formik';
 import * as yup from 'yup';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { Timer } from 'lucide-react';
@@ -38,6 +38,9 @@ import { fetchWithAuth, CustomerProfile } from '../../../../services/fetchWithAu
 import { validateBirthDate, validateTCKNFull, validateTurkishPhoneStrict, validateTaxNumber } from '../../../../utils/validators';
 import { performLogin, verifyOTP, updateCustomerProfile, CustomerType } from '../../../../utils/authHelper';
 import '../../../../styles/form-style.css';
+import { OFFLINE_FORM_CONFIG } from '@/constants/offlineForms';
+
+const BANNER_PREFILL_KEY = OFFLINE_FORM_CONFIG.konut.storageKey;
 
 // DataLayer helper functions
 declare global {
@@ -352,6 +355,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState<any>({});
   const [konutCaseCreationInProgress, setKonutCaseCreationInProgress] = useState(false);
+  const bannerPrefillAppliedRef = useRef(false);
 
   // Helper functions
   const clearFieldError = (fieldName: string) => {
@@ -924,6 +928,46 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       }
     },
   });
+
+  useEffect(() => {
+    if (bannerPrefillAppliedRef.current) return;
+    if (typeof window === 'undefined') return;
+
+    const rawPrefill = localStorage.getItem(BANNER_PREFILL_KEY);
+    if (!rawPrefill) return;
+
+    try {
+      const parsedPrefill = JSON.parse(rawPrefill) as {
+        identityNumber?: string;
+        phoneNumber?: string;
+        acceptKvkk?: boolean;
+        acceptCommercial?: boolean;
+      };
+
+      const sanitizedIdentity = (parsedPrefill.identityNumber || '').replace(/\D/g, '').slice(0, 11);
+      const sanitizedPhone = (parsedPrefill.phoneNumber || '').replace(/\D/g, '').slice(0, 10);
+
+      setUserData(prev => ({
+        ...prev,
+        tcNo: sanitizedIdentity || prev.tcNo,
+        phone: sanitizedPhone || prev.phone,
+      }));
+
+      formik.setValues(prev => ({
+        ...prev,
+        identityNumber: sanitizedIdentity || prev.identityNumber || '',
+        phoneNumber: sanitizedPhone || prev.phoneNumber || '',
+        acceptTerms: typeof parsedPrefill.acceptKvkk === 'boolean' ? parsedPrefill.acceptKvkk : prev.acceptTerms,
+        acceptCommercial: typeof parsedPrefill.acceptCommercial === 'boolean' ? parsedPrefill.acceptCommercial : prev.acceptCommercial,
+      }), false);
+
+      bannerPrefillAppliedRef.current = true;
+    } catch (prefillError) {
+      console.warn('Konut banner prefill verisi okunamadı:', prefillError);
+    } finally {
+      localStorage.removeItem(BANNER_PREFILL_KEY);
+    }
+  }, [formik, setUserData]);
 
   // Build update payload based on customer type
   const buildUpdatePayload = (values: FormikValues, customerType: CustomerType): Record<string, any> => {

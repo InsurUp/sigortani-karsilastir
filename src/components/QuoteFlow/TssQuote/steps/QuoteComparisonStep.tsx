@@ -52,6 +52,7 @@ import { useAgencyConfig } from '../../../../context/AgencyConfigProvider';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import { API_ENDPOINTS, API_BASE_URL as AppApiBaseUrl } from '@/config/api';
+import { useLoadingStore } from '@/store/loadingStore';
 
 // DataLayer helper functions
 declare global {
@@ -310,6 +311,8 @@ export default function QuoteComparisonStep({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const theme = useTheme();
+  const [isPollingActive, setIsPollingActive] = useState(true);
+  const { setFirstQuoteReceived } = useLoadingStore();
   const agencyConfig = useAgencyConfig();
   const params = useParams();
   const router = useRouter();
@@ -502,7 +505,12 @@ export default function QuoteComparisonStep({
         // Kullanıcıya sadece ACTIVE filtrelenmiş quotes'ları göster (immediate display)
         setQuotes(sortQuotes(filteredQuotes));
         setBestOffers(getBestOffers(filteredQuotes));
-
+        
+        // İlk teklif geldiğinde loading modal'ı bilgilendir
+        if (filteredQuotes.length > 0) {
+          setFirstQuoteReceived();
+        }
+        
         // Loading kontrolü için WAITING quotes'ları kontrol et
         const relevantWaitingQuotes = processed.filter(q => 
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
@@ -525,6 +533,7 @@ export default function QuoteComparisonStep({
           if (pollInterval) {
             clearInterval(pollInterval);
           }
+          setIsPollingActive(false);
           
           // Analytics event tetikleme - teklif sonuçlarına göre
           const hasSuccessfulQuotes = filteredQuotes.length > 0;
@@ -959,7 +968,7 @@ export default function QuoteComparisonStep({
                               fontWeight: 'medium',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                               zIndex: 1,
-                              backgroundColor: '#ff9315',
+                              backgroundColor: '#ef2027',
                               color: 'white',
                               '& .MuiChip-label': {
                                 color: 'white'
@@ -1354,7 +1363,7 @@ export default function QuoteComparisonStep({
                               size="small"
                               variant="outlined"
                               sx={{
-                                backgroundColor: '#ff9315',
+                                backgroundColor: '#ef2027',
                                 color: 'white',
                                 '& .MuiChip-label': {
                                   color: 'white',

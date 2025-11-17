@@ -44,6 +44,7 @@ import { useAgencyConfig } from '../../../../context/AgencyConfigProvider';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import { API_ENDPOINTS } from '@/config/api';
+import { useLoadingStore } from '@/store/loadingStore';
 
 // DataLayer helper functions
 declare global {
@@ -212,6 +213,8 @@ export default function QuoteComparisonStep({
   const [selectedQuoteForModal, setSelectedQuoteForModal] = useState<ProcessedQuote | null>(null);
   const [expandedQuotes, setExpandedQuotes] = useState<Record<string, boolean>>({});
   const [sortOption, setSortOption] = useState<'price' | 'company'>('price');
+  const [isPollingActive, setIsPollingActive] = useState(true);
+  const { setFirstQuoteReceived } = useLoadingStore();
   const [showOnlyBestOffers, setShowOnlyBestOffers] = useState(false);
   const [hoveredQuote, setHoveredQuote] = useState<string | null>(null);
   const theme = useTheme();
@@ -387,6 +390,11 @@ export default function QuoteComparisonStep({
         // Kullanıcıya sadece ACTIVE filtrelenmiş quotes'ları göster (immediate display)
         setQuotes(sortQuotes(filteredQuotes));
         setBestOffers(getBestOffers(filteredQuotes));
+        
+        // İlk teklif geldiğinde loading modal'ı bilgilendir
+        if (filteredQuotes.length > 0) {
+          setFirstQuoteReceived();
+        }
 
         // Loading kontrolü için WAITING quotes'ları kontrol et
         const relevantWaitingQuotes = processedQuotes.filter(q => 
@@ -437,7 +445,8 @@ export default function QuoteComparisonStep({
           if (pollInterval) {
             clearInterval(pollInterval);
           }
-          setIsLoading(false); // Sadece bu durumda loading ekranını kapat
+          setIsLoading(false);
+          setIsPollingActive(false); // Polling'i bitir
           return;
         }
 

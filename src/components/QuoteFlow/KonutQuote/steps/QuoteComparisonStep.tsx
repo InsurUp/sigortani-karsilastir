@@ -316,6 +316,8 @@ export default function QuoteComparisonStep({
   const [selectedQuoteForModal, setSelectedQuoteForModal] = useState<ProcessedQuote | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const theme = useTheme();
+  const [isPollingActive, setIsPollingActive] = useState(true);
+  const { setFirstQuoteReceived } = useLoadingStore();
   const agencyConfig = useAgencyConfig();
   const params = useParams();
   const router = useRouter();
@@ -542,6 +544,11 @@ export default function QuoteComparisonStep({
         setQuotes(sortQuotes(filteredQuotes));
         setBestOffers(getBestOffers(filteredQuotes));
 
+        // İlk teklif geldiğinde loading modal'ı bilgilendir
+        if (filteredQuotes.length > 0) {
+          setFirstQuoteReceived();
+        }
+
         // Loading kontrolü için WAITING quotes'ları kontrol et
         const relevantWaitingQuotes = processedQuotes.filter(q => 
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
@@ -590,6 +597,7 @@ export default function QuoteComparisonStep({
             clearInterval(pollInterval);
           }
           setIsLoading(false);
+          setIsPollingActive(false);
           return;
         }
 
@@ -1000,7 +1008,7 @@ export default function QuoteComparisonStep({
                               fontWeight: 'medium',
                               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                               zIndex: 1,
-                              backgroundColor: '#ff9315',
+                              backgroundColor: '#ef2027',
                               color: 'white',
                               '& .MuiChip-label': {
                                 color: 'white'
@@ -1395,7 +1403,7 @@ export default function QuoteComparisonStep({
                               size="small"
                               variant="outlined"
                               sx={{
-                                backgroundColor: '#ff9315',
+                                backgroundColor: '#ef2027',
                                 color: 'white',
                                 '& .MuiChip-label': {
                                   color: 'white',

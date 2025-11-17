@@ -62,4 +62,33 @@ export const getInsuranceCompanyName = (id: number): string => {
 
 export const getInsuranceCompanyId = (name: string): number => {
   return InsuranceCompany[name as keyof typeof InsuranceCompany] || -1;
+};
+
+/**
+ * Config'ten coverageGroupIds'i döndürür
+ * @param config - Agency config objesi
+ * @param productType - Ürün tipi (kasko, trafik, dask, konut, tss, imm)
+ * @returns coverageGroupIds array veya null
+ */
+export const getCoverageGroupIds = (
+  config: any,
+  productType: 'kasko' | 'trafik' | 'dask' | 'konut' | 'tss' | 'imm'
+): string[] | null => {
+  console.log('🔍 getCoverageGroupIds called:', {
+    productType,
+    configExists: !!config,
+    coverageGroupIdsExists: !!config?.coverageGroupIds,
+    value: config?.coverageGroupIds?.[productType]
+  });
+  
+  const coverageGroupIds = config?.coverageGroupIds?.[productType];
+  
+  // Eğer array varsa ve içinde eleman varsa döndür, yoksa null
+  if (Array.isArray(coverageGroupIds) && coverageGroupIds.length > 0) {
+    console.log('✅ Returning coverageGroupIds:', coverageGroupIds);
+    return coverageGroupIds;
+  }
+  
+  console.log('❌ Returning null (no IDs found)');
+  return null;
 }; 
