@@ -27,7 +27,7 @@ const footerSections = [
     column2: [
       { href: "/urunler/tamamlayici-saglik-sigortasi", label: "TSS" },
       { href: "/urunler/ozel-saglik", label: "Özel Sağlık" },
-      { href: "/urunler/seyahat-saglik", label: "Seyahat Sağlık" },
+      { href: "/seyahat-teklif", label: "Seyahat Sağlık" },
       { href: "/urunler/cep-telefonu", label: "Cep Telefonu" },
     ]
   },

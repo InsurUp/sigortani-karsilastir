@@ -61,7 +61,7 @@ function Header() {
       icon: '/images/product/icon/tss.svg',
       items: [
         { name: 'Tamamlayıcı Sağlık', href: '/urunler/tamamlayici-saglik-sigortasi' },
-        { name: 'Seyahat Sağlık', href: '/urunler/seyahat-saglik' },
+        { name: 'Seyahat Sağlık', href: '/seyahat-teklif' },
       ]
     }
   ]
