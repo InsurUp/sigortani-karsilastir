@@ -4,7 +4,7 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import QuoteComparisonModal from '@/components/common/QuoteComparisonModal';
+import QuoteComparisonModal, { QuoteForComparison } from '@/components/common/QuoteComparisonModal';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
 import CloseIcon from '@mui/icons-material/Close';
@@ -46,13 +46,14 @@ import {
   useTheme,
   styled,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import { useAgencyConfig } from '../../../../context/AgencyConfigProvider';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import { API_ENDPOINTS, API_BASE_URL as AppApiBaseUrl } from '@/config/api';
 import { useLoadingStore } from '@/store/loadingStore';
+import { LoadingScreen } from '@/components/common/loader';
 
 // DataLayer helper functions
 declare global {
@@ -312,7 +313,6 @@ export default function QuoteComparisonStep({
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const theme = useTheme();
   const [isPollingActive, setIsPollingActive] = useState(true);
-  const { setFirstQuoteReceived } = useLoadingStore();
   const agencyConfig = useAgencyConfig();
   const params = useParams();
   const router = useRouter();
@@ -321,8 +321,19 @@ export default function QuoteComparisonStep({
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [bestOffers, setBestOffers] = useState<ProcessedQuote[]>([]);
   const [showAllQuotes, setShowAllQuotes] = useState(false);
+  const [shouldCompleteLoading, setShouldCompleteLoading] = useState(false);
+  const [hasWaitingQuotes, setHasWaitingQuotes] = useState(false);
+  const [hasStoppedGlobalLoading, setHasStoppedGlobalLoading] = useState(false);
+  const companiesCacheRef = useRef<InsuranceCompany[] | null>(null);
 
-  const proposalIdToUse = initialProposalId || params?.proposalId as string | undefined || localStorage.getItem('proposalIdFortss');
+  const {
+    isLoading: globalIsLoading,
+    setFirstQuoteReceived,
+    stopLoading: stopGlobalLoading
+  } = useLoadingStore();
+
+
+  const proposalIdToUse = initialProposalId || (params?.proposalId as string | undefined) || localStorage.getItem('proposalIdForTss');
 
   // Get product display mode for each quote
   const getProductDisplayMode = (productCode: string, productId: number): ProductDisplayMode => {
@@ -347,7 +358,7 @@ export default function QuoteComparisonStep({
   };
 
   useEffect(() => {
-    const storedProposalId = localStorage.getItem('proposalIdFortss');
+    const storedProposalId = localStorage.getItem('proposalIdForTss');
     if (storedProposalId) {
       setProposalId(storedProposalId);
     } else if (params?.proposalId) {
@@ -356,6 +367,7 @@ export default function QuoteComparisonStep({
     } else {
       setError('tss teklif ID bilgisi bulunamadı. Lütfen önceki adıma dönüp tekrar deneyin.');
       setIsLoading(false);
+      stopGlobalLoading();
     }
   }, [params.proposalId]);
 
@@ -438,6 +450,10 @@ export default function QuoteComparisonStep({
     const startTime = Date.now();
 
     const fetchCompanies = async () => {
+      if (companiesCacheRef.current && companiesCacheRef.current.length > 0) {
+        return companiesCacheRef.current;
+      }
+
       const currentAccessToken = useAuthStore.getState().accessToken;
       if (!currentAccessToken) {
         throw new Error('Yetkilendirme anahtarı bulunamadı.');
@@ -457,6 +473,7 @@ export default function QuoteComparisonStep({
         throw new Error('Şirket bilgileri format hatalı.');
       }
 
+      companiesCacheRef.current = companyData;
       return companyData;
     };
 
@@ -507,8 +524,16 @@ export default function QuoteComparisonStep({
         setBestOffers(getBestOffers(filteredQuotes));
         
         // İlk teklif geldiğinde loading modal'ı bilgilendir
-        if (filteredQuotes.length > 0) {
+        if (filteredQuotes.length > 0 && !hasStoppedGlobalLoading) {
           setFirstQuoteReceived();
+          setShouldCompleteLoading(true);
+          setHasStoppedGlobalLoading(true);
+          
+          // 4.3 saniye sonra global loading'i durdur ve local loading'i durdur (4s completion + 300ms wait)
+          setTimeout(() => {
+            stopGlobalLoading();
+            setIsLoading(false); // Animasyon tamamlandıktan sonra local loading'i durdur
+          }, 4300);
         }
         
         // Loading kontrolü için WAITING quotes'ları kontrol et
@@ -516,9 +541,13 @@ export default function QuoteComparisonStep({
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
         );
         
+        // WAITING quotes durumunu state'e kaydet (UI'da spinner göstermek için)
+        setHasWaitingQuotes(relevantWaitingQuotes.length > 0);
+        
         // IMMEDIATE DISPLAY: ACTIVE quotes varsa hemen göster, WAITING'leri arka planda devam ettir
+        // NOT: setIsLoading'i burada çağırma - sadece ilk teklif geldiğinde global loading'i durdur
         if (filteredQuotes.length > 0) {
-          setIsLoading(false);
+          // setIsLoading(false); // KALDIRILDI - polling sırasında state değişikliği yaratmasın
         }
 
         // Polling kontrolü için relevantQuotes (aynı logic)
@@ -529,12 +558,10 @@ export default function QuoteComparisonStep({
           quote.state === 'FAILED' || quote.state === 'ACTIVE'
         );
         
-        if (allQuotesFinalized) {
-          if (pollInterval) {
-            clearInterval(pollInterval);
-          }
-          setIsPollingActive(false);
-          
+        const elapsedTime = Date.now() - startTime;
+        const timeoutReached = elapsedTime >= 300000; // 5 dakika
+        
+        if (allQuotesFinalized || timeoutReached) {
           // Analytics event tetikleme - teklif sonuçlarına göre
           const hasSuccessfulQuotes = filteredQuotes.length > 0;
           if (hasSuccessfulQuotes) {
@@ -549,22 +576,34 @@ export default function QuoteComparisonStep({
             });
           }
           
-          setIsLoading(false);
-          return;
-        }
-
-        // 5 dakika geçtiyse polling'i durdur
-        const elapsedTime = Date.now() - startTime;
-        if (elapsedTime >= 300000) {
           if (pollInterval) {
             clearInterval(pollInterval);
           }
-          setIsLoading(false);
+          
+          // Eğer teklif gelmemişse ve loading hala aktifse, loading'i tamamla
+          if (filteredQuotes.length === 0 && !hasStoppedGlobalLoading) {
+            setShouldCompleteLoading(true);
+            setHasStoppedGlobalLoading(true);
+            
+            // 4.3 saniye sonra global loading'i durdur ve local loading'i durdur
+            setTimeout(() => {
+              stopGlobalLoading();
+              setIsLoading(false);
+            }, 4300);
+          } else {
+            // Teklif gelmişse veya loading zaten durdurulmuşsa direkt durdur
+            stopGlobalLoading();
+            setIsLoading(false);
+          }
+          
+          setIsPollingActive(false);
+          setHasWaitingQuotes(false); // Polling bittiğinde spinner'ı kapat
           return;
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Teklifler alınırken bir hata oluştu.');
         setIsLoading(false);
+        stopGlobalLoading();
         if (pollInterval) {
           clearInterval(pollInterval);
         }
@@ -575,10 +614,13 @@ export default function QuoteComparisonStep({
       if (!proposalIdToUse) {
         setError('Teklif ID bulunamadı. Lütfen önceki adıma dönün.');
         setIsLoading(false);
+        stopGlobalLoading();
         return;
       }
 
       setIsLoading(true);
+      setShouldCompleteLoading(false);
+      setHasStoppedGlobalLoading(false);
       setError(null);
 
       try {
@@ -602,6 +644,7 @@ export default function QuoteComparisonStep({
         setQuotes([]);
         setBestOffers([]);
         setIsLoading(false);
+        stopGlobalLoading();
       }
     };
 
@@ -613,7 +656,7 @@ export default function QuoteComparisonStep({
         clearInterval(pollInterval);
       }
     };
-  }, [proposalIdToUse]);
+  }, [proposalIdToUse, agencyConfig]);
 
   const filterQuotesByProductIds = (quotes: ProcessedQuote[]) => {
     const allowedProductIds = agencyConfig.homepage.partners.companies.flatMap((company) =>
@@ -799,12 +842,50 @@ export default function QuoteComparisonStep({
     }
   };
 
+  // Loading durumunda SADECE loading göster, hiçbir içerik gösterme (Kasko/Trafik ile aynı mantık)
+  if (isLoading || globalIsLoading) {
+    return (
+      <LoadingScreen
+        key={proposalId || 'tss-loading'}
+        productType="tss"
+        duration={60}
+        shouldComplete={shouldCompleteLoading}
+      />
+    );
+  }
+
   return (
       <>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" component="h1" fontWeight="600" gutterBottom>
-            Tamamlayıcı Sağlık Sigortası Teklifleri
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Typography variant="h5" component="h1" fontWeight="600">
+              Tamamlayıcı Sağlık Sigortası Teklifleri
+            </Typography>
+            
+            {/* Daha fazla teklif yükleniyor spinner */}
+            {hasWaitingQuotes && (
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1
+              }}>
+                <CircularProgress 
+                  size={18} 
+                  thickness={5} 
+                  sx={{ 
+                    color: '#262163',
+                    '& .MuiCircularProgress-circle': {
+                      strokeLinecap: 'round'
+                    }
+                  }} 
+                />
+                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                  Daha fazla teklif yükleniyor...
+                </Typography>
+              </Box>
+            )}
+          </Box>
+          
           <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
             Size en uygun Tamamlayıcı Sağlık Sigortası teklifini seçip hemen satın alabilirsiniz
           </Typography>

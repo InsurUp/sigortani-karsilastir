@@ -56,11 +56,7 @@ declare global {
 }
  
 
-const pushToDataLayer = (eventData: any) => {
-  if (typeof window !== 'undefined' && window.dataLayer) {
-    window.dataLayer.push(eventData);
-  }
-};
+
 
 // Display mode types
 type ProductDisplayMode = 'FULL_ACCESS' | 'CONTACT_TO_BUY' | 'CENSORED_CONTACT';
@@ -548,6 +544,7 @@ export default function QuoteComparisonStep({
   const [isPollingActive, setIsPollingActive] = useState(true);
   const [shouldCompleteLoading, setShouldCompleteLoading] = useState(false);
   const [hasStoppedGlobalLoading, setHasStoppedGlobalLoading] = useState(false);
+  const [hasWaitingQuotes, setHasWaitingQuotes] = useState(false);
   const { isLoading: globalIsLoading, setFirstQuoteReceived, stopLoading: stopGlobalLoading } = useLoadingStore();
 
   // URL'deki proposalId öncelikli olmalı, localStorage sadece fallback
@@ -952,9 +949,10 @@ export default function QuoteComparisonStep({
           setShouldCompleteLoading(true);
           setHasStoppedGlobalLoading(true);
           
-          // 4.3 saniye sonra global loading'i durdur (4s completion + 300ms wait)
+          // 4.3 saniye sonra global loading'i durdur ve local loading'i durdur (4s completion + 300ms wait)
           setTimeout(() => {
             stopGlobalLoading();
+            setIsLoading(false); // Animasyon tamamlandıktan sonra local loading'i durdur
           }, 4300);
         }
         
@@ -963,9 +961,11 @@ export default function QuoteComparisonStep({
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
         );
         
+        // WAITING quotes durumunu state'e kaydet (UI'da spinner göstermek için)
+        setHasWaitingQuotes(relevantWaitingQuotes.length > 0);
+        
         // En az 2 ACTIVE teklif varsa comparison button göster, WAITING yoksa loading durdur
         const hasActiveQuotes = filteredQuotes.length >= 2;
-        const hasWaitingQuotes = relevantWaitingQuotes.length > 0;
         
         console.log('🔍 KASKO LOADING DEBUG:', {
           filteredQuotes: filteredQuotes.length,
@@ -976,9 +976,36 @@ export default function QuoteComparisonStep({
         });
         
         // IMMEDIATE DISPLAY: ACTIVE quotes varsa hemen göster, WAITING'leri arka planda devam ettir
+        // NOT: setIsLoading'i burada çağırma - sadece ilk teklif geldiğinde global loading'i durdur
         if (filteredQuotes.length > 0) {
           console.log('✅ KASKO IMMEDIATE DISPLAY - ACTIVE quotes:', filteredQuotes.length, 'WAITING continues in background:', relevantWaitingQuotes.length);
+          // setIsLoading(false); // KALDIRILDI - animasyon tamamlandıktan sonra setTimeout içinde çağrılıyor
+        }
+        
+        // 1 dakika içinde teklif gelmemişse loader'ı tamamla
+        const elapsedTime = Date.now() - startTime;
+        const oneMinuteTimeout = elapsedTime >= 60000; // 1 dakika
+        
+        if (oneMinuteTimeout && filteredQuotes.length === 0 && !hasStoppedGlobalLoading) {
+          // Teklif gelmemişse loader'ı tamamla
+          setShouldCompleteLoading(true);
+          setHasStoppedGlobalLoading(true);
           setIsLoading(false);
+          
+          // 4.3 saniye sonra loading'i tamamen durdur (animasyon için)
+          setTimeout(() => {
+            stopGlobalLoading();
+          }, 4300);
+          
+          if (pollInterval) {
+            clearInterval(pollInterval);
+          }
+          setIsPollingActive(false);
+          
+          // Analytics event tetikleme
+     
+          
+          return;
         }
         
         // Polling kontrolü için relevantQuotes (aynı logic)
@@ -988,7 +1015,6 @@ export default function QuoteComparisonStep({
           (quote) => quote.state === 'FAILED' || quote.state === 'ACTIVE'
         );
 
-        const elapsedTime = Date.now() - startTime;
         const timeoutReached = elapsedTime >= 300000; // 5 dakika
 
         if (allRelevantQuotesFinalized || timeoutReached) {
@@ -1000,23 +1026,14 @@ export default function QuoteComparisonStep({
           // Check if there are any successful quotes and trigger dataLayer event
           const hasSuccessfulQuotes = filteredQuotes.length > 0;
           
-          if (hasSuccessfulQuotes) {
-            pushToDataLayer({
-              event: "kasko_formsubmit",
-              form_name: "kasko_teklif_basarili"
-            });
-          } else {
-            pushToDataLayer({
-              event: "kasko_formsubmit",
-              form_name: "kasko_teklif_basarisiz"
-            });
-          }
+    
           
           if (pollInterval) {
             clearInterval(pollInterval);
           }
           setIsLoading(false);
           setIsPollingActive(false);
+          setHasWaitingQuotes(false); // Polling bittiğinde spinner'ı kapat
           stopGlobalLoading(); // Global loading'i durdur
           return;
         }
@@ -1257,9 +1274,35 @@ export default function QuoteComparisonStep({
   return (
     <>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" component="h1" fontWeight="600" gutterBottom>
-          Kasko Sigortası Teklifleri
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+          <Typography variant="h5" component="h1" fontWeight="600">
+            Kasko Sigortası Teklifleri
+          </Typography>
+          
+          {/* Daha fazla teklif yükleniyor spinner */}
+          {hasWaitingQuotes && (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1
+            }}>
+              <CircularProgress 
+                size={18} 
+                thickness={5} 
+                sx={{ 
+                  color: '#262163',
+                  '& .MuiCircularProgress-circle': {
+                    strokeLinecap: 'round'
+                  }
+                }} 
+              />
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                Daha fazla teklif yükleniyor...
+              </Typography>
+            </Box>
+          )}
+        </Box>
+        
         <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
           Size en uygun Kasko Sigortası teklifini seçip hemen satın alabilirsiniz
         </Typography>

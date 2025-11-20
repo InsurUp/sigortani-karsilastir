@@ -26,6 +26,7 @@ import { API_ENDPOINTS } from '../../../../config/api';
 import { fetchWithAuth } from '../../../../services/fetchWithAuth';
 import { useLoadingStore } from '@/store/loadingStore';
 import { getLoadingContent } from '@/config/loadingContent';
+import { FullScreenLoading } from '@/components/common/loader';
 
 // DataLayer helper functions
 declare global {
@@ -252,6 +253,7 @@ export default function AssetInfoStep({
 
   const { customerId, accessToken } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [showFullScreenLoader, setShowFullScreenLoader] = useState(false);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const [modelError, setModelError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -262,6 +264,46 @@ export default function AssetInfoStep({
   const [plateCities, setPlateCities] = useState<Array<{ value: string; text: string; label?: string }>>([]);
   const router = useRouter();
   const { startLoading } = useLoadingStore();
+  const fullScreenLoaderStartedAtRef = useRef<number | null>(null);
+  const fullScreenLoaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const MIN_FULLSCREEN_LOADER_DURATION = 4000;
+
+  const activateFullScreenLoader = useCallback(() => {
+    setShowFullScreenLoader(true);
+    fullScreenLoaderStartedAtRef.current = Date.now();
+  }, []);
+
+  const deactivateFullScreenLoader = useCallback(() => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    const elapsed = startedAt ? Date.now() - startedAt : 0;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (fullScreenLoaderTimeoutRef.current) {
+      clearTimeout(fullScreenLoaderTimeoutRef.current);
+    }
+    fullScreenLoaderTimeoutRef.current = setTimeout(() => {
+      setShowFullScreenLoader(false);
+      fullScreenLoaderStartedAtRef.current = null;
+      fullScreenLoaderTimeoutRef.current = null;
+    }, remaining);
+  }, []);
+
+  const waitForFullScreenLoaderMinDuration = useCallback(async () => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    if (!startedAt) return;
+    const elapsed = Date.now() - startedAt;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fullScreenLoaderTimeoutRef.current) {
+        clearTimeout(fullScreenLoaderTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const getCustomerIdFromAuthStorage = (): string | null => {
     const authStorageItem = localStorage.getItem('auth-storage');
@@ -1276,6 +1318,8 @@ export default function AssetInfoStep({
     }
 
     setIsLoading(true);
+    activateFullScreenLoader();
+    let keepGlobalTransitionActive = false;
     
     try {
       const payload = {
@@ -1287,10 +1331,6 @@ export default function AssetInfoStep({
         productBranch: 'TRAFIK',
         coverageGroupIds: null,
       };
-
-      // Loading'i başlat
-      const loadingContent = getLoadingContent('trafik');
-      startLoading('trafik', loadingContent);
 
       const response = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
         method: 'POST',
@@ -1315,7 +1355,11 @@ export default function AssetInfoStep({
             form_name: "trafik_step2"
           });
           
-          // Yönlendirme - loading modal devam edecek
+          const loadingContent = getLoadingContent('trafik');
+          startLoading('trafik', loadingContent, proposalId);
+          keepGlobalTransitionActive = true;
+
+          await waitForFullScreenLoaderMinDuration();
           router.push(`/trafik/quote-comparison/${proposalId}`);
           return; // İşlem başarılı, fonksiyondan çık
         } else {
@@ -1331,7 +1375,10 @@ export default function AssetInfoStep({
       setNotificationSeverity('error');
       setShowNotification(true);
     } finally {
-      setIsLoading(false);
+      if (!keepGlobalTransitionActive) {
+        setIsLoading(false);
+        deactivateFullScreenLoader();
+      }
     }
   };
 
@@ -1342,6 +1389,8 @@ export default function AssetInfoStep({
     }
     
     setIsLoading(true);
+    activateFullScreenLoader();
+    let keepGlobalTransitionActive = false;
     
     try {
       const vehiclePayload = {
@@ -1424,10 +1473,6 @@ export default function AssetInfoStep({
         coverageGroupIds: null,
       };
       
-      // Loading'i başlat
-      const loadingContent = getLoadingContent('trafik');
-      startLoading('trafik', loadingContent);
-      
       const proposalResponse = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
         method: 'POST',
         headers: {
@@ -1454,9 +1499,12 @@ export default function AssetInfoStep({
             form_name: "trafik_step2"
           });
           
-          setTimeout(() => {
-            router.push(`/trafik/quote-comparison/${proposalResult.proposalId}`);
-          }, 1000);
+          const loadingContent = getLoadingContent('trafik');
+          startLoading('trafik', loadingContent, proposalResult.proposalId);
+          keepGlobalTransitionActive = true;
+          
+          await waitForFullScreenLoaderMinDuration();
+          router.push(`/trafik/quote-comparison/${proposalResult.proposalId}`);
           return;
         } else if (proposalResult && proposalResult.id) {
           localStorage.setItem('proposalIdForTrafik', proposalResult.id);
@@ -1471,9 +1519,12 @@ export default function AssetInfoStep({
             form_name: "trafik_step2"
           });
           
-          setTimeout(() => {
-            router.push(`/trafik/quote-comparison/${proposalResult.id}`);
-          }, 1000);
+          const loadingContent = getLoadingContent('trafik');
+          startLoading('trafik', loadingContent, proposalResult.id);
+          keepGlobalTransitionActive = true;
+          
+          await waitForFullScreenLoaderMinDuration();
+          router.push(`/trafik/quote-comparison/${proposalResult.id}`);
           return;
         }
       } else {
@@ -1485,7 +1536,10 @@ export default function AssetInfoStep({
       setNotificationSeverity('error');
       setShowNotification(true);
     } finally {
-      setIsLoading(false);
+      if (!keepGlobalTransitionActive) {
+        setIsLoading(false);
+        deactivateFullScreenLoader();
+      }
     }
   };
 
@@ -1680,6 +1734,8 @@ export default function AssetInfoStep({
           </Box>
         </>
       )}
+
+      {showFullScreenLoader && <FullScreenLoading productType="trafik" />}
     </Box>
   );
 }

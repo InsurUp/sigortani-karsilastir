@@ -19,7 +19,7 @@ import {
   Autocomplete,
   InputAdornment,
 } from '@mui/material';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { useAuthStore } from '../../../../store/useAuthStore';
@@ -31,6 +31,7 @@ import { API_ENDPOINTS } from '@/config/api';
 import { useFormik } from 'formik';
 import { useLoadingStore } from '@/store/loadingStore';
 import { getLoadingContent } from '@/config/loadingContent';
+import { FullScreenLoading } from '@/components/common/loader';
 
 // DataLayer helper functions
 declare global {
@@ -359,6 +360,7 @@ export default function PropertyInfoStep({
   const router = useRouter();
   const { startLoading } = useLoadingStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [showFullScreenLoader, setShowFullScreenLoader] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false); // Adres yükleme için ayrı state
   const [isUavtLoading, setIsUavtLoading] = useState(false); // UAVT sorgulama için ayrı state
   const [isOldPolicyLoading, setIsOldPolicyLoading] = useState(false); // Eski poliçe sorgulama için ayrı state
@@ -372,6 +374,46 @@ export default function PropertyInfoStep({
   const [notificationSeverity, setNotificationSeverity] = useState<'success' | 'error' | 'warning'>('success');
   const [error, setError] = useState<string | null>(null);
   const [propertyType, setPropertyType] = useState<'manual' | 'uavt'>('manual'); // UAVT sorgu durumunu takip et
+  const MIN_FULLSCREEN_LOADER_DURATION = 4000;
+  const fullScreenLoaderStartedAtRef = useRef<number | null>(null);
+  const fullScreenLoaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const activateFullScreenLoader = useCallback(() => {
+    setShowFullScreenLoader(true);
+    fullScreenLoaderStartedAtRef.current = Date.now();
+  }, []);
+
+  const deactivateFullScreenLoader = useCallback(() => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    const elapsed = startedAt ? Date.now() - startedAt : 0;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (fullScreenLoaderTimeoutRef.current) {
+      clearTimeout(fullScreenLoaderTimeoutRef.current);
+    }
+    fullScreenLoaderTimeoutRef.current = setTimeout(() => {
+      setShowFullScreenLoader(false);
+      fullScreenLoaderStartedAtRef.current = null;
+      fullScreenLoaderTimeoutRef.current = null;
+    }, remaining);
+  }, []);
+
+  const waitForFullScreenLoaderMinDuration = useCallback(async () => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    if (!startedAt) return;
+    const elapsed = Date.now() - startedAt;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fullScreenLoaderTimeoutRef.current) {
+        clearTimeout(fullScreenLoaderTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Yeni adres seviyeleri için state'ler
   const [towns, setTowns] = useState<LocationOption[]>([]);
@@ -896,7 +938,9 @@ const fetchApartments = async (buildingValue: string) => {
     validateOnBlur: true,
     onSubmit: async (values: DaskPropertyFormData) => {
       setIsLoading(true);
+      activateFullScreenLoader();
       setNotificationMessage('');
+      let keepGlobalTransitionActive = false;
 
       // DASK step 2 event tetikleme
       pushToDataLayer({
@@ -910,6 +954,7 @@ const fetchApartments = async (buildingValue: string) => {
           setNotificationSeverity('error');
           setShowNotification(true);
           setIsLoading(false);
+          deactivateFullScreenLoader();
           return;
         }
 
@@ -921,6 +966,7 @@ const fetchApartments = async (buildingValue: string) => {
             setNotificationSeverity('error');
             setShowNotification(true);
             setIsLoading(false);
+            deactivateFullScreenLoader();
             return;
           }
           propertyIdToSubmit = values.selectedPropertyId;
@@ -931,6 +977,7 @@ const fetchApartments = async (buildingValue: string) => {
             setNotificationSeverity('error');
             setShowNotification(true);
             setIsLoading(false);
+            deactivateFullScreenLoader();
             return;
           }
 
@@ -939,6 +986,7 @@ const fetchApartments = async (buildingValue: string) => {
             setNotificationSeverity('error');
             setShowNotification(true);
             setIsLoading(false);
+            deactivateFullScreenLoader();
             return;
           }
 
@@ -1008,6 +1056,7 @@ const fetchApartments = async (buildingValue: string) => {
             setNotificationSeverity('error');
             setShowNotification(true);
             setIsLoading(false);
+            deactivateFullScreenLoader();
             return;
           }
           
@@ -1062,6 +1111,7 @@ const fetchApartments = async (buildingValue: string) => {
             setNotificationSeverity('error');
             setShowNotification(true);
             setIsLoading(false);
+            deactivateFullScreenLoader();
             return;
           }
           const createdProperty = await propertyResponse.json();
@@ -1087,10 +1137,6 @@ const fetchApartments = async (buildingValue: string) => {
           coverageGroupIds: null,
           };
 
-        // Loading'i başlat
-        const loadingContent = getLoadingContent('dask');
-        startLoading('dask', loadingContent);
-
         const proposalResponse = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
             method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -1106,7 +1152,12 @@ const fetchApartments = async (buildingValue: string) => {
 
         if (proposalResult && proposalResult.proposalId) {
           localStorage.setItem('daskProposalId', proposalResult.proposalId);
-          // Yönlendirme - loading modal devam edecek
+          
+          const loadingContent = getLoadingContent('dask');
+          startLoading('dask', loadingContent, proposalResult.proposalId);
+          keepGlobalTransitionActive = true;
+
+          await waitForFullScreenLoaderMinDuration();
           router.push(`/dask/quote-comparison/${proposalResult.proposalId}`);
         } else {
           throw new Error('DASK Teklif ID alınamadı.');
@@ -1122,7 +1173,10 @@ const fetchApartments = async (buildingValue: string) => {
         setNotificationSeverity('error');
         setShowNotification(true);
       } finally {
-        setIsLoading(false);
+        if (!keepGlobalTransitionActive) {
+          setIsLoading(false);
+          deactivateFullScreenLoader();
+        }
       }
     },
   });
@@ -2886,6 +2940,8 @@ const fetchApartments = async (buildingValue: string) => {
           </Box>
         </>
       )}
+
+      {showFullScreenLoader && <FullScreenLoading productType="dask" />}
     </Box>
   );
 }

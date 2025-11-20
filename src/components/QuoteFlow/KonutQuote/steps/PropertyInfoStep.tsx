@@ -27,7 +27,7 @@ import {
   alpha,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { useAuthStore } from '../../../../store/useAuthStore';
@@ -38,6 +38,7 @@ import { useRouter } from 'next/navigation';
 import { API_ENDPOINTS } from '@/config/api';
 import { useFormik } from 'formik';
 import { formatNumberWithDots, removeNumberFormatting, handleFormattedNumberChange } from '../../../../utils/numberFormat';
+import { FullScreenLoading } from '@/components/common/loader';
 import { useAgencyConfig } from '@/context/AgencyConfigProvider';
 import { getCoverageGroupIds } from '@/utils/insuranceCompanies';
 import { useLoadingStore } from '@/store/loadingStore';
@@ -116,6 +117,8 @@ const inflationOptions = [
   { value: InflationType.Inflation75, label: '% 75 ENFLASYONLU' },
   { value: InflationType.Inflation80, label: '% 80 ENFLASYONLU' },
 ];
+
+const DEFAULT_CONSTRUCTION_COST_PER_SQUARE_METER = '25000';
 
 // Konut için Kat Sayısı Aralığı Enum ve Seçenekleri (Konut'takine benzer)
 enum KonutPropertyFloorCountRange {
@@ -248,7 +251,6 @@ interface KonutPropertyFormData {
   ownershipType: KonutPropertyOwnershipType; // YENİ EKLENDİ
 
   // Teminat Bilgileri
-  propertyPrice: string; // Konut Bedeli
   furniturePrice: string; // Eşya Bedeli
   electronicDevicePrice: string; // Elektronik Cihaz Bedeli
   insulationPrice: string; // İzolasyon Bedeli
@@ -277,11 +279,10 @@ const initialKonutFormData: KonutPropertyFormData = {
   buildingMaterial: PropertyStructure.Unknown,
   riskZone: PropertyDamageStatus.Unknown,
   ownershipType: KonutPropertyOwnershipType.Unknown,
-  propertyPrice: '',
-  furniturePrice: '250000',
+  furniturePrice: '50000',
   electronicDevicePrice: '10000',
-  insulationPrice: '10000',
-  windowPrice: '50000',
+  insulationPrice: '1000',
+  windowPrice: '5000',
   inflationValue: InflationType.Inflation60,
 };
 
@@ -378,6 +379,12 @@ const getInflationPercentage = (inflationType: InflationType): number => {
         return parseInt(match[1], 10);
     }
     return 0; // Eşleşme bulunamazsa varsayılan
+};
+
+const toNumberValue = (value: string | undefined, fallback = 0) => {
+  if (!value) return fallback;
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
 };
 
 // Enflasyon tipini API payload'ına dönüştüren fonksiyon
@@ -482,17 +489,54 @@ export default function PropertyInfoStep({
   const [selectedApartment, setSelectedApartment] = useState<LocationOption | null>(null);
   
   const [propertyType, setPropertyType] = useState<'manual' | 'uavt'>('manual'); // UAVT sorgu durumunu takip et
+  const [showFullScreenLoader, setShowFullScreenLoader] = useState(false);
 
   const { customerId, accessToken } = useAuthStore();
   const agencyConfig = useAgencyConfig();
   const router = useRouter();
   const theme = useTheme();
   const { startLoading } = useLoadingStore();
+  const MIN_FULLSCREEN_LOADER_DURATION = 4000;
+  const fullScreenLoaderStartedAtRef = useRef<number | null>(null);
+  const fullScreenLoaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const activateFullScreenLoader = useCallback(() => {
+    setShowFullScreenLoader(true);
+    fullScreenLoaderStartedAtRef.current = Date.now();
+  }, []);
+
+  const deactivateFullScreenLoader = useCallback(() => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    const elapsed = startedAt ? Date.now() - startedAt : 0;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (fullScreenLoaderTimeoutRef.current) {
+      clearTimeout(fullScreenLoaderTimeoutRef.current);
+    }
+    fullScreenLoaderTimeoutRef.current = setTimeout(() => {
+      setShowFullScreenLoader(false);
+      fullScreenLoaderStartedAtRef.current = null;
+      fullScreenLoaderTimeoutRef.current = null;
+    }, remaining);
+  }, []);
+
+const waitForFullScreenLoaderMinDuration = useCallback(async () => {
+  const startedAt = fullScreenLoaderStartedAtRef.current;
+  if (!startedAt) return;
+  const elapsed = Date.now() - startedAt;
+  const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+  if (remaining > 0) {
+    await new Promise((resolve) => setTimeout(resolve, remaining));
+  }
+}, []);
+
+  useEffect(() => {
+    return () => {
+      if (fullScreenLoaderTimeoutRef.current) {
+        clearTimeout(fullScreenLoaderTimeoutRef.current);
+      }
+    };
+  }, []);
   
-  // Eğer config'de konut için coverageGroupIds varsa teminat alanlarını gizle
-  const shouldShowCoverageFields = !getCoverageGroupIds(agencyConfig, 'konut');
-
-
   useEffect(() => {
     let isMounted = true;
     const checkMissingInfo = async () => {
@@ -909,7 +953,9 @@ export default function PropertyInfoStep({
     }),
     onSubmit: async (values: KonutPropertyFormData) => {
       setIsLoading(true);
+      activateFullScreenLoader();
       setNotificationMessage('');
+      let keepGlobalTransitionActive = false;
 
       // Konut step 2 event tetikleme
       pushToDataLayer({
@@ -923,6 +969,7 @@ export default function PropertyInfoStep({
           setNotificationSeverity('error');
           setShowNotification(true);
           setIsLoading(false);
+          deactivateFullScreenLoader();
           return;
         }
 
@@ -934,6 +981,7 @@ export default function PropertyInfoStep({
             setNotificationSeverity('error');
             setShowNotification(true);
             setIsLoading(false);
+            deactivateFullScreenLoader();
             return;
           }
           propertyIdToSubmit = values.selectedPropertyId;
@@ -977,6 +1025,7 @@ export default function PropertyInfoStep({
             setNotificationSeverity('error');
             setShowNotification(true);
             setIsLoading(false);
+            deactivateFullScreenLoader();
             return;
           }
           const createdProperty = await propertyResponse.json();
@@ -994,37 +1043,32 @@ export default function PropertyInfoStep({
         // Konut Proposal oluşturma
         const coverageGroupIds = getCoverageGroupIds(agencyConfig, 'konut');
         console.log('Konut coverageGroupIds:', coverageGroupIds, 'agencyConfig:', agencyConfig?.coverageGroupIds?.konut);
+
+        const coveragePayload = {
+          furniturePrice: toNumberValue(values.furniturePrice),
+          electronicDevicePrice: toNumberValue(values.electronicDevicePrice),
+          insulationPrice: toNumberValue(values.insulationPrice),
+          windowPrice: toNumberValue(values.windowPrice),
+          constructionCostPerSquareMeter: toNumberValue(DEFAULT_CONSTRUCTION_COST_PER_SQUARE_METER),
+          inflation: getInflationPercentage(values.inflationValue),
+        };
         
         const proposalPayload = {
           $type: 'konut',
           propertyId: propertyIdToSubmit,
           insurerCustomerId: customerId,
           insuredCustomerId: customerId,
-          ...(coverageGroupIds ? {
-            // Eğer coverageGroupIds varsa sadece coverageGroupIds gönder, coverage null
-            coverageGroupIds: coverageGroupIds,
-            coverage: null
-          } : {
-            // Eğer coverageGroupIds yoksa coverage bilgilerini gönder
-            coverage: {
-              binaBedeli: values.propertyPrice ? { "$type": "DECIMAL", value: parseInt(values.propertyPrice, 10) } : { "$type": "UNDEFINED" },
-              esyaBedeli: { "$type": "DECIMAL", value: parseInt(values.furniturePrice, 10) },
-              elektronikCihazBedeli: { "$type": "DECIMAL", value: parseInt(values.electronicDevicePrice, 10) },
-              izolasyonBedeli: { "$type": "DECIMAL", value: parseInt(values.insulationPrice, 10) },
-              camBedeli: { "$type": "DECIMAL", value: parseInt(values.windowPrice, 10) },
-              enflasyon: { "$type": "PERCENT", value: getInflationPercentage(values.inflationValue) },
-              productBranch: "KONUT"
-            },
-            coverageGroupIds: null
-          }),
+          coverageGroupIds: Array.isArray(coverageGroupIds) && coverageGroupIds.length > 0 ? coverageGroupIds : null,
+          furniturePrice: coveragePayload.furniturePrice,
+          electronicDevicePrice: coveragePayload.electronicDevicePrice,
+          insulationPrice: coveragePayload.insulationPrice,
+          windowPrice: coveragePayload.windowPrice,
+          constructionCostPerSquareMeter: coveragePayload.constructionCostPerSquareMeter,
+          inflation: coveragePayload.inflation,
           channel: "WEBSITE"
         };
         
         console.log('Konut proposalPayload:', JSON.stringify(proposalPayload, null, 2));
-
-        // Loading'i başlat
-        const loadingContent = getLoadingContent('konut');
-        startLoading('konut', loadingContent);
 
         const proposalResponse = await fetchWithAuth(API_ENDPOINTS.PROPOSALS_CREATE, {
           method: 'POST',
@@ -1041,7 +1085,12 @@ export default function PropertyInfoStep({
 
         if (proposalResult && proposalResult.proposalId) {
           localStorage.setItem('KonutProposalId', proposalResult.proposalId);
-          // Yönlendirme - loading modal devam edecek
+          
+          const loadingContent = getLoadingContent('konut');
+          startLoading('konut', loadingContent, proposalResult.proposalId);
+          keepGlobalTransitionActive = true;
+
+          await waitForFullScreenLoaderMinDuration();
           router.push(`/konut-teklif/quote-comparison/${proposalResult.proposalId}`);
         } else {
           throw new Error('Konut Teklif ID alınamadı.');
@@ -1057,7 +1106,10 @@ export default function PropertyInfoStep({
         setNotificationSeverity('error');
         setShowNotification(true);
       } finally {
-        setIsLoading(false);
+        if (!keepGlobalTransitionActive) {
+          setIsLoading(false);
+          deactivateFullScreenLoader();
+        }
       }
     },
   });
@@ -1202,11 +1254,10 @@ export default function PropertyInfoStep({
         ownershipType: KonutPropertyOwnershipType.Unknown,
         uavtNo: selected.number?.toString() || '',
         // Teminat alanlarını mevcut değerleri ile koru (sadece boşsa default değer ata)
-        propertyPrice: currentValues.propertyPrice || '',
-        furniturePrice: currentValues.furniturePrice || '250000',
+        furniturePrice: currentValues.furniturePrice || '50000',
         electronicDevicePrice: currentValues.electronicDevicePrice || '10000',
-        insulationPrice: currentValues.insulationPrice || '10000',
-        windowPrice: currentValues.windowPrice || '50000',
+        insulationPrice: currentValues.insulationPrice || '1000',
+        windowPrice: currentValues.windowPrice || '5000',
         inflationValue: currentValues.inflationValue !== InflationType.Unknown ? currentValues.inflationValue : InflationType.Inflation60,
       });
 
@@ -1978,20 +2029,85 @@ export default function PropertyInfoStep({
                   </Box> /* Form Box sonu */
               )}
 
-              {/* Teminat Bilgileri Accordion - Sadece coverageGroupIds yoksa göster */}
-              {shouldShowCoverageFields && (
-                <Accordion sx={{ mt: 4, mb: 3 }} defaultExpanded>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant="h6">Teminat Bilgileri</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      Lütfen sigortaya dahil edilecek teminat tutarlarını belirtiniz.
-                    </Typography>
-
-                    {/* Row 1: Eşya Bedeli */}
-                  <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, mb: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 'auto' } }}>
+              <Accordion sx={{ mt: 4, mb: 3 }} defaultExpanded>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography variant="h6">Teminat Bilgileri</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Bu alanları güncelleyerek teklifinizde kullanılacak varsayılan teminat tutarlarını belirleyebilirsiniz.
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                      gap: 3,
+                    }}
+                  >
+                    <Box>
+                      <TextField
+                          fullWidth
+                          name="furniturePrice"
+                          label="Eşya Bedeli (TL)"
+                          type="text"
+                          value={formatNumberWithDots(formik.values.furniturePrice)}
+                          onChange={(e) => {
+                            const formattedValue = handleFormattedNumberChange(e.target.value, 1000000);
+                            formik.setFieldValue('furniturePrice', removeNumberFormatting(formattedValue));
+                          }}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched.furniturePrice && Boolean(formik.errors.furniturePrice)}
+                          helperText={formik.touched.furniturePrice && formik.errors.furniturePrice ? formik.errors.furniturePrice : 'Ev eşyalarının toplam değeri'}
+                          inputProps={{
+                            inputMode: 'numeric',
+                            pattern: '[0-9.]*'
+                          }}
+                          required
+                      />
+                    </Box>
+                    <Box>
+                      <TextField
+                          fullWidth
+                          name="electronicDevicePrice"
+                          label="Elektronik Cihaz Bedeli (TL)"
+                          type="text"
+                          value={formatNumberWithDots(formik.values.electronicDevicePrice)}
+                          onChange={(e) => {
+                            const formattedValue = handleFormattedNumberChange(e.target.value, 500000);
+                            formik.setFieldValue('electronicDevicePrice', removeNumberFormatting(formattedValue));
+                          }}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched.electronicDevicePrice && Boolean(formik.errors.electronicDevicePrice)}
+                          helperText={formik.touched.electronicDevicePrice && formik.errors.electronicDevicePrice ? formik.errors.electronicDevicePrice : 'TV, bilgisayar, telefon vb. değeri'}
+                          inputProps={{
+                            inputMode: 'numeric',
+                            pattern: '[0-9.]*'
+                          }}
+                          required
+                      />
+                    </Box>
+                    <Box>
+                      <TextField
+                          fullWidth
+                          name="insulationPrice"
+                          label="İzolasyon Bedeli (TL)"
+                          type="text"
+                          value={formatNumberWithDots(formik.values.insulationPrice)}
+                          onChange={(e) => {
+                            const formattedValue = handleFormattedNumberChange(e.target.value, 100000);
+                            formik.setFieldValue('insulationPrice', removeNumberFormatting(formattedValue));
+                          }}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched.insulationPrice && Boolean(formik.errors.insulationPrice)}
+                          helperText={formik.touched.insulationPrice && formik.errors.insulationPrice ? formik.errors.insulationPrice : 'Su izolasyonu hasar teminatı'}
+                          inputProps={{
+                            inputMode: 'numeric',
+                            pattern: '[0-9.]*'
+                          }}
+                          required
+                      />
+                    </Box>
+                    <Box>
                       <TextField
                           fullWidth
                           name="windowPrice"
@@ -2012,92 +2128,19 @@ export default function PropertyInfoStep({
                           required
                       />
                     </Box>
-                    <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 'auto' } }}>
-                      <TextField
-                          fullWidth
-                          name="furniturePrice"
-                          label="Eşya Bedeli (TL)"
-                          type="text"
-                          value={formatNumberWithDots(formik.values.furniturePrice)}
-                          onChange={(e) => {
-                            const formattedValue = handleFormattedNumberChange(e.target.value, 1000000);
-                            formik.setFieldValue('furniturePrice', removeNumberFormatting(formattedValue));
-                          }}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.furniturePrice && Boolean(formik.errors.furniturePrice)}
-                          helperText={formik.touched.furniturePrice && formik.errors.furniturePrice ? formik.errors.furniturePrice : 'Ev eşyalarının toplam değeri'}
-                          inputProps={{ 
-                            inputMode: 'numeric',
-                            pattern: '[0-9.]*'
-                          }}
-                          required
-                      />
-                    </Box>
-                  </Box>
-
-                  {/* Row 2: Elektronik Cihaz Bedeli, İzolasyon Bedeli */}
-                  <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, mb: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 'auto' } }}>
-                      <TextField
-                          fullWidth
-                          name="electronicDevicePrice"
-                          label="Elektronik Cihaz Bedeli (TL)"
-                          type="text"
-                          value={formatNumberWithDots(formik.values.electronicDevicePrice)}
-                          onChange={(e) => {
-                            const formattedValue = handleFormattedNumberChange(e.target.value, 500000);
-                            formik.setFieldValue('electronicDevicePrice', removeNumberFormatting(formattedValue));
-                          }}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.electronicDevicePrice && Boolean(formik.errors.electronicDevicePrice)}
-                          helperText={formik.touched.electronicDevicePrice && formik.errors.electronicDevicePrice ? formik.errors.electronicDevicePrice : 'TV, bilgisayar, telefon vb. değeri'}
-                          inputProps={{ 
-                            inputMode: 'numeric',
-                            pattern: '[0-9.]*'
-                          }}
-                          required
-                      />
-                    </Box>
-                    <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 'auto' } }}>
-                      <TextField
-                          fullWidth
-                          name="insulationPrice"
-                          label="İzolasyon Bedeli (TL)"
-                          type="text"
-                          value={formatNumberWithDots(formik.values.insulationPrice)}
-                          onChange={(e) => {
-                            const formattedValue = handleFormattedNumberChange(e.target.value, 100000);
-                            formik.setFieldValue('insulationPrice', removeNumberFormatting(formattedValue));
-                          }}
-                          onBlur={formik.handleBlur}
-                          error={formik.touched.insulationPrice && Boolean(formik.errors.insulationPrice)}
-                          helperText={formik.touched.insulationPrice && formik.errors.insulationPrice ? formik.errors.insulationPrice : 'Su izolasyonu hasar teminatı'}
-                          inputProps={{ 
-                            inputMode: 'numeric',
-                            pattern: '[0-9.]*'
-                          }}
-                          required
-                      />
-                    </Box>
-                  </Box>
-
-                  {/* Row 3: Enflasyon */}
-                  <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, mb: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 'auto' } }}>
+                    <Box>
                       <CustomSelect
-                          label="Enflasyon Oranı"
-                          value={formik.values.inflationValue.toString()}
-                          onChange={(val: string) => formik.setFieldValue('inflationValue', Number(val) || InflationType.Unknown)}
+                          label="Enflasyon Koruması"
+                          value={formik.values.inflationValue === InflationType.Unknown ? '' : formik.values.inflationValue.toString()}
+                          onChange={(val: string) => formik.setFieldValue('inflationValue', val ? Number(val) : InflationType.Unknown)}
                           options={inflationOptions.map(opt => ({ value: opt.value.toString(), label: opt.label }))}
                           error={formik.touched.inflationValue && formik.errors.inflationValue ? String(formik.errors.inflationValue) : undefined}
                           required
                       />
                     </Box>
-                    <Box sx={{ flex: 1, minWidth: { xs: '100%', sm: 'auto' } }} />
                   </Box>
                 </AccordionDetails>
               </Accordion>
-              )}
 
               {/* Logları buraya ekleyelim */}
               {( () => {
@@ -2149,6 +2192,8 @@ export default function PropertyInfoStep({
               </Box>
             </>
         )}
+
+      {showFullScreenLoader && <FullScreenLoading productType="konut" />}
       </Box>
   );
 }

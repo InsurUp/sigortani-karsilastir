@@ -38,13 +38,14 @@ import {
   useTheme,
   styled,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import { useAgencyConfig } from '../../../../context/AgencyConfigProvider';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import { API_ENDPOINTS } from '@/config/api';
 import { useLoadingStore } from '@/store/loadingStore';
+import { LoadingScreen } from '@/components/common/loader';
 
 // DataLayer helper functions
 declare global {
@@ -214,7 +215,7 @@ export default function QuoteComparisonStep({
   const [expandedQuotes, setExpandedQuotes] = useState<Record<string, boolean>>({});
   const [sortOption, setSortOption] = useState<'price' | 'company'>('price');
   const [isPollingActive, setIsPollingActive] = useState(true);
-  const { setFirstQuoteReceived } = useLoadingStore();
+  const { isLoading: globalIsLoading, setFirstQuoteReceived, stopLoading: stopGlobalLoading } = useLoadingStore();
   const [showOnlyBestOffers, setShowOnlyBestOffers] = useState(false);
   const [hoveredQuote, setHoveredQuote] = useState<string | null>(null);
   const theme = useTheme();
@@ -222,6 +223,10 @@ export default function QuoteComparisonStep({
   const params = useParams();
   const router = useRouter();
   const [proposalId, setProposalId] = useState<string | null>(initialProposalId || null);
+  const [shouldCompleteLoading, setShouldCompleteLoading] = useState(false);
+  const [hasStoppedGlobalLoading, setHasStoppedGlobalLoading] = useState(false);
+  const [hasWaitingQuotes, setHasWaitingQuotes] = useState(false);
+  const hasFirstQuoteRef = useRef(false);
   const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [expandedQuoteId, setExpandedQuoteId] = useState<string | null>(null);
   const [bestOffers, setBestOffers] = useState<ProcessedQuote[]>([]);
@@ -266,6 +271,21 @@ export default function QuoteComparisonStep({
       setIsLoading(false);
     }
   }, [params.proposalId]);
+
+  useEffect(() => {
+    if (!hasFirstQuoteRef.current && quotes.some((quote) => quote.state === 'ACTIVE')) {
+      hasFirstQuoteRef.current = true;
+      setFirstQuoteReceived();
+    }
+  }, [quotes, setFirstQuoteReceived]);
+
+  useEffect(() => {
+    if (!isLoading && !hasStoppedGlobalLoading) {
+      setShouldCompleteLoading(true);
+      stopGlobalLoading();
+      setHasStoppedGlobalLoading(true);
+    }
+  }, [isLoading, hasStoppedGlobalLoading, stopGlobalLoading]);
 
   // processQuotesData yardımcı fonksiyonu - DASK teminat açıklaması ile güncellenmiş
   const processQuotesData = (quotesData: Quote[], currentCompanies: InsuranceCompany[]): ProcessedQuote[] => {
@@ -392,8 +412,16 @@ export default function QuoteComparisonStep({
         setBestOffers(getBestOffers(filteredQuotes));
         
         // İlk teklif geldiğinde loading modal'ı bilgilendir
-        if (filteredQuotes.length > 0) {
+        if (filteredQuotes.length > 0 && !hasStoppedGlobalLoading) {
           setFirstQuoteReceived();
+          setShouldCompleteLoading(true);
+          setHasStoppedGlobalLoading(true);
+          
+          // 4.3 saniye sonra global loading'i durdur ve local loading'i durdur (4s completion + 300ms wait)
+          setTimeout(() => {
+            stopGlobalLoading();
+            setIsLoading(false); // Animasyon tamamlandıktan sonra local loading'i durdur
+          }, 4300);
         }
 
         // Loading kontrolü için WAITING quotes'ları kontrol et
@@ -401,13 +429,16 @@ export default function QuoteComparisonStep({
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
         );
         
+        // WAITING quotes durumunu state'e kaydet (UI'da spinner göstermek için)
+        setHasWaitingQuotes(relevantWaitingQuotes.length > 0);
+        
         // En az 2 ACTIVE teklif varsa comparison button göster, WAITING yoksa loading durdur
         const hasActiveQuotes = filteredQuotes.length >= 2;
-        const hasWaitingQuotes = relevantWaitingQuotes.length > 0;
         
         // IMMEDIATE DISPLAY: ACTIVE quotes varsa hemen göster, WAITING'leri arka planda devam ettir
+        // NOT: setIsLoading'i burada çağırma - sadece ilk teklif geldiğinde global loading'i durdur
         if (filteredQuotes.length > 0) {
-          setIsLoading(false);
+          // setIsLoading(false); // KALDIRILDI - polling sırasında state değişikliği yaratmasın
         }
 
         // Polling'i yönetmek için ilgili (config'de tanımlı) teklifleri al
@@ -445,8 +476,10 @@ export default function QuoteComparisonStep({
           if (pollInterval) {
             clearInterval(pollInterval);
           }
-          setIsLoading(false);
+          // setIsLoading(false); // KALDIRILDI - global loading zaten durdurulmuş
           setIsPollingActive(false); // Polling'i bitir
+          setHasWaitingQuotes(false); // Polling bittiğinde spinner'ı kapat
+          stopGlobalLoading(); // Global loading'i durdur
           return;
         }
 
@@ -675,12 +708,50 @@ export default function QuoteComparisonStep({
     }
   };
 
+  // Loading durumunda SADECE loading göster, hiçbir içerik gösterme (Kasko/Trafik ile aynı mantık)
+  if (isLoading || globalIsLoading) {
+    return (
+      <LoadingScreen
+        key={proposalId || 'dask-loading'}
+        productType='dask'
+        duration={60}
+        shouldComplete={shouldCompleteLoading}
+      />
+    );
+  }
+
   return (
     <>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" component="h1" fontWeight="600" gutterBottom>
-          Dask Sigortası Teklifleri
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+          <Typography variant="h5" component="h1" fontWeight="600">
+            Dask Sigortası Teklifleri
+          </Typography>
+          
+          {/* Daha fazla teklif yükleniyor spinner */}
+          {hasWaitingQuotes && (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1
+            }}>
+              <CircularProgress 
+                size={18} 
+                thickness={5} 
+                sx={{ 
+                  color: '#262163',
+                  '& .MuiCircularProgress-circle': {
+                    strokeLinecap: 'round'
+                  }
+                }} 
+              />
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                Daha fazla teklif yükleniyor...
+              </Typography>
+            </Box>
+          )}
+        </Box>
+        
         <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
           Size en uygun DASK sigortası teklifini seçip hemen satın alabilirsiniz
         </Typography>
@@ -726,26 +797,7 @@ export default function QuoteComparisonStep({
         </Alert>
       )}
 
-      {isLoading ? (
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          my: 8,
-          gap: 3
-        }}>
-          <CircularProgress size={48} thickness={4} />
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="medium" gutterBottom>
-              Teklifler Hazırlanıyor
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Anlaşmalı şirketlerimizden size özel teklifler alınıyor...
-            </Typography>
-          </Box>
-        </Box>
-      ) : quotes.length === 0 ? (
+      {quotes.length === 0 ? (
         <Alert 
           severity="info" 
           sx={{ 

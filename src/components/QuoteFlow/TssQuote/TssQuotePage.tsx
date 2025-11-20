@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   Container,
@@ -23,7 +23,10 @@ import MobileStepper from '@/components/QuoteFlow/MobileStepper';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAgencyConfig } from '@/context/AgencyConfigProvider';
 import { getCoverageGroupIds } from '@/utils/insuranceCompanies';
+import { useLoadingStore } from '@/store/loadingStore';
+import { getLoadingContent } from '@/config/loadingContent';
 import '../../../styles/form-style.css';
+import { FullScreenLoading } from '@/components/common/loader';
 
 // Props tipleri (Geçici olarak buraya eklendi)
 interface PersonalInfoStepProps {
@@ -124,9 +127,51 @@ export default function TssQuotePage() {
   const [personalInfoMode, setPersonalInfoMode] = useState<'login' | 'additionalInfo'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFullScreenLoader, setShowFullScreenLoader] = useState(false);
+  const MIN_FULLSCREEN_LOADER_DURATION = 4000;
+  const fullScreenLoaderStartedAtRef = useRef<number | null>(null);
+  const fullScreenLoaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const activateFullScreenLoader = useCallback(() => {
+    setShowFullScreenLoader(true);
+    fullScreenLoaderStartedAtRef.current = Date.now();
+  }, []);
+
+  const deactivateFullScreenLoader = useCallback(() => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    const elapsed = startedAt ? Date.now() - startedAt : 0;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (fullScreenLoaderTimeoutRef.current) {
+      clearTimeout(fullScreenLoaderTimeoutRef.current);
+    }
+    fullScreenLoaderTimeoutRef.current = setTimeout(() => {
+      setShowFullScreenLoader(false);
+      fullScreenLoaderStartedAtRef.current = null;
+      fullScreenLoaderTimeoutRef.current = null;
+    }, remaining);
+  }, []);
+
+  const waitForFullScreenLoaderMinDuration = useCallback(async () => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    if (!startedAt) return;
+    const elapsed = Date.now() - startedAt;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fullScreenLoaderTimeoutRef.current) {
+        clearTimeout(fullScreenLoaderTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const { customerId, accessToken } = useAuthStore();
   const agencyConfig = useAgencyConfig();
+  const { startLoading } = useLoadingStore();
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -215,6 +260,9 @@ export default function TssQuotePage() {
       return;
     }
 
+    activateFullScreenLoader();
+    let keepGlobalTransitionActive = false;
+
     try {
       const tokenToUse = accessToken;
 
@@ -248,7 +296,14 @@ export default function TssQuotePage() {
         const newProposalId = result.proposalId || result.id;
         if (newProposalId) {
           localStorage.setItem('proposalIdForTss', newProposalId);
+          
+          const loadingContent = getLoadingContent('tss');
+          startLoading('tss', loadingContent, newProposalId);
+
+          keepGlobalTransitionActive = true;
+          await waitForFullScreenLoaderMinDuration();
           router.push(`/tss/quote-comparison/${newProposalId}`);
+          return;
         } else {
           alert('Teklif oluşturuldu ancak teklif ID alınamadı.');
         }
@@ -258,6 +313,10 @@ export default function TssQuotePage() {
       }
     } catch (error) {
       alert('Teklif oluşturulurken bir hata oluştu.');
+    } finally {
+      if (!keepGlobalTransitionActive) {
+        deactivateFullScreenLoader();
+      }
     }
   };
 
@@ -316,6 +375,7 @@ export default function TssQuotePage() {
           <div className="flex  items-center justify-center pb-8">
             <Container maxWidth="lg">
               <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+                {showFullScreenLoader && <FullScreenLoading productType="tss" />}
                 {isMobile ? (
                     <MobileStepper steps={steps} activeStep={activeStep} />
                 ) : (

@@ -45,14 +45,16 @@ import {
   useTheme,
   styled,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import { useParams, useRouter } from 'next/navigation';
 import { useLoadingStore } from '@/store/loadingStore';
+import { LoadingScreen } from '@/components/common/loader';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { fetchWithAuth } from '../../../../services/fetchWithAuth';
 import { useAgencyConfig } from '../../../../context/AgencyConfigProvider';
 import { API_ENDPOINTS } from '../../../../config/api';
+import QuoteComparisonModal, { QuoteForComparison } from '@/components/common/QuoteComparisonModal';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_VITE_API_BASE_URL;
 
@@ -269,11 +271,16 @@ export default function QuoteComparisonStep({
   const [hoveredQuote, setHoveredQuote] = useState<string | null>(null);
   const theme = useTheme();
   const [isPollingActive, setIsPollingActive] = useState(true);
-  const { setFirstQuoteReceived } = useLoadingStore();
+  const { isLoading: globalIsLoading, setFirstQuoteReceived, stopLoading: stopGlobalLoading } = useLoadingStore();
   const agencyConfig = useAgencyConfig();
   const params = useParams();
   const router = useRouter();
   const [proposalId, setProposalId] = useState<string | null>(initialProposalId || null);
+  const [shouldCompleteLoading, setShouldCompleteLoading] = useState(false);
+  const [hasStoppedGlobalLoading, setHasStoppedGlobalLoading] = useState(false);
+  const [hasWaitingQuotes, setHasWaitingQuotes] = useState(false);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
+  const hasFirstQuoteRef = useRef(false);
 
   // Get product display mode for each quote
   const getProductDisplayMode = (productCode: string, productId: number): ProductDisplayMode => {
@@ -381,6 +388,15 @@ export default function QuoteComparisonStep({
   }, [params]);
 
   useEffect(() => {
+    if (!hasFirstQuoteRef.current && quotes.some((quote) => quote.state === 'ACTIVE')) {
+      hasFirstQuoteRef.current = true;
+      setFirstQuoteReceived();
+    }
+  }, [quotes, setFirstQuoteReceived]);
+
+  // Bu useEffect'i kaldırıyoruz çünkü teklif geldiğinde direkt fetchQuotes içinde handle ediyoruz
+
+  useEffect(() => {
     let isPollingActive = true;
     let pollInterval: NodeJS.Timeout | null = null;
     const startTime = Date.now();
@@ -455,8 +471,16 @@ export default function QuoteComparisonStep({
         setQuotes(sortQuotes(filteredQuotes));
         
         // İlk teklif geldiğinde loading modal'ı bilgilendir
-        if (filteredQuotes.length > 0) {
+        if (filteredQuotes.length > 0 && !hasStoppedGlobalLoading) {
           setFirstQuoteReceived();
+          setShouldCompleteLoading(true);
+          setHasStoppedGlobalLoading(true);
+          
+          // 4.3 saniye sonra global loading'i durdur ve local loading'i durdur (4s completion + 300ms wait)
+          setTimeout(() => {
+            stopGlobalLoading();
+            setIsLoading(false); // Animasyon tamamlandıktan sonra local loading'i durdur
+          }, 4300);
         }
         
         // Loading kontrolü için WAITING quotes'ları kontrol et
@@ -464,13 +488,16 @@ export default function QuoteComparisonStep({
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
         );
         
+        // WAITING quotes durumunu state'e kaydet (UI'da spinner göstermek için)
+        setHasWaitingQuotes(relevantWaitingQuotes.length > 0);
+        
         // En az 2 ACTIVE teklif varsa comparison button göster, WAITING yoksa loading durdur
         const hasActiveQuotes = filteredQuotes.length >= 2;
-        const hasWaitingQuotes = relevantWaitingQuotes.length > 0;
         
         // IMMEDIATE DISPLAY: ACTIVE quotes varsa hemen göster, WAITING'leri arka planda devam ettir
+        // NOT: setIsLoading'i burada çağırma - sadece ilk teklif geldiğinde global loading'i durdur
         if (filteredQuotes.length > 0) {
-          setIsLoading(false);
+          // setIsLoading(false); // KALDIRILDI - polling sırasında state değişikliği yaratmasın
         }
         
         // Polling kontrolü için relevantQuotes (aynı logic)
@@ -507,8 +534,10 @@ export default function QuoteComparisonStep({
           if (pollInterval) {
             clearInterval(pollInterval);
           }
-          setIsLoading(false);
+          // setIsLoading(false); // KALDIRILDI - global loading zaten durdurulmuş
           setIsPollingActive(false);
+          setHasWaitingQuotes(false); // Polling bittiğinde spinner'ı kapat
+          stopGlobalLoading(); // Global loading'i durdur
           return;
         }
 
@@ -741,12 +770,50 @@ export default function QuoteComparisonStep({
 
   const isBestOffer = (sortedQuotes: ProcessedQuote[], currentQuoteId: string) => sortedQuotes.length > 0 && sortedQuotes[0].id === currentQuoteId;
 
+  // Loading durumunda SADECE loading göster, hiçbir içerik gösterme (Kasko ile aynı mantık)
+  if (isLoading || globalIsLoading) {
+    return (
+      <LoadingScreen
+        key={proposalId || 'trafik-loading'}
+        productType="trafik"
+        duration={60}
+        shouldComplete={shouldCompleteLoading}
+      />
+    );
+  }
+
   return (
     <>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" component="h1" fontWeight="600" gutterBottom>
-          Trafik Sigortası Teklifleri
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+          <Typography variant="h5" component="h1" fontWeight="600">
+            Trafik Sigortası Teklifleri
+          </Typography>
+          
+          {/* Daha fazla teklif yükleniyor spinner */}
+          {hasWaitingQuotes && (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1
+            }}>
+              <CircularProgress 
+                size={18} 
+                thickness={5} 
+                sx={{ 
+                  color: '#262163',
+                  '& .MuiCircularProgress-circle': {
+                    strokeLinecap: 'round'
+                  }
+                }} 
+              />
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                Daha fazla teklif yükleniyor...
+              </Typography>
+            </Box>
+          )}
+        </Box>
+        
         <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
           Size en uygun Trafik Sigortası teklifini seçip hemen satın alabilirsiniz
         </Typography>
@@ -756,11 +823,36 @@ export default function QuoteComparisonStep({
           mt: 3, 
           mb: 2,
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: 2
         }}>
+          {/* Karşılaştırma Butonu */}
+          <Box>
+            {quotes.filter(q => q.state === 'ACTIVE').length > 1 && (
+              <Button
+                variant="outlined"
+                startIcon={<CompareArrowsIcon />}
+                onClick={() => setIsComparisonModalOpen(true)}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 'medium',
+                  borderColor: agencyConfig.theme.primaryColor,
+                  color: agencyConfig.theme.primaryColor,
+                  '&:hover': {
+                    borderColor: agencyConfig.theme.primaryColor,
+                    bgcolor: alpha(agencyConfig.theme.primaryColor, 0.05),
+                  }
+                }}
+              >
+                Teklifleri Karşılaştır
+              </Button>
+            )}
+          </Box>
+
+          {/* Sıralama Kontrolü */}
           <FormControl size="small">
             <Select
               value={sortOption}
@@ -792,26 +884,7 @@ export default function QuoteComparisonStep({
         </Alert>
       )}
 
-      {isLoading ? (
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          my: 8,
-          gap: 3
-        }}>
-          <CircularProgress size={48} thickness={4} />
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="medium" gutterBottom>
-              Teklifler Hazırlanıyor
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Anlaşmalı şirketlerimizden size özel teklifler alınıyor...
-            </Typography>
-          </Box>
-        </Box>
-      ) : quotes.length === 0 ? (
+      {quotes.length === 0 ? (
         <Alert 
           severity="info" 
           sx={{ 
@@ -1374,6 +1447,29 @@ export default function QuoteComparisonStep({
           </DialogActions>
         </Dialog>
       )}
+
+      {/* Karşılaştırma Modal'ı */}
+      <QuoteComparisonModal
+        open={isComparisonModalOpen}
+        onClose={() => setIsComparisonModalOpen(false)}
+        quotes={convertQuotesForComparison(quotes.filter(q => q.state === 'ACTIVE'))}
+        title="Trafik Sigortası"
+        onPurchase={handlePurchase}
+        maxQuotes={3}
+      />
     </>
   );
 }
+
+// Karşılaştırma modal'ı için teklifleri dönüştür
+const convertQuotesForComparison = (quotes: ProcessedQuote[]): QuoteForComparison[] => {
+  return quotes.map(quote => ({
+    id: quote.id,
+    company: quote.company,
+    logo: quote.logo,
+    premiums: quote.premiums,
+    insuranceCompanyGuarantees: quote.insuranceCompanyGuarantees,
+    coverageGroupName: quote.coverageGroupName,
+    selectedInstallmentNumber: quote.selectedInstallmentNumber
+  }));
+};

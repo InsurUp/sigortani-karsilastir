@@ -26,6 +26,9 @@ import { API_ENDPOINTS } from '@/config/api';
 import { fetchWithAuth } from '../../../../services/fetchWithAuth';
 import { useAgencyConfig } from '../../../../context/AgencyConfigProvider';
 import { getCoverageGroupIds } from '@/utils/insuranceCompanies';
+import { useLoadingStore } from '@/store/loadingStore';
+import { getLoadingContent } from '@/config/loadingContent';
+import { FullScreenLoading } from '@/components/common/loader';
 import "../../../../styles/form-style.css"
 
 interface Vehicle {
@@ -239,6 +242,7 @@ export default function AssetInfoStep({
 
   const { customerId, accessToken } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [showFullScreenLoader, setShowFullScreenLoader] = useState(false);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const [modelError, setModelError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -249,6 +253,47 @@ export default function AssetInfoStep({
   const [plateCities, setPlateCities] = useState<Array<{ value: string; text: string; label?: string }>>([]);
   const router = useRouter();
   const agencyConfig = useAgencyConfig();
+  const { startLoading } = useLoadingStore();
+  const MIN_FULLSCREEN_LOADER_DURATION = 4000;
+  const fullScreenLoaderStartedAtRef = useRef<number | null>(null);
+  const fullScreenLoaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const activateFullScreenLoader = useCallback(() => {
+    setShowFullScreenLoader(true);
+    fullScreenLoaderStartedAtRef.current = Date.now();
+  }, []);
+
+  const deactivateFullScreenLoader = useCallback(() => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    const elapsed = startedAt ? Date.now() - startedAt : 0;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (fullScreenLoaderTimeoutRef.current) {
+      clearTimeout(fullScreenLoaderTimeoutRef.current);
+    }
+    fullScreenLoaderTimeoutRef.current = setTimeout(() => {
+      setShowFullScreenLoader(false);
+      fullScreenLoaderStartedAtRef.current = null;
+      fullScreenLoaderTimeoutRef.current = null;
+    }, remaining);
+  }, []);
+
+  const waitForFullScreenLoaderMinDuration = useCallback(async () => {
+    const startedAt = fullScreenLoaderStartedAtRef.current;
+    if (!startedAt) return;
+    const elapsed = Date.now() - startedAt;
+    const remaining = Math.max(0, MIN_FULLSCREEN_LOADER_DURATION - elapsed);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fullScreenLoaderTimeoutRef.current) {
+        clearTimeout(fullScreenLoaderTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const getCustomerIdFromAuthStorage = (): string | null => {
     try {
@@ -1073,6 +1118,8 @@ export default function AssetInfoStep({
       return;
     }
     setIsLoading(true);
+    activateFullScreenLoader();
+    let keepGlobalTransitionActive = false;
 
     try {
       const customerIdForTramer = getCustomerIdFromAuthStorage();
@@ -1197,6 +1244,7 @@ export default function AssetInfoStep({
       setShowNotification(true);
     } finally {
       setIsLoading(false);
+      deactivateFullScreenLoader();
     }
   };
 
@@ -1225,28 +1273,16 @@ export default function AssetInfoStep({
     }
 
     setIsLoading(true);
+    activateFullScreenLoader();
 
     try {
+      const coverageGroupIds = getCoverageGroupIds(agencyConfig, 'imm');
       const payload = {
         $type: 'imm',
         insurerCustomerId: storedCustomerId,
         insuredCustomerId: storedCustomerId,
         vehicleId: selectedVehicleId,
-        coverageGroupIds: null,
-        coverage: {
-          immLimitiAyrimsiz: {
-            "$type": "DECIMAL",
-            "value": 3000000
-          },
-          kiralikArac: {
-            "$type": "DEFINED",
-            "yillikKullanimSayisi": 2,
-            "tekSeferlikGunSayisi": 15,
-            "aracSegment": "SEGMENTE_SEGMENT"
-          },
-          tasinanYuk: "YOK",
-          productBranch: "IMM"
-        },
+        coverageGroupIds: coverageGroupIds && coverageGroupIds.length > 0 ? coverageGroupIds : null,
         channel: 'WEBSITE'
       };
 
@@ -1273,11 +1309,12 @@ export default function AssetInfoStep({
           setNotificationSeverity('success');
           setShowNotification(true);
 
+          const loadingContent = getLoadingContent('imm');
+          startLoading('imm', loadingContent, proposalId);
+          keepGlobalTransitionActive = true;
 
-          // Router push'tan önce kısa bir delay ekleyelim
-          setTimeout(() => {
-            router.push(`/imm/quote-comparison/${proposalId}`);
-          }, 1000);
+          await waitForFullScreenLoaderMinDuration();
+          router.push(`/imm/quote-comparison/${proposalId}`);
           return; // İşlem başarılı, fonksiyondan çık
         } else {
           throw new Error('Teklif oluşturuldu ancak yanıt verisinden teklif ID okunamadı.');
@@ -1292,7 +1329,10 @@ export default function AssetInfoStep({
       setNotificationSeverity('error');
       setShowNotification(true);
     } finally {
-      setIsLoading(false);
+      if (!keepGlobalTransitionActive) {
+        setIsLoading(false);
+        deactivateFullScreenLoader();
+      }
     }
   };
 
@@ -1317,8 +1357,11 @@ export default function AssetInfoStep({
     }
 
     setIsLoading(true);
+    activateFullScreenLoader();
+    let keepGlobalTransitionActive = false;
 
     try {
+      const coverageGroupIds = getCoverageGroupIds(agencyConfig, 'imm');
       const vehiclePayload = {
         customerId,
         plate: {
@@ -1394,22 +1437,7 @@ export default function AssetInfoStep({
         insurerCustomerId: customerId,
         insuredCustomerId: customerId,
         vehicleId: vehicleId,
-        coverageGroupIds: null,
-        coverage: {
-          immLimitiAyrimsiz: {
-            "$type": "DECIMAL",
-            "value": 3000000
-          },
-          kiralikArac: {
-            "$type": "DEFINED",
-            "yillikKullanimSayisi": 2,
-            "tekSeferlikGunSayisi": 15,
-            "aracSegment": "SEGMENTE_SEGMENT"
-          },
-          tasinanYuk: "YOK",
-          productBranch: "IMM"
-        },
-        coverageGroupIds: getCoverageGroupIds(agencyConfig, 'imm'),
+        coverageGroupIds: coverageGroupIds && coverageGroupIds.length > 0 ? coverageGroupIds : null,
         channel: "WEBSITE"
       };
       
@@ -1434,10 +1462,12 @@ export default function AssetInfoStep({
           setNotificationSeverity('success');
           setShowNotification(true);
           
+          const loadingContent = getLoadingContent('imm');
+          startLoading('imm', loadingContent, proposalResult.proposalId);
+          keepGlobalTransitionActive = true;
           
-          setTimeout(() => {
-            router.push(`/imm/quote-comparison/${proposalResult.proposalId}`);
-          }, 1000);
+          await waitForFullScreenLoaderMinDuration();
+          router.push(`/imm/quote-comparison/${proposalResult.proposalId}`);
           return;
         } else if (proposalResult && proposalResult.id) {
           localStorage.setItem('proposalIdForImm', proposalResult.id);
@@ -1446,10 +1476,12 @@ export default function AssetInfoStep({
           setNotificationSeverity('success');
           setShowNotification(true);
           
+          const loadingContent = getLoadingContent('imm');
+          startLoading('imm', loadingContent, proposalResult.id);
+          keepGlobalTransitionActive = true;
           
-          setTimeout(() => {
-            router.push(`/imm/quote-comparison/${proposalResult.id}`);
-          }, 1000);
+          await waitForFullScreenLoaderMinDuration();
+          router.push(`/imm/quote-comparison/${proposalResult.id}`);
           return;
         }
       } else {
@@ -1461,7 +1493,10 @@ export default function AssetInfoStep({
       setNotificationSeverity('error');
       setShowNotification(true);
     } finally {
-      setIsLoading(false);
+      if (!keepGlobalTransitionActive) {
+        setIsLoading(false);
+        deactivateFullScreenLoader();
+      }
     }
   };
 
@@ -1646,6 +1681,8 @@ export default function AssetInfoStep({
           </Box>
         </>
       )}
+
+      {showFullScreenLoader && <FullScreenLoading productType="imm" />}
     </Box>
   );
 }

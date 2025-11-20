@@ -266,6 +266,46 @@ export default function AssetInfoStep({
   const { startLoading } = useLoadingStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmittingProposal, setIsSubmittingProposal] = useState(false); // Sadece proposal API için
+  const MIN_SUBMISSION_LOADER_DURATION = 4000;
+  const submissionLoaderStartedAtRef = useRef<number | null>(null);
+  const submissionLoaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const activateSubmissionLoader = useCallback(() => {
+    setIsSubmittingProposal(true);
+    submissionLoaderStartedAtRef.current = Date.now();
+  }, []);
+
+  const deactivateSubmissionLoader = useCallback(() => {
+    const startedAt = submissionLoaderStartedAtRef.current;
+    const elapsed = startedAt ? Date.now() - startedAt : 0;
+    const remaining = Math.max(0, MIN_SUBMISSION_LOADER_DURATION - elapsed);
+    if (submissionLoaderTimeoutRef.current) {
+      clearTimeout(submissionLoaderTimeoutRef.current);
+    }
+    submissionLoaderTimeoutRef.current = setTimeout(() => {
+      setIsSubmittingProposal(false);
+      submissionLoaderStartedAtRef.current = null;
+      submissionLoaderTimeoutRef.current = null;
+    }, remaining);
+  }, []);
+
+  const waitForSubmissionLoaderMinDuration = useCallback(async () => {
+    const startedAt = submissionLoaderStartedAtRef.current;
+    if (!startedAt) return;
+    const elapsed = Date.now() - startedAt;
+    const remaining = Math.max(0, MIN_SUBMISSION_LOADER_DURATION - elapsed);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (submissionLoaderTimeoutRef.current) {
+        clearTimeout(submissionLoaderTimeoutRef.current);
+      }
+    };
+  }, []);
   const [isModelsLoading, setIsModelsLoading] = useState(false); // Model yükleme için ayrı state
   const [modelError, setModelError] = useState<string | null>(null); // Model hata mesajı için state
   const [error, setError] = useState<string | null>(null);
@@ -1294,8 +1334,9 @@ export default function AssetInfoStep({
   };
 
   const handleExistingVehicleProposal = async () => {
+    let keepGlobalTransitionActive = false;
     try {
-      setIsSubmittingProposal(true);
+      activateSubmissionLoader();
       
       const tokenToUse = accessToken ?? (await refreshAccessToken());
 
@@ -1358,7 +1399,9 @@ export default function AssetInfoStep({
             loadingText: 'Sana özel en uygun teklif seçeneklerini kaçırma!',
           }, newProposalId);
           
-          // Direkt yönlendir
+          keepGlobalTransitionActive = true;
+
+          await waitForSubmissionLoaderMinDuration();
           router.push(`/kasko/quote-comparison/${newProposalId}`);
           return; // İşlem başarılı, fonksiyondan çık
         } else {
@@ -1377,13 +1420,16 @@ export default function AssetInfoStep({
       setNotificationSeverity('error');
       setShowNotification(true);
     } finally {
-      setIsSubmittingProposal(false);
+      if (!keepGlobalTransitionActive) {
+        deactivateSubmissionLoader();
+      }
     }
   };
 
   const handleNewVehicleProposal = async () => {
+    let keepGlobalTransitionActive = false;
     try {
-      setIsSubmittingProposal(true);
+      activateSubmissionLoader();
       
       const tokenToUse = accessToken ?? (await refreshAccessToken());
 
@@ -1510,8 +1556,10 @@ export default function AssetInfoStep({
             description: 'Teklifleriniz hazırlanıyor. Sigorta şirketlerinden gelen fırsatları senin için özenle bir araya getiriyoruz.',
             loadingText: 'Sana özel en uygun teklif seçeneklerini kaçırma!',
           }, newProposalId);
+
+          keepGlobalTransitionActive = true;
           
-          // Direkt yönlendir
+          await waitForSubmissionLoaderMinDuration();
           router.push(`/kasko/quote-comparison/${newProposalId}`);
           return; // İşlem başarılı, fonksiyondan çık
         } else {
@@ -1530,7 +1578,9 @@ export default function AssetInfoStep({
       setNotificationSeverity('error');
       setShowNotification(true);
     } finally {
-      setIsSubmittingProposal(false);
+      if (!keepGlobalTransitionActive) {
+        deactivateSubmissionLoader();
+      }
     }
   };
 

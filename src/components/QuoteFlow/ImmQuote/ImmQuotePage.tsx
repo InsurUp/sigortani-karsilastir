@@ -46,11 +46,11 @@ export default function ImmQuotePage() {
 
     // Check if user is authenticated and automatically progress to step 2
     // Only do this once on initial load
-    if (isAuthenticated && activeStep === 0 && !hasAutoProgressed.current) {
+    if (isAuthenticated && accessToken && activeStep === 0 && !hasAutoProgressed.current) {
       hasAutoProgressed.current = true;
       handleStepChange(1, true); // true indicates automatic progression
     }
-  }, [urlProposalId, isAuthenticated, activeStep]);
+  }, [urlProposalId, isAuthenticated, accessToken, activeStep]);
 
   const handleStepChange = (newStep: number, isAutomatic: boolean = false) => {
     const stepName = steps[newStep];
