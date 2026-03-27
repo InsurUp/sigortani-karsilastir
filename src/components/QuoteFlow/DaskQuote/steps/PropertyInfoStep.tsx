@@ -18,7 +18,14 @@ import {
   Radio,
   Autocomplete,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -356,10 +363,12 @@ export default function PropertyInfoStep({
   isLastStep,
   onSelectionTypeChange,
 }: PropertyInfoStepProps) {
-  const { accessToken, customerId } = useAuthStore();
+  const { accessToken, customerId, user, logout } = useAuthStore();
   const router = useRouter();
   const { startLoading } = useLoadingStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [showBackDialog, setShowBackDialog] = useState(false);
+  const [insuredInfo, setInsuredInfo] = useState<{ name: string; city: string; district: string } | null>(null);
   const [showFullScreenLoader, setShowFullScreenLoader] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false); // Adres yükleme için ayrı state
   const [isUavtLoading, setIsUavtLoading] = useState(false); // UAVT sorgulama için ayrı state
@@ -450,13 +459,19 @@ export default function PropertyInfoStep({
           if (!isMounted) return;
             
           if (rawResponse.ok) {
-            const data = await rawResponse.json() as { fullName?: string; title?: string; city?: {value: string}; district?: {value: string, text: string}};
+            const data = await rawResponse.json() as { fullName?: string; title?: string; city?: {value: string; text?: string}; district?: {value: string; text: string}};
             if (data) {
-              // Check for both individual (fullName) and corporate (title) customer data
               const hasMissingInfo = (!data.fullName && !data.title) || !data.city?.value || !data.district?.value || !data.district?.text;
               if (hasMissingInfo) {
-                if (isMounted) onBack(); // PersonalInfoStep'e geri dön
+                if (isMounted) onBack();
                 return;
+              }
+              if (isMounted) {
+                setInsuredInfo({
+                  name: data.fullName || data.title || '',
+                  city: data.city?.text || data.city?.value || '',
+                  district: data.district?.text || '',
+                });
               }
             } else {
               if (isMounted) onBack();
@@ -472,8 +487,6 @@ export default function PropertyInfoStep({
           }
         } catch (error) {
           if (isMounted) {
-            // setError('Kullanıcı bilgileri kontrol edilemedi.'); // Opsiyonel: Kullanıcıya hata göster
-            // Belki burada da onBack() çağrılmalı veya akış durdurulmalı
           }
         }
       }
@@ -486,11 +499,20 @@ export default function PropertyInfoStep({
     };
   }, [accessToken, onBack]);
 
+  const handleBackToPersonalInfo = () => {
+    setShowBackDialog(true);
+  };
+
+  const handleConfirmBack = () => {
+    logout();
+    localStorage.clear();
+    window.location.reload();
+  };
+
   const fetchDistricts = async (cityValue: string) => {
     if (!cityValue) {
       setDistricts([]);
       setSelectedDistrict(null);
-      // Alt seviyeleri sıfırla
       setTowns([]);
       setSelectedTown(null);
       setNeighborhoods([]);
@@ -1954,6 +1976,53 @@ const fetchApartments = async (buildingValue: string) => {
           : 'DASK poliçeniz için konut bilgilerinizi giriniz'}
       </Typography>
 
+      {(insuredInfo?.name || user?.name) && (
+        <Box
+          sx={{
+            mb: 3,
+            p: 2,
+            borderRadius: 2,
+            background: 'linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%)',
+            border: '1px solid',
+            borderColor: 'primary.light',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              bgcolor: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <PersonOutlineIcon sx={{ color: 'white', fontSize: 24 }} />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+              Bu işlem aşağıdaki sigortalı adına yapılmaktadır
+            </Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }} noWrap>
+              {insuredInfo?.name || user?.name}
+            </Typography>
+            {insuredInfo?.city && insuredInfo?.district && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
+                <LocationOnOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                <Typography variant="caption" color="text.secondary">
+                  {insuredInfo.district}, {insuredInfo.city}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      )}
+
       <Snackbar
         open={showNotification}
         autoHideDuration={6000}
@@ -2896,8 +2965,8 @@ const fetchApartments = async (buildingValue: string) => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4, pt:2 }}>
               <Button
                 variant="outlined"
-                onClick={onBack}
-                disabled={isLoading || formik.isSubmitting || isFirstStep}
+                onClick={handleBackToPersonalInfo}
+                disabled={isLoading || formik.isSubmitting}
                 sx={{
                   minWidth: 100,
                   height: 48,
@@ -2942,6 +3011,27 @@ const fetchApartments = async (buildingValue: string) => {
       )}
 
       {showFullScreenLoader && <FullScreenLoading productType="dask" />}
+
+      <Dialog
+        open={showBackDialog}
+        onClose={() => setShowBackDialog(false)}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Çıkış Onayı</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Şu an <strong>{user?.name || 'kullanıcı'}</strong> kullanıcısından çıkış yapıyorsunuz ve ilk adıma yönlendiriliyorsunuz.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setShowBackDialog(false)} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2 }}>
+            İptal
+          </Button>
+          <Button onClick={handleConfirmBack} variant="contained" color="error" sx={{ textTransform: 'none', borderRadius: 2 }}>
+            Çıkış Yap
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
