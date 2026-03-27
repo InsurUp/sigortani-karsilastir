@@ -15,6 +15,11 @@ import {
   Autocomplete,
   Grid,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -27,6 +32,8 @@ import { fetchWithAuth } from '../../../../services/fetchWithAuth';
 import { useLoadingStore } from '@/store/loadingStore';
 import { getLoadingContent } from '@/config/loadingContent';
 import { FullScreenLoading } from '@/components/common/loader';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 
 // DataLayer helper functions
 declare global {
@@ -251,9 +258,11 @@ export default function AssetInfoStep({
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationSeverity, setNotificationSeverity] = useState<'success' | 'error' | 'warning' | 'info'>('success');
 
-  const { customerId, accessToken } = useAuthStore();
+  const { customerId, accessToken, user, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showFullScreenLoader, setShowFullScreenLoader] = useState(false);
+  const [showBackDialog, setShowBackDialog] = useState(false);
+  const [insuredInfo, setInsuredInfo] = useState<{ name: string; city: string; district: string } | null>(null);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const [modelError, setModelError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -334,13 +343,17 @@ export default function AssetInfoStep({
           const response: any = await fetchWithAuth(API_ENDPOINTS.CUSTOMER_ME);
           if (response.ok) {
             const data = await response.json();
-            // Check for both individual (fullName) and corporate (title) customer data
             const hasMissingInfo = (!data.fullName && !data.title) || !data.city?.value || !data.district?.value;
 
             if (hasMissingInfo) {
               onBack();
               return;
             }
+            setInsuredInfo({
+              name: data.fullName || data.title || '',
+              city: data.city?.text || data.city?.value || '',
+              district: data.district?.text || '',
+            });
           } else {
           }
         } catch (error) {
@@ -353,6 +366,16 @@ export default function AssetInfoStep({
 
   const handleCloseNotification = () => {
     setShowNotification(false);
+  };
+
+  const handleBackToPersonalInfo = () => {
+    setShowBackDialog(true);
+  };
+
+  const handleConfirmBack = () => {
+    logout();
+    localStorage.clear();
+    window.location.reload();
   };
 
   const refreshAccessToken = useCallback(async () => {
@@ -1598,6 +1621,53 @@ export default function AssetInfoStep({
           : 'Trafik Sigortası teklifiniz için araç bilgilerinizi giriniz'}
       </Typography>
 
+      {(insuredInfo?.name || user?.name) && (
+        <Box
+          sx={{
+            mb: 3,
+            p: 2,
+            borderRadius: 2,
+            background: 'linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%)',
+            border: '1px solid',
+            borderColor: 'primary.light',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              bgcolor: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <PersonOutlineIcon sx={{ color: 'white', fontSize: 24 }} />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+              Bu işlem aşağıdaki sigortalı adına yapılmaktadır
+            </Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }} noWrap>
+              {insuredInfo?.name || user?.name}
+            </Typography>
+            {insuredInfo?.city && insuredInfo?.district && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
+                <LocationOnOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                <Typography variant="caption" color="text.secondary">
+                  {insuredInfo.district}, {insuredInfo.city}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      )}
+
       <Snackbar
         open={showNotification}
         autoHideDuration={6000}
@@ -1679,6 +1749,20 @@ export default function AssetInfoStep({
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mt: 3 }}>
             <Box>
+              {activeStep === 0 && (
+                <Button
+                  variant="outlined"
+                  onClick={handleBackToPersonalInfo}
+                  sx={{
+                    minWidth: 100,
+                    height: 48,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                  }}
+                >
+                  Geri
+                </Button>
+              )}
               {activeStep === 1 && (
                 <Button
                   variant="outlined"
@@ -1736,6 +1820,27 @@ export default function AssetInfoStep({
       )}
 
       {showFullScreenLoader && <FullScreenLoading productType="trafik" />}
+
+      <Dialog
+        open={showBackDialog}
+        onClose={() => setShowBackDialog(false)}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Çıkış Onayı</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Şu an <strong>{user?.name || 'kullanıcı'}</strong> kullanıcısından çıkış yapıyorsunuz ve ilk adıma yönlendiriliyorsunuz.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setShowBackDialog(false)} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2 }}>
+            İptal
+          </Button>
+          <Button onClick={handleConfirmBack} variant="contained" color="error" sx={{ textTransform: 'none', borderRadius: 2 }}>
+            Çıkış Yap
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -11,7 +11,14 @@ import {
   CardContent,
   CardActions,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../../../store/useAuthStore';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
@@ -39,11 +46,22 @@ interface RequestStepProps {
 }
 
 const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepProps) => {
-  const { customerId, accessToken } = useAuthStore();
+  const { customerId, accessToken, user, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requestCreated, setRequestCreated] = useState(false);
   const [requestResult, setRequestResult] = useState<'idle' | 'success' | 'error' | 'existing'>('idle');
+  const [showBackDialog, setShowBackDialog] = useState(false);
+
+  const handleBackToPersonalInfo = () => {
+    setShowBackDialog(true);
+  };
+
+  const handleConfirmBack = () => {
+    logout();
+    localStorage.clear();
+    window.location.reload();
+  };
 
   useEffect(() => {
     // localStorage'dan gelen durumları kontrol et
@@ -270,29 +288,49 @@ const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepPro
 
   // Normal talep oluşturma ekranı (önceden login olmuş kullanıcılar için)
   return (
-    <Box sx={{ textAlign: 'center', py: 4 }}>
-      <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
+    <Box sx={{ py: 4 }}>
+      <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
         Cep Telefonu Sigortası Teklif Talebi
       </Typography>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+      {user?.name && (
+        <Box sx={{ mb: 3, p: 2, borderRadius: 2, background: 'linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%)', border: '1px solid', borderColor: 'primary.light', display: 'flex', alignItems: 'center', gap: 2, maxWidth: 600, mx: 'auto' }}>
+          <Box sx={{ width: 44, height: 44, borderRadius: '50%', bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <PersonOutlineIcon sx={{ color: 'white', fontSize: 24 }} />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>Bu işlem aşağıdaki sigortalı adına yapılmaktadır</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }} noWrap>{user.name}</Typography>
+          </Box>
+        </Box>
+      )}
+
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto', textAlign: 'center' }}>
         Talebinizi oluşturduktan sonra uzman ekibimiz sizinle iletişime geçerek 
         ihtiyaçlarınıza en uygun teklifi hazırlayacaktır.
       </Typography>
 
-      <Button
-        variant="contained"
-        onClick={handleCreateRequest}
-        disabled={isLoading}
-        sx={{ 
-          minWidth: 200,
-          height: 40,
-          borderRadius: 2,
-          textTransform: 'none',
-        }}
-      >
-        {isLoading ? 'Talep Oluşturuluyor...' : 'Talep Oluştur'}
-      </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', maxWidth: 600, mx: 'auto' }}>
+        <Button variant="outlined" onClick={handleBackToPersonalInfo} sx={{ minWidth: 100, height: 40, borderRadius: 2, textTransform: 'none' }}>
+          Geri
+        </Button>
+        <Button variant="contained" onClick={handleCreateRequest} disabled={isLoading} sx={{ minWidth: 200, height: 40, borderRadius: 2, textTransform: 'none' }}>
+          {isLoading ? 'Talep Oluşturuluyor...' : 'Talep Oluştur'}
+        </Button>
+      </Box>
+
+      <Dialog open={showBackDialog} onClose={() => setShowBackDialog(false)} PaperProps={{ sx: { borderRadius: 3, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 600 }}>Çıkış Onayı</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Şu an <strong>{user?.name || 'kullanıcı'}</strong> kullanıcısından çıkış yapıyorsunuz ve ilk adıma yönlendiriliyorsunuz.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setShowBackDialog(false)} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2 }}>İptal</Button>
+          <Button onClick={handleConfirmBack} variant="contained" color="error" sx={{ textTransform: 'none', borderRadius: 2 }}>Çıkış Yap</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

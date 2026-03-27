@@ -7,7 +7,14 @@ import {
   CircularProgress,
   TextField,
   Autocomplete,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useAuthStore } from '../../../../store/useAuthStore';
@@ -87,7 +94,8 @@ export default function HealthInfoStep({
 }: HealthInfoStepProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const { customerId, accessToken } = useAuthStore();
+  const { customerId, accessToken, user, logout } = useAuthStore();
+  const [showBackDialog, setShowBackDialog] = useState(false);
   const [initialValues, setInitialValues] = useState<{ height: string | number | null; weight: string | number | null }>({ height: null, weight: null });
 
   const getInitialValue = <T,>(key: string, defaultValue: T): T => {
@@ -200,6 +208,16 @@ export default function HealthInfoStep({
   // Artık tedavi planı ve hastane ağı seçenekleri kullanılmıyor
 
 
+  const handleBackToPersonalInfo = () => {
+    setShowBackDialog(true);
+  };
+
+  const handleConfirmBack = () => {
+    logout();
+    localStorage.clear();
+    window.location.reload();
+  };
+
   return (
     <Box component="form" onSubmit={formik.handleSubmit} noValidate>
       <Typography variant="h5" component="h2" gutterBottom>
@@ -208,6 +226,45 @@ export default function HealthInfoStep({
       <Typography variant="body2" color="text.secondary" paragraph>
         Lütfen ek sağlık bilgilerinizi giriniz.
       </Typography>
+
+      {user?.name && (
+        <Box
+          sx={{
+            mb: 3,
+            p: 2,
+            borderRadius: 2,
+            background: 'linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%)',
+            border: '1px solid',
+            borderColor: 'primary.light',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              bgcolor: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <PersonOutlineIcon sx={{ color: 'white', fontSize: 24 }} />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+              Bu işlem aşağıdaki sigortalı adına yapılmaktadır
+            </Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }} noWrap>
+              {user.name}
+            </Typography>
+          </Box>
+        </Box>
+      )}
 
       {isLoading && (
          <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
@@ -274,9 +331,19 @@ export default function HealthInfoStep({
         {/* Tedavi planı ve hastane ağı alanları kaldırıldı - default olarak coverageGroupIds kullanılacak */}
       </Box>
 
-      {/* Butonlar (Formatlama Düzeltildi) */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-
+        <Button
+          variant="outlined"
+          onClick={handleBackToPersonalInfo}
+          sx={{
+            minWidth: 100,
+            height: 48,
+            borderRadius: 2,
+            textTransform: 'none',
+          }}
+        >
+          Geri
+        </Button>
         <Button
           type="submit"
           variant="contained"
@@ -285,7 +352,6 @@ export default function HealthInfoStep({
             minWidth: 200,
             height: 48,
             borderRadius: 2,
-            ml: 'auto',
             textTransform: 'none',
           }}
           disabled={formik.isSubmitting || !formik.isValid}
@@ -297,6 +363,27 @@ export default function HealthInfoStep({
           )}
         </Button>
       </Box>
+
+      <Dialog
+        open={showBackDialog}
+        onClose={() => setShowBackDialog(false)}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Çıkış Onayı</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Şu an <strong>{user?.name || 'kullanıcı'}</strong> kullanıcısından çıkış yapıyorsunuz ve ilk adıma yönlendiriliyorsunuz.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setShowBackDialog(false)} variant="outlined" sx={{ textTransform: 'none', borderRadius: 2 }}>
+            İptal
+          </Button>
+          <Button onClick={handleConfirmBack} variant="contained" color="error" sx={{ textTransform: 'none', borderRadius: 2 }}>
+            Çıkış Yap
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 } 
