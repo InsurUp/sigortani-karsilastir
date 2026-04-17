@@ -9,6 +9,7 @@ import PurchaseStep from './steps/PurchaseStep';
 import QuoteComparisonStep from './steps/QuoteComparisonStep';
 import { useAuthStore } from '@/store/useAuthStore';
 import MobileStepper from '@/components/QuoteFlow/MobileStepper';
+import QuoteFormHeading from '@/components/QuoteFlow/QuoteFormHeading';
 import { useParams } from 'next/navigation';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import { API_ENDPOINTS } from '@/config/api';
@@ -106,6 +107,7 @@ export default function KaskoQuotePage() {
         <div className="flex  items-center justify-center pb-8">
           <Container maxWidth="lg">
             <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+              <QuoteFormHeading />
               {isMobile ? (
                 <MobileStepper steps={steps} activeStep={activeStep} />
               ) : (

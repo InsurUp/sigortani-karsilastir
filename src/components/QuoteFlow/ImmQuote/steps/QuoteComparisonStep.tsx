@@ -1215,7 +1215,7 @@ export default function QuoteComparisonStep({
                                                                 variant="outlined"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`tel:${agencyConfig?.contact?.phone?.primary?.replace(/\s/g, '') || '44422377'}`, '_self');
+                                                                    window.open(`tel:${agencyConfig?.contact?.phone?.primary?.replace(/\s/g, '') || '05330864001'}`, '_self');
                                                                 }}
                                                                 sx={{
                                                                     color: 'text.primary',
@@ -1238,7 +1238,7 @@ export default function QuoteComparisonStep({
                                                                     Bize Ulaşın
                                                                 </Typography>
                                                                 <Typography variant="caption" sx={{ fontSize: '0.75rem', opacity: 0.8, mt: 0.5 }}>
-                                                                    {agencyConfig?.contact?.phone?.primary || '444 22 37'}
+                                                                    {agencyConfig?.contact?.phone?.primary || '+90 533 086 40 01'}
                                                                 </Typography>
                                                             </PurchaseButton>
                                                         );

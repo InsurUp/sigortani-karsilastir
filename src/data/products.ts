@@ -732,6 +732,110 @@ export const productData: Record<string, ProductData> = {
         { city: '', price: '55-64: Kadın 27.799 TL / Erkek 23.117 TL' }
       ]
     }
+  },
+  seyahat: {
+    slug: 'seyahat-saglik-sigortasi',
+    name: 'Seyahat Sağlık Sigortası',
+    banner: {
+      title: 'Seyahat Sağlık Sigortası Teklifi Al!',
+      description: 'Seyahat sağlık sigortası teklifi almak için lütfen aşağıdaki formu doldurunuz.'
+    },
+    intro: {
+      title: 'Seyahat Sağlık Sigortanı Hızla Bul, Yolculuğa Güvenle Çık!',
+      description: 'Yurt içi veya yurt dışı seyahatlerinde sağlık giderlerini güvence altına almak istiyorsan, seyahat sağlık sigortası tam sana göre. Sigortanı Karşılaştır ile teklifleri hızlıca değerlendir, sana uygun poliçeyi kolayca seç ve yolculuğuna iç rahatlığıyla başla.'
+    },
+    about: {
+      title: 'Seyahat Sağlık Sigortası Nedir?',
+      description: 'Seyahat sağlık sigortası; yolculuk sırasında karşılaşabileceğin ani rahatsızlık, kaza, acil tedavi ve asistans ihtiyaçlarında devreye giren önemli bir güvencedir. Özellikle vize başvurularında zorunlu olan bu ürün, seyahatin boyunca beklenmedik sağlık masraflarına karşı koruma sağlar.'
+    },
+    guarantees: {
+      title: 'Seyahat Sağlık Sigortası Teminatları',
+      items: [
+        {
+          title: 'Acil Sağlık Giderleri',
+          description: 'Seyahat sırasında oluşan ani hastalık veya kaza kaynaklı tedavi masrafları teminat altına alınır.'
+        },
+        {
+          title: 'Tıbbi Nakil ve Destek',
+          description: 'Gerekli durumlarda en yakın sağlık kuruluşuna nakil ve asistans hizmetleri sunulur.'
+        },
+        {
+          title: 'Bagaj ve Seyahat Aksaklıkları',
+          description: 'Poliçeye bağlı olarak bagaj gecikmesi, kaybı veya seyahat iptali gibi ek durumlar için destek sağlanabilir.'
+        },
+        {
+          title: 'Vize Uyumlu Poliçe',
+          description: 'Schengen başvuruları dahil birçok seyahat için gerekli minimum teminat koşullarını karşılayan poliçe seçenekleri sunulur.'
+        }
+      ]
+    },
+    whyChooseUs: {
+      title: 'Neden Sigortanı Karşılaştır?',
+      items: [
+        {
+          title: 'Hızlı Başvuru',
+          description: 'Kısa form ile dakikalar içinde seyahat sağlık sigortası teklifine ulaşabilirsin.'
+        },
+        {
+          title: 'Kolay Karşılaştırma',
+          description: 'Farklı poliçe seçeneklerini tek ekranda değerlendirip ihtiyacına uygun olanı seçebilirsin.'
+        },
+        {
+          title: 'Güvenli Süreç',
+          description: 'KVKK uyumlu altyapı ve güvenli ödeme deneyimi ile işlemlerini rahatça tamamlayabilirsin.'
+        },
+        {
+          title: 'Uzman Destek',
+          description: 'Süreç boyunca ihtiyaç duyduğunda ekibimizden destek alabilirsin.'
+        },
+        {
+          title: 'Seyahate Uygun Çözümler',
+          description: 'Vize, tatil veya iş seyahati fark etmeksizin kullanım amacına uygun poliçe alternatifleri sunulur.'
+        }
+      ]
+    },
+    attentionPoints: {
+      title: 'Seyahat Sağlık Sigortası Yaptırırken Nelere Dikkat Etmeli?',
+      items: [
+        {
+          title: 'Teminat Limiti',
+          description: 'Gideceğin ülkenin veya vize başvurusunun istediği minimum teminat tutarını kontrol et.'
+        },
+        {
+          title: 'Poliçe Süresi',
+          description: 'Seyahat tarihlerini kapsadığından ve giriş-çıkış günlerine uygun olduğundan emin ol.'
+        },
+        {
+          title: 'Coğrafi Kapsam',
+          description: 'Poliçenin gideceğin ülke veya bölge için geçerli olup olmadığını mutlaka incele.'
+        },
+        {
+          title: 'Ek Teminatlar',
+          description: 'Bagaj kaybı, uçuş gecikmesi veya asistans gibi ek hizmetleri ihtiyacına göre değerlendir.'
+        },
+        {
+          title: 'Kolay Erişim',
+          description: 'Acil durumda hızlı destek sunan ve poliçene kolay erişim sağlayan bir platform tercih et.'
+        }
+      ]
+    },
+    offerSteps: [
+      {
+        icon: 'ClipboardDocumentListIcon',
+        title: 'Bilgilerini Gir',
+        description: 'Seyahat tarihlerini ve temel bilgilerini paylaş, sana uygun poliçeler için süreç hemen başlasın.'
+      },
+      {
+        icon: 'MagnifyingGlassIcon',
+        title: 'Teklifleri Karşılaştır',
+        description: 'Seyahat planına uygun seçenekleri tek ekranda incele ve ihtiyacına en uygun poliçeyi seç.'
+      },
+      {
+        icon: 'ShieldCheckIcon',
+        title: 'Güvenle Tamamla',
+        description: 'Poliçeni güvenli şekilde al, seyahate çıkmadan önce sağlık güvenceni hazır hale getir.'
+      }
+    ]
   }
 };
 

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { getProductData } from '@/data/products'
+import { KaskoDegerHesaplamaForm } from '@/components/pages/kasko-deger-hesaplama/sections'
 
 interface PricingData {
   brand: string
@@ -76,13 +77,12 @@ const kaskoData: KaskoPricingData = {
 export function KaskoPricingTabs() {
   const params = useParams()
   const slug = params.slug as string
+  const [activeTab, setActiveTab] = useState<'pricing' | 'discounts'>('pricing')
   const productData = getProductData(slug)
   
   if (!productData || slug !== 'kasko-sigortasi') {
     return null
   }
-
-  const [activeTab, setActiveTab] = useState<'pricing' | 'discounts'>('pricing')
 
   return (
     <section className='py-20 bg-gray-50'>
@@ -183,6 +183,8 @@ export function KaskoPricingTabs() {
             </div>
           )}
         </div>
+
+        <KaskoDegerHesaplamaForm embedded />
       </div>
     </section>
   )

@@ -69,8 +69,17 @@ const Hero = () => {
                 </div>
               ))}
             </div>
-            <div className="col-span-3 text-center">
-              <Link href="/urunler" className="text-sm font-medium text-black">Tüm Ürünleri Gör</Link>
+            <div className="col-span-3 mt-2 flex justify-center">
+              <Link
+                href="/urunler"
+                className="inline-flex items-center gap-2 rounded-full bg-[#223140] px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(34,49,64,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#16222d] hover:shadow-[0_22px_44px_rgba(34,49,64,0.24)]"
+              >
+                <span>Tüm Ürünleri Gör</span>
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4.167 10h11.666" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="m10.833 5 5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
             </div>
           </div>
         </div>

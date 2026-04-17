@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import React, { useState } from 'react'
 
 interface VehicleInfo {
@@ -13,7 +14,11 @@ interface CalculationResult {
   currency: string
 }
 
-export function KaskoDegerHesaplamaForm() {
+interface KaskoDegerHesaplamaFormProps {
+  embedded?: boolean
+}
+
+export function KaskoDegerHesaplamaForm({ embedded = false }: KaskoDegerHesaplamaFormProps) {
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo>({
     brand: '',
     modelYear: '',
@@ -50,13 +55,23 @@ export function KaskoDegerHesaplamaForm() {
   }
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className={embedded ? 'pt-10' : 'py-20 bg-gray-50'}>
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
-              Araç Kasko Değer Listesi
-            </h1>
+          <div className={`rounded-lg p-8 ${embedded ? 'border border-gray-200 bg-white shadow-sm' : 'bg-white shadow-lg'}`}>
+            <div className="text-center mb-8">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+                Kasko Değer Hesaplama
+              </p>
+              <h2 className="text-3xl font-bold text-center text-gray-800">
+                Araç Kasko Değer Listesi
+              </h2>
+              {embedded && (
+                <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-gray-600">
+                  Kasko değer tablosunu inceledikten sonra aracınızın tahmini değerini aynı sayfada hızlıca hesaplayabilirsiniz.
+                </p>
+              )}
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="relative">
@@ -126,9 +141,9 @@ export function KaskoDegerHesaplamaForm() {
                 <p className="text-gray-600 mb-4">
                   tutarında hesaplanmıştır.
                 </p>
-                <button className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                <Link href="/kasko-teklif" className="inline-flex bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
                   Kasko Teklifi Al
-                </button>
+                </Link>
               </div>
             )}
           </div>

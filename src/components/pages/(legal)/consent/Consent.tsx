@@ -95,7 +95,7 @@ function Consent() {
                 Adres: Hepkebirler Mah. Adalet Cad. No: 26 Merkez / Kastamonu
               </p>
               <p>
-                Tel: <a href="tel:4442237" rel="noopener noreferrer" className="acerapps-text-editor-link">444 22 37</a>
+                Tel: <a href="tel:5330864001" rel="noopener noreferrer" className="acerapps-text-editor-link">+90 533 086 40 01</a>
               </p>
             </div>
 

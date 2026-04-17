@@ -9,7 +9,17 @@ import { userStories } from '@/data/userStories';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
+const storySummaries: Record<number, string> = {
+  1: 'Yoğun iş gününde kasko tekliflerini hızla karşılaştırıp poliçesini dakikalar içinde tamamladı.',
+  2: 'Kaza anında chatbot ve WhatsApp desteğiyle hasar sürecini panik yaşamadan yönetti.',
+  3: 'Konut sigortasını güvenle seçip SSL sertifikalı ödeme ile hızlıca tamamladı.',
+  4: 'Yoğun iş temposunda en uygun trafik sigortasını kısa sürede bulup kolayca satın aldı.',
+};
+
 const UserStories = () => {
+  const getStoryPreview = (id: number, story: string) => {
+    return storySummaries[id] || story;
+  };
 
   return (
     <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50">
@@ -23,11 +33,19 @@ const UserStories = () => {
           </p>
         </div>
 
-        <div className="relative max-w-5xl mx-auto">
+        <div className="relative max-w-7xl mx-auto">
           <Swiper
             modules={[Pagination, Autoplay]}
-            spaceBetween={20}
+            spaceBetween={24}
             slidesPerView={1}
+            breakpoints={{
+              768: {
+                slidesPerView: 2,
+              },
+              1280: {
+                slidesPerView: 3,
+              },
+            }}
             autoplay={{
               delay: 6000,
               disableOnInteraction: false,
@@ -39,18 +57,18 @@ const UserStories = () => {
             loop={true}
             className="user-stories-swiper"
           >
-            {userStories.map((story, index) => (
+            {userStories.map((story) => (
               <SwiperSlide key={story.id}>
-                <div className="relative">
+                <div className="relative w-full">
                   {/* Ana Kart */}
-                  <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-gray-100 overflow-hidden relative">
+                  <div className="relative w-full overflow-hidden rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.07)] md:p-6">
                     
                     <div className="relative z-10">
                       {/* Üst Kısım - Kullanıcı Bilgileri */}
-                      <div className="flex items-start justify-between mb-8">
-                        <div className="flex items-center space-x-4">
+                      <div className="mb-5 flex items-start justify-between gap-3 md:gap-4">
+                        <div className="flex min-w-0 items-center space-x-4">
                           <div className="relative">
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-lg font-bold shadow-lg">
                               {story.name.charAt(0)}
                             </div>
                             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
@@ -59,23 +77,23 @@ const UserStories = () => {
                               </svg>
                             </div>
                           </div>
-                          <div>
-                            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                          <div className="min-w-0">
+                            <h3 className="mb-1 truncate text-lg font-bold text-gray-900 md:text-xl">
                               {story.name}
                             </h3>
                             <div className="flex items-center text-gray-600">
-                              <span className="font-medium">{story.location}</span>
+                              <span className="truncate font-medium">{story.location}</span>
                             </div>
                           </div>
                         </div>
                         
                         {/* Rating */}
-                        <div className="flex flex-col items-end">
-                          <div className="flex space-x-1 mb-2">
+                        <div className="flex shrink-0 flex-col items-end">
+                          <div className="mb-2 flex space-x-1">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <svg
                                 key={star}
-                                className="w-5 h-5 text-yellow-400"
+                                className="w-4 h-4 text-yellow-400"
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
                               >
@@ -88,17 +106,23 @@ const UserStories = () => {
                       </div>
 
                       {/* Hikaye Başlığı */}
-                      <h4 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 leading-tight">
+                      <h4 className="mb-4 line-clamp-2 break-words text-xl font-bold leading-tight text-gray-900 md:text-2xl">
                         {story.title}
                       </h4>
 
                       {/* Hikaye Metni */}
-                      <div className="bg-gray-50 rounded-2xl p-6 md:p-8 relative">
-                        <div className="absolute top-4 left-6 text-4xl text-blue-200 font-serif">"</div>
-                        <blockquote className="text-gray-700 text-lg md:text-xl leading-relaxed pl-8 italic">
-                          {story.story}
+                      <div className="relative rounded-2xl border border-slate-100 bg-gradient-to-b from-slate-50 to-white p-4">
+                        <div className="absolute left-4 top-2 text-2xl font-serif text-blue-200">&quot;</div>
+                        <blockquote className="pl-5 pr-1 text-[15px] leading-7 text-gray-700 italic md:text-base">
+                          {getStoryPreview(story.id, story.story)}
                         </blockquote>
-                        <div className="absolute bottom-4 right-6 text-4xl text-blue-200 font-serif">"</div>
+                        <div className="absolute bottom-2 right-4 text-2xl font-serif text-blue-200">&quot;</div>
+                      </div>
+
+                      <div className="mt-3">
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                          Gerçek Müşteri Deneyimi
+                        </span>
                       </div>
 
                     </div>
@@ -134,10 +158,18 @@ const UserStories = () => {
               transform: scale(1);
             }
 
-            .user-stories-swiper .swiper-slide {
-              height: auto;
-            }
-          `}</style>
+             .user-stories-swiper .swiper-slide {
+               height: auto;
+             }
+
+             .user-stories-swiper {
+               overflow: hidden;
+             }
+
+             .user-stories-swiper .swiper-wrapper {
+               align-items: flex-start;
+             }
+           `}</style>
         </div>
       </div>
     </section>

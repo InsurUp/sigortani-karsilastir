@@ -11,7 +11,7 @@ export const agencyConfig = {
     },
     contact: {
       phone: {
-        primary: "444 22 37",
+        primary: "+90 533 086 40 01",
         secondary: ""
       },
       email: {
