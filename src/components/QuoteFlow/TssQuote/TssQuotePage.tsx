@@ -20,6 +20,7 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import HealthInfoStep from './steps/HealthInfoStep';
 import { fetchWithAuth } from '@/services/fetchWithAuth';
 import MobileStepper from '@/components/QuoteFlow/MobileStepper';
+import QuoteFormHeading from '@/components/QuoteFlow/QuoteFormHeading';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAgencyConfig } from '@/context/AgencyConfigProvider';
 import { getCoverageGroupIds } from '@/utils/insuranceCompanies';
@@ -376,6 +377,7 @@ export default function TssQuotePage() {
             <Container maxWidth="lg">
               <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
                 {showFullScreenLoader && <FullScreenLoading productType="tss" />}
+                <QuoteFormHeading />
                 {isMobile ? (
                     <MobileStepper steps={steps} activeStep={activeStep} />
                 ) : (

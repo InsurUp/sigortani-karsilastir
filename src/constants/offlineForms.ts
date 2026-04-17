@@ -30,6 +30,11 @@ export const OFFLINE_FORM_CONFIG = {
     targetPath: '/imm-teklif',
     keywords: ['imm'],
   },
+  seyahat: {
+    storageKey: 'seyahatBannerPrefill',
+    targetPath: '/seyahat-teklif',
+    keywords: ['seyahat'],
+  },
   tss: {
     storageKey: 'tssBannerPrefill',
     targetPath: '/tss-teklif',

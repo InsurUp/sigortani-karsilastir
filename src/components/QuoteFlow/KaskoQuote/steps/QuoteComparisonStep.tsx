@@ -2016,14 +2016,14 @@ export default function QuoteComparisonStep({
             <Typography variant="caption" color="text.secondary" sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
               Teminat detayları sigorta şirketinin teklif belgesinden ve servislerinden alınan değerler aracılığıyla sunulmaktadır. Daha detaylı sorularınız için{' '}
               <a 
-                href={`tel:${agencyConfig.contact?.phone?.primary?.replace(/\s/g, '') || '44422377'}`}
+                href={`tel:${agencyConfig.contact?.phone?.primary?.replace(/\s/g, '') || '05330864001'}`}
                 style={{ 
                   color: agencyConfig.theme.primaryColor, 
                   textDecoration: 'none',
                   fontWeight: 600
                 }}
               >
-                {agencyConfig.contact?.phone?.primary || '444 22 37'}
+                {agencyConfig.contact?.phone?.primary || '+90 533 086 40 01'}
               </a>
               {' '}numaralı telefon numarasından müşteri temsilcilerimize ulaşabilirsiniz.
             </Typography>

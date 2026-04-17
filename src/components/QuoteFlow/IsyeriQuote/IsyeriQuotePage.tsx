@@ -7,6 +7,7 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import RequestStep from './steps/RequestStep';
 import { useAuthStore } from '@/store/useAuthStore';
 import MobileStepper from '@/components/QuoteFlow/MobileStepper';
+import QuoteFormHeading from '@/components/QuoteFlow/QuoteFormHeading';
 import { useParams } from 'next/navigation';
 import "../../../styles/form-style.css"
 
@@ -79,6 +80,7 @@ export default function IsyeriQuotePage() {
         <div className="flex  items-center justify-center pb-8">
           <Container maxWidth="lg">
             <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+              <QuoteFormHeading />
               {isMobile ? (
                 <MobileStepper steps={steps} activeStep={activeStep} />
               ) : (

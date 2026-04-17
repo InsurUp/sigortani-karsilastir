@@ -76,7 +76,7 @@ function DisatanceLayout() {
                                 </tr>
                                 <tr>
                                     <th>Telefon</th>
-                                    <td>444 22 37</td>
+                                    <td>+90 533 086 40 01</td>
                                 </tr>
                                 <tr>
                                     <th>E-posta</th>

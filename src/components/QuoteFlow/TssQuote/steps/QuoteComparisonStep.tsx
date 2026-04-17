@@ -226,9 +226,55 @@ interface ProcessedQuote extends Quote {
 // Coverage'da gerçek değerler olup olmadığını kontrol eden yardımcı fonksiyon
 const hasValidTssCoverage = (coverage: TssCoverage | null): boolean => {
   if (!coverage) return false;
-  
+
   return !!(coverage.hastaneAgi && coverage.hastaneAgi !== 'UNDEFINED' &&
-         coverage.saglikPaketi && typeof coverage.saglikPaketi === 'object');
+    coverage.saglikPaketi && typeof coverage.saglikPaketi === 'object');
+};
+
+// TSS için tüm olası teminat alanlarının etiket eşlemeleri
+const TSS_GUARANTEE_LABELS: Record<string, string> = {
+  disPaketi: 'Diş Paketi',
+  diyetisyenHizmeti: 'Diyetisyen Hizmeti',
+  yogunBakim: 'Yoğun Bakım',
+  checkUpHizmeti: 'Check-up Hizmeti',
+  psikolojikDanismanlik: 'Psikolojik Danışmanlık',
+  fizikTedavi: 'Fizik Tedavi',
+  suniUzuv: 'Suni Uzuv',
+  ambulans: 'Ambulans',
+  yatarakTedavi: 'Yatarak Tedavi',
+  ayaktaTedavi: 'Ayakta Tedavi',
+  doktorMuayene: 'Doktor Muayene',
+  ameliyat: 'Ameliyat',
+  ameliyatMalzeme: 'Ameliyat Malzeme',
+  kemoterapi: 'Kemoterapi',
+  radyoterapi: 'Radyoterapi',
+  diyaliz: 'Diyaliz',
+  evdeBakim: 'Evde Bakım',
+  yediGun24SaatTibbiDanismanlik: '7/24 Tıbbi Danışmanlık',
+  dogum: 'Doğum',
+  kucukMudahale: 'Küçük Müdahale',
+  gozPaketi: 'Göz Paketi'
+};
+
+// Değer tipine göre metin oluşturan yardımcı fonksiyon
+const formatTssCoverageValue = (value: any): string | null => {
+  if (!value || typeof value !== 'object') return null;
+
+  const type = value.$type;
+  if (type === 'UNDEFINED') return null;
+  if (type === 'INCLUDED') return 'Dahil';
+  if (type === 'NOT_INCLUDED') return 'Dahil Değil';
+  if (type === 'LIMITLESS') return 'Limitsiz';
+
+  if (value.text) return value.text;
+  if (value.value !== undefined && value.value !== null) {
+    if (typeof value.value === 'number') {
+      return value.value.toLocaleString('tr-TR') + (value.currency === 'TURKISH_LIRA' ? ' ₺' : '');
+    }
+    return String(value.value);
+  }
+
+  return 'Dahil'; // Fallback for other non-undefined types
 };
 
 // TSS Coverage'ı Guarantee array'ine dönüştürme fonksiyonu
@@ -238,14 +284,14 @@ const convertTssCoverageToGuarantees = (coverage: TssCoverage | null): Guarantee
   const guarantees: Guarantee[] = [];
   let guaranteeId = 1;
 
-  // Hastane Ağı
-  if (coverage.hastaneAgi && coverage.hastaneAgi !== 'UNDEFINED') {
+  // 1. Hastane Ağı (Özel işleme)
+  if (coverage.hastaneAgi && coverage.hastaneAgi !== 'UNDEFINED' && coverage.hastaneAgi !== 'BILINMIYOR') {
     const hastaneAgiLabels: Record<string, string> = {
       'STANDART_KAPSAM': 'Standart Kapsam',
       'GENIS_KAPSAM': 'Geniş Kapsam',
       'DAR_KAPSAM': 'Dar Kapsam'
     };
-    
+
     guarantees.push({
       insuranceGuaranteeId: guaranteeId.toString(),
       label: 'Hastane Ağı',
@@ -255,50 +301,69 @@ const convertTssCoverageToGuarantees = (coverage: TssCoverage | null): Guarantee
     guaranteeId++;
   }
 
-  // Sağlık Paketi
+  // 2. Sağlık Paketi / Tedavi Şekli (Özel işleme)
   if (coverage.saglikPaketi && typeof coverage.saglikPaketi === 'object') {
     const { tedaviSekli, ayaktaYillikTedaviSayisi } = coverage.saglikPaketi;
-    
-    // Tedavi şekli bilgisini her zaman göster (undefined false olsa bile)
-    if (tedaviSekli && tedaviSekli !== 'UNDEFINED') {
+
+    if (tedaviSekli && tedaviSekli !== 'UNDEFINED' && tedaviSekli !== 'BILINMIYOR') {
       const tedaviSekliLabels: Record<string, string> = {
         'YATARAK': 'Yatarak Tedavi',
         'AYAKTA': 'Ayakta Tedavi',
         'YATARAK_AYAKTA': 'Yatarak ve Ayakta Tedavi'
       };
-      
+
       guarantees.push({
-        insuranceGuaranteeId: guaranteeId.toString(),
+        insuranceGuaranteeId: (guaranteeId++).toString(),
         label: 'Tedavi Şekli',
         valueText: tedaviSekliLabels[tedaviSekli] || tedaviSekli,
         amount: 0
       });
-      guaranteeId++;
     }
-    
-    // Yıllık ayakta tedavi sayısını sadece geçerli değerler için göster
+
     if (ayaktaYillikTedaviSayisi !== null && ayaktaYillikTedaviSayisi !== undefined && ayaktaYillikTedaviSayisi > 0) {
       guarantees.push({
-        insuranceGuaranteeId: guaranteeId.toString(),
+        insuranceGuaranteeId: (guaranteeId++).toString(),
         label: 'Yıllık Ayakta Tedavi Sayısı',
         valueText: `${ayaktaYillikTedaviSayisi.toLocaleString('tr-TR')} kez`,
         amount: ayaktaYillikTedaviSayisi
       });
-      guaranteeId++;
     }
   }
+
+  // 3. Diğer Dinamik Alanlar ($type içeren nesne yapıları)
+  Object.keys(coverage).forEach(key => {
+    // Zaten işlenenleri atla
+    if (key === 'hastaneAgi' || key === 'saglikPaketi' || key === '$type' || key === 'productBranch') return;
+
+    const value = coverage[key];
+    const formattedValue = formatTssCoverageValue(value);
+
+    if (formattedValue) {
+      const label = TSS_GUARANTEE_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+
+      // Mükerrer eklemeyi önle (bazı alanlar tedaviSekli ile çakışabilir)
+      if (!guarantees.find(g => g.label === label)) {
+        guarantees.push({
+          insuranceGuaranteeId: (guaranteeId++).toString(),
+          label: label,
+          valueText: formattedValue,
+          amount: typeof value.value === 'number' ? value.value : 0
+        });
+      }
+    }
+  });
 
   return guarantees;
 };
 
 export default function QuoteComparisonStep({
-                                              proposalId: initialProposalId,
-                                              onNext,
-                                              onBack,
-                                              onSelectQuote,
-                                              isFirstStep,
-                                              isLastStep,
-                                            }: QuoteComparisonStepProps) {
+  proposalId: initialProposalId,
+  onNext,
+  onBack,
+  onSelectQuote,
+  isFirstStep,
+  isLastStep,
+}: QuoteComparisonStepProps) {
   const accessToken = useAuthStore((state) => state.accessToken);
   const [quotes, setQuotes] = useState<ProcessedQuote[]>([]);
   const [companies, setCompanies] = useState<InsuranceCompany[]>([]);
@@ -379,7 +444,7 @@ export default function QuoteComparisonStep({
       // ve bu istenmiyorsa kullanılabilir. Genellikle API'den zaten doğru veri gelmesi beklenir.
       const uniquePremiums = quote.premiums.reduce((acc: Premium[], current) => {
         const isDuplicate = acc.some(item =>
-            item.installmentNumber === current.installmentNumber
+          item.installmentNumber === current.installmentNumber
         );
         if (!isDuplicate) {
           acc.push(current);
@@ -401,31 +466,65 @@ export default function QuoteComparisonStep({
 
       const initialSelectedInstallment = formattedPremiums.length > 0 ? formattedPremiums[0].installmentNumber : 1;
 
-      // --- Alan bazlı coverage birleştirme ---
-      const coverageFields = ['hastaneAgi', 'saglikPaketi'];
+      // --- Backend'den gelen hazır teminatları kontrol et ---
+      if (quote.insuranceCompanyGuarantees && quote.insuranceCompanyGuarantees.length > 0) {
+        const guarantees = quote.insuranceCompanyGuarantees;
+        const features = guarantees.map((g) => g.label);
+
+        return {
+          ...quote,
+          premiums: formattedPremiums,
+          company: company?.name || `Sigorta Şirketi #${quote.insuranceCompanyId}`,
+          coverage: 0,
+          features,
+          logo: company?.logo || `https://storage.dogasigorta.com/app-1/insurup-b2c-company/${quote.insuranceCompanyId}.png`,
+          selectedInstallmentNumber: initialSelectedInstallment,
+          insuranceCompanyGuarantees: guarantees,
+        };
+      }
+
+      // --- Fallback: Alan bazlı coverage birleştirme (Backend verisi yoksa) ---
+      // Tüm kaynaklardaki anahtarları topla
+      const allCoverageKeys = new Set([
+        ...Object.keys(quote.initialCoverage || {}),
+        ...Object.keys(quote.insuranceServiceProviderCoverage || {}),
+        ...Object.keys(quote.pdfCoverage || {})
+      ]);
+
       const mergedCoverage: any = { $type: 'tss' };
-      for (const field of coverageFields) {
-        let value = undefined;
-        for (const src of [quote.pdfCoverage, quote.insuranceServiceProviderCoverage, quote.initialCoverage]) {
+
+      allCoverageKeys.forEach(key => {
+        if (key === '$type' || key === 'productBranch') return;
+
+        // Öncelik sırası: pdfCoverage > insuranceServiceProviderCoverage > initialCoverage
+        const sources = [quote.pdfCoverage, quote.insuranceServiceProviderCoverage, quote.initialCoverage];
+
+        for (const src of sources) {
           if (!src) continue;
-          const v = src[field];
-          // hastaneAgi için
-          if (field === 'hastaneAgi') {
-            if (v && v !== 'BILINMIYOR' && v !== 'UNDEFINED' && v !== null && v !== undefined) {
-              value = v;
-              break;
+          const val = src[key];
+
+          // Geçerli bir değer mi kontrol et
+          if (val !== undefined && val !== null) {
+            // Eğer bir nesneyse ($type içeren), UNDEFINED veya BILINMIYOR değilse al
+            if (typeof val === 'object' && val.$type) {
+              if (val.$type !== 'UNDEFINED' && val.$type !== 'BILINMIYOR') {
+                mergedCoverage[key] = val;
+                break;
+              }
             }
-          }
-          // saglikPaketi için
-          if (field === 'saglikPaketi') {
-            if (v && typeof v === 'object' && v.tedaviSekli && v.tedaviSekli !== 'BILINMIYOR' && v.tedaviSekli !== 'UNDEFINED') {
-              value = v;
+            // Eğer basit bir değerse (string vb.), UNDEFINED veya BILINMIYOR değilse al
+            else if (val !== 'UNDEFINED' && val !== 'BILINMIYOR') {
+              mergedCoverage[key] = val;
               break;
             }
           }
         }
-        mergedCoverage[field] = value;
-      }
+
+        // Eğer hiçbirinde geçerli değer bulunamadıysa, son çare olarak birinden al (tanımlıysa)
+        if (mergedCoverage[key] === undefined) {
+          mergedCoverage[key] = quote.pdfCoverage?.[key] || quote.insuranceServiceProviderCoverage?.[key] || quote.initialCoverage?.[key];
+        }
+      });
 
       const guarantees = convertTssCoverageToGuarantees(mergedCoverage);
       const coverage = 0;
@@ -501,7 +600,7 @@ export default function QuoteComparisonStep({
 
         const proposalData = await rawProductsResponse.json();
         const productsData = proposalData.products as Quote[];
-        
+
         if (!Array.isArray(productsData)) {
           throw new Error('Ürünler API yanıtı beklenen formatta değil.');
         }
@@ -509,41 +608,41 @@ export default function QuoteComparisonStep({
         const processed = processQuotesData(productsData, currentCompanies);
         // Config'de tanımlı productId'leri al
         const allowedProductIds = agencyConfig.homepage.partners.companies.flatMap((company) =>
-            (company.products.tss || []).map(product => 
-              typeof product === 'object' ? product.id : product
-            )
+          (company.products.tss || []).map(product =>
+            typeof product === 'object' ? product.id : product
+          )
         );
-        
+
         // Hem ACTIVE hem de config'de tanımlı olanları filtrele
-        const filteredQuotes = processed.filter(quote => 
+        const filteredQuotes = processed.filter(quote =>
           quote.state === 'ACTIVE' && allowedProductIds.includes(quote.productId)
         );
-        
+
         // Kullanıcıya sadece ACTIVE filtrelenmiş quotes'ları göster (immediate display)
         setQuotes(sortQuotes(filteredQuotes));
         setBestOffers(getBestOffers(filteredQuotes));
-        
+
         // İlk teklif geldiğinde loading modal'ı bilgilendir
         if (filteredQuotes.length > 0 && !hasStoppedGlobalLoading) {
           setFirstQuoteReceived();
           setShouldCompleteLoading(true);
           setHasStoppedGlobalLoading(true);
-          
+
           // 4.3 saniye sonra global loading'i durdur ve local loading'i durdur (4s completion + 300ms wait)
           setTimeout(() => {
             stopGlobalLoading();
             setIsLoading(false); // Animasyon tamamlandıktan sonra local loading'i durdur
           }, 4300);
         }
-        
+
         // Loading kontrolü için WAITING quotes'ları kontrol et
-        const relevantWaitingQuotes = processed.filter(q => 
+        const relevantWaitingQuotes = processed.filter(q =>
           allowedProductIds.includes(q.productId) && q.state === 'WAITING'
         );
-        
+
         // WAITING quotes durumunu state'e kaydet (UI'da spinner göstermek için)
         setHasWaitingQuotes(relevantWaitingQuotes.length > 0);
-        
+
         // IMMEDIATE DISPLAY: ACTIVE quotes varsa hemen göster, WAITING'leri arka planda devam ettir
         // NOT: setIsLoading'i burada çağırma - sadece ilk teklif geldiğinde global loading'i durdur
         if (filteredQuotes.length > 0) {
@@ -554,13 +653,13 @@ export default function QuoteComparisonStep({
         const relevantQuotes = processed.filter(q => allowedProductIds.includes(q.productId));
 
         // Tüm teklifler finalize edilmişse polling'i durdur
-        const allQuotesFinalized = relevantQuotes.length > 0 && relevantQuotes.every((quote) => 
+        const allQuotesFinalized = relevantQuotes.length > 0 && relevantQuotes.every((quote) =>
           quote.state === 'FAILED' || quote.state === 'ACTIVE'
         );
-        
+
         const elapsedTime = Date.now() - startTime;
         const timeoutReached = elapsedTime >= 300000; // 5 dakika
-        
+
         if (allQuotesFinalized || timeoutReached) {
           // Analytics event tetikleme - teklif sonuçlarına göre
           const hasSuccessfulQuotes = filteredQuotes.length > 0;
@@ -575,16 +674,16 @@ export default function QuoteComparisonStep({
               form_name: "tss_teklif_basarisiz",
             });
           }
-          
+
           if (pollInterval) {
             clearInterval(pollInterval);
           }
-          
+
           // Eğer teklif gelmemişse ve loading hala aktifse, loading'i tamamla
           if (filteredQuotes.length === 0 && !hasStoppedGlobalLoading) {
             setShouldCompleteLoading(true);
             setHasStoppedGlobalLoading(true);
-            
+
             // 4.3 saniye sonra global loading'i durdur ve local loading'i durdur
             setTimeout(() => {
               stopGlobalLoading();
@@ -595,7 +694,7 @@ export default function QuoteComparisonStep({
             stopGlobalLoading();
             setIsLoading(false);
           }
-          
+
           setIsPollingActive(false);
           setHasWaitingQuotes(false); // Polling bittiğinde spinner'ı kapat
           return;
@@ -660,13 +759,13 @@ export default function QuoteComparisonStep({
 
   const filterQuotesByProductIds = (quotes: ProcessedQuote[]) => {
     const allowedProductIds = agencyConfig.homepage.partners.companies.flatMap((company) =>
-        (company.products.tss || []).map(product => 
-          typeof product === 'object' ? product.id : product
-        )
+      (company.products.tss || []).map(product =>
+        typeof product === 'object' ? product.id : product
+      )
     );
     return quotes.filter((quote) =>
-        allowedProductIds.includes(quote.productId) &&
-        (quote.state === 'ACTIVE' || quote.state === 'WAITING')
+      allowedProductIds.includes(quote.productId) &&
+      (quote.state === 'ACTIVE' || quote.state === 'WAITING')
     );
   };
 
@@ -676,11 +775,11 @@ export default function QuoteComparisonStep({
 
   const handleInstallmentChange = (quoteId: string, installmentNumber: number) => {
     setQuotes((prevQuotes) =>
-        prevQuotes.map((quote) =>
-            quote.id === quoteId
-                ? { ...quote, selectedInstallmentNumber: installmentNumber }
-                : quote
-        )
+      prevQuotes.map((quote) =>
+        quote.id === quoteId
+          ? { ...quote, selectedInstallmentNumber: installmentNumber }
+          : quote
+      )
     );
   };
 
@@ -694,7 +793,7 @@ export default function QuoteComparisonStep({
         proposalProductId: selectedFullQuote.id, // proposalProductId olarak id'yi kullanıyoruz
         productId: selectedFullQuote.id // productId olarak da id'yi kullanıyoruz (string olarak)
       };
-      
+
       localStorage.setItem('selectedQuoteForPurchase', JSON.stringify(purchaseData));
       localStorage.setItem('selectedInstallmentForPurchase', selectedFullQuote.selectedInstallmentNumber.toString());
       if (onSelectQuote) {
@@ -794,10 +893,10 @@ export default function QuoteComparisonStep({
     }
     if (guarantee.amount) {
       return (
-          guarantee.amount.toLocaleString('tr-TR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }) + ' ₺'
+        guarantee.amount.toLocaleString('tr-TR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }) + ' ₺'
       );
     }
     return '-';
@@ -812,7 +911,7 @@ export default function QuoteComparisonStep({
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.errors?.[0] || 'Döküman görüntülenirken bir hata oluştu');
@@ -825,11 +924,11 @@ export default function QuoteComparisonStep({
         if (!pdfResponse.ok) {
           throw new Error('PDF dosyası indirilemedi');
         }
-        
+
         const blob = await pdfResponse.blob();
         const blobUrl = window.URL.createObjectURL(blob);
         window.open(blobUrl, '_blank');
-        
+
         // Bellek temizliği için URL'yi revoke et (biraz gecikme ile)
         setTimeout(() => {
           window.URL.revokeObjectURL(blobUrl);
@@ -855,665 +954,665 @@ export default function QuoteComparisonStep({
   }
 
   return (
-      <>
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-            <Typography variant="h5" component="h1" fontWeight="600">
-              Tamamlayıcı Sağlık Sigortası Teklifleri
-            </Typography>
-            
-            {/* Daha fazla teklif yükleniyor spinner */}
-            {hasWaitingQuotes && (
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 1
-              }}>
-                <CircularProgress 
-                  size={18} 
-                  thickness={5} 
-                  sx={{ 
-                    color: '#262163',
-                    '& .MuiCircularProgress-circle': {
-                      strokeLinecap: 'round'
-                    }
-                  }} 
-                />
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  Daha fazla teklif yükleniyor...
-                </Typography>
-              </Box>
-            )}
-          </Box>
-          
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-            Size en uygun Tamamlayıcı Sağlık Sigortası teklifini seçip hemen satın alabilirsiniz
+    <>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+          <Typography variant="h5" component="h1" fontWeight="600">
+            Tamamlayıcı Sağlık Sigortası Teklifleri
           </Typography>
 
-          {/* Filtering and Sorting Controls */}
-          <Box sx={{
-            mt: 3,
-            mb: 2,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 2
-          }}>
-            <Box>
-              {quotes.filter(q => q.state === 'ACTIVE').length > 1 && (
-                <Button
-                  variant="outlined"
-                  startIcon={<CompareArrowsIcon />}
-                  onClick={() => setIsComparisonModalOpen(true)}
-                  sx={{
-                    borderColor: agencyConfig.theme.primaryColor,
-                    color: agencyConfig.theme.primaryColor,
-                    '&:hover': {
-                      borderColor: agencyConfig.theme.primaryColor,
-                      backgroundColor: alpha(agencyConfig.theme.primaryColor, 0.05)
-                    }
-                  }}
-                >
-                  Teklifleri Karşılaştır
-                </Button>
-              )}
-            </Box>
-            <FormControl size="small">
-              <Select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value as 'price' | 'company')}
-                  sx={{
-                    minWidth: 150,
-                    borderRadius: 2,
-                    fontSize: '0.875rem',
-                    '& .MuiSelect-select': { py: 1 }
-                  }}
-              >
-                <MenuItem value="price">Fiyata Göre Sırala</MenuItem>
-                <MenuItem value="company">A'dan Z'ye Sırala</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
-
-        {error && (
-            <Alert
-                severity="error"
-                sx={{
-                  mb: 3,
-                  borderRadius: 2,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                }}
-            >
-              {error}
-            </Alert>
-        )}
-
-        {isLoading ? (
+          {/* Daha fazla teklif yükleniyor spinner */}
+          {hasWaitingQuotes && (
             <Box sx={{
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              my: 8,
-              gap: 3
+              gap: 1
             }}>
-              <CircularProgress size={48} thickness={4} />
-              <Box textAlign="center">
-                <Typography variant="h6" fontWeight="medium" gutterBottom>
-                  Teklifler Hazırlanıyor
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Anlaşmalı şirketlerimizden size özel teklifler alınıyor...
-                </Typography>
-              </Box>
-            </Box>
-        ) : quotes.length === 0 ? (
-            <Alert
-                severity="info"
+              <CircularProgress
+                size={18}
+                thickness={5}
                 sx={{
-                  mb: 3,
-                  py: 2,
-                  borderRadius: 2,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                  color: '#262163',
+                  '& .MuiCircularProgress-circle': {
+                    strokeLinecap: 'round'
+                  }
                 }}
+              />
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                Daha fazla teklif yükleniyor...
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+          Size en uygun Tamamlayıcı Sağlık Sigortası teklifini seçip hemen satın alabilirsiniz
+        </Typography>
+
+        {/* Filtering and Sorting Controls */}
+        <Box sx={{
+          mt: 3,
+          mb: 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 2
+        }}>
+          <Box>
+            {quotes.filter(q => q.state === 'ACTIVE').length > 1 && (
+              <Button
+                variant="outlined"
+                startIcon={<CompareArrowsIcon />}
+                onClick={() => setIsComparisonModalOpen(true)}
+                sx={{
+                  borderColor: agencyConfig.theme.primaryColor,
+                  color: agencyConfig.theme.primaryColor,
+                  '&:hover': {
+                    borderColor: agencyConfig.theme.primaryColor,
+                    backgroundColor: alpha(agencyConfig.theme.primaryColor, 0.05)
+                  }
+                }}
+              >
+                Teklifleri Karşılaştır
+              </Button>
+            )}
+          </Box>
+          <FormControl size="small">
+            <Select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as 'price' | 'company')}
+              sx={{
+                minWidth: 150,
+                borderRadius: 2,
+                fontSize: '0.875rem',
+                '& .MuiSelect-select': { py: 1 }
+              }}
             >
-              <AlertTitle>Uygun Teklif Bulunamadı</AlertTitle>
-              Kişisel bilgilerinize göre uygun teklif bulunamadı. Bilgilerinizi kontrol edip tekrar deneyebilirsiniz.
-            </Alert>
-        ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, alignItems: 'center' }}>
-              {sortQuotes(getBestOffers(quotes.filter(q => q.state === 'ACTIVE'))).map((quote) => {
-                const currentPremium = getSelectedPremium(quote);
-                const isFailed = quote.state === 'FAILED';
-                const isWaiting = quote.state === 'WAITING';
+              <MenuItem value="price">Fiyata Göre Sırala</MenuItem>
+              <MenuItem value="company">A'dan Z'ye Sırala</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
 
-                const isHovered = hoveredQuote === quote.id;
-                const isSelected = selectedQuote === quote.id;
-                const highlightColor = getHighlightColor(quote);
-                const best = isBestOffer(sortQuotes(quotes.filter(q => q.state === 'ACTIVE')), quote.id);
+      {error && (
+        <Alert
+          severity="error"
+          sx={{
+            mb: 3,
+            borderRadius: 2,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}
+        >
+          {error}
+        </Alert>
+      )}
 
-                return (
-                    <Box key={quote.id} sx={{ width: '100%' }}>
-                      <StyledQuoteCard
-                          elevation={isHovered || isSelected ? 3 : 1}
-                          onMouseEnter={() => setHoveredQuote(quote.id)}
-                          onMouseLeave={() => setHoveredQuote(null)}
-                          onClick={() => !isFailed && !isWaiting && handleQuoteSelect(quote.id)}
-                          sx={{
-                            cursor: isFailed || isWaiting ? 'default' : 'pointer',
-                            border: isSelected
-                                ? `2px solid ${agencyConfig.theme.primaryColor}`
-                                : isFailed
-                                    ? '1px solid rgba(211, 47, 47, 0.3)'
-                                    : isWaiting
-                                        ? '1px solid rgba(0, 0, 0, 0.12)'
-                                        : `1px solid rgba(0, 0, 0, 0.08)`,
-                            opacity: isFailed ? 0.8 : 1,
-                            backgroundColor: isSelected
-                                ? alpha(agencyConfig.theme.primaryColor, 0.04)
-                                : highlightColor
-                          }}
-                      >
-                        {/* Best Offer Badge - only show when sorting by price and there's more than one active quote */}
-                        {sortOption === 'price' &&
-                            quotes.filter(q => q.state === 'ACTIVE').length > 1 &&
-                            best && (
-                                <Chip
-                                    label="En Uygun Fiyat"
-                                    color="success"
-                                    size="small"
-                                    icon={<CheckCircleOutlineIcon />}
+      {isLoading ? (
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          my: 8,
+          gap: 3
+        }}>
+          <CircularProgress size={48} thickness={4} />
+          <Box textAlign="center">
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              Teklifler Hazırlanıyor
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Anlaşmalı şirketlerimizden size özel teklifler alınıyor...
+            </Typography>
+          </Box>
+        </Box>
+      ) : quotes.length === 0 ? (
+        <Alert
+          severity="info"
+          sx={{
+            mb: 3,
+            py: 2,
+            borderRadius: 2,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}
+        >
+          <AlertTitle>Uygun Teklif Bulunamadı</AlertTitle>
+          Kişisel bilgilerinize göre uygun teklif bulunamadı. Bilgilerinizi kontrol edip tekrar deneyebilirsiniz.
+        </Alert>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, alignItems: 'center' }}>
+          {sortQuotes(getBestOffers(quotes.filter(q => q.state === 'ACTIVE'))).map((quote) => {
+            const currentPremium = getSelectedPremium(quote);
+            const isFailed = quote.state === 'FAILED';
+            const isWaiting = quote.state === 'WAITING';
+
+            const isHovered = hoveredQuote === quote.id;
+            const isSelected = selectedQuote === quote.id;
+            const highlightColor = getHighlightColor(quote);
+            const best = isBestOffer(sortQuotes(quotes.filter(q => q.state === 'ACTIVE')), quote.id);
+
+            return (
+              <Box key={quote.id} sx={{ width: '100%' }}>
+                <StyledQuoteCard
+                  elevation={isHovered || isSelected ? 3 : 1}
+                  onMouseEnter={() => setHoveredQuote(quote.id)}
+                  onMouseLeave={() => setHoveredQuote(null)}
+                  onClick={() => !isFailed && !isWaiting && handleQuoteSelect(quote.id)}
+                  sx={{
+                    cursor: isFailed || isWaiting ? 'default' : 'pointer',
+                    border: isSelected
+                      ? `2px solid ${agencyConfig.theme.primaryColor}`
+                      : isFailed
+                        ? '1px solid rgba(211, 47, 47, 0.3)'
+                        : isWaiting
+                          ? '1px solid rgba(0, 0, 0, 0.12)'
+                          : `1px solid rgba(0, 0, 0, 0.08)`,
+                    opacity: isFailed ? 0.8 : 1,
+                    backgroundColor: isSelected
+                      ? alpha(agencyConfig.theme.primaryColor, 0.04)
+                      : highlightColor
+                  }}
+                >
+                  {/* Best Offer Badge - only show when sorting by price and there's more than one active quote */}
+                  {sortOption === 'price' &&
+                    quotes.filter(q => q.state === 'ACTIVE').length > 1 &&
+                    best && (
+                      <Chip
+                        label="En Uygun Fiyat"
+                        color="success"
+                        size="small"
+                        icon={<CheckCircleOutlineIcon />}
+                        sx={{
+                          position: 'absolute',
+                          top: -12,
+                          left: 16,
+                          fontWeight: 'medium',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          zIndex: 1
+                        }}
+                      />
+                    )}
+                  {/* Coverage Group Name Badge - En Uygun Fiyat badge'inin yanında */}
+                  {quote.coverageGroupName && (
+                    <Chip
+                      label={quote.coverageGroupName}
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: -12,
+                        left: sortOption === 'price' &&
+                          quotes.filter(q => q.state === 'ACTIVE').length > 1 &&
+                          best ? 140 : 16,
+                        fontWeight: 'medium',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        zIndex: 1,
+                        backgroundColor: '#ef2027',
+                        color: 'white',
+                        '& .MuiChip-label': {
+                          color: 'white'
+                        }
+                      }}
+                    />
+                  )}
+
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, alignItems: 'center' }}>
+                      {/* Company & Logo Section */}
+                      <Box sx={{ flex: 3.5, minWidth: 0, mb: { xs: 2, md: 0 } }}>
+                        <CompanyLogoWrapper>
+                          {(() => {
+                            const displayMode = getProductDisplayMode('tss', quote.productId);
+                            const isCensored = displayMode === 'CENSORED_CONTACT';
+
+                            return (
+                              <>
+                                {isCensored ? (
+                                  <Box
                                     sx={{
-                                      position: 'absolute',
-                                      top: -12,
-                                      left: 16,
-                                      fontWeight: 'medium',
-                                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                      zIndex: 1
+
+                                      borderRadius: 1,
+                                      width: 50,
+                                      height: 40,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
                                     }}
-                                />
-                            )}
-                        {/* Coverage Group Name Badge - En Uygun Fiyat badge'inin yanında */}
-                        {quote.coverageGroupName && (
+                                  >
+                                    <Shield
+                                      size={40}
+                                      color={agencyConfig?.theme?.primaryColor || theme.palette.primary.main}
+                                      stroke={agencyConfig?.theme?.primaryColor || theme.palette.primary.main}
+                                      strokeWidth={2}
+                                    />
+                                  </Box>
+                                ) : quote.logo ? (
+                                  <Box
+                                    component="img"
+                                    src={quote.logo}
+                                    alt={quote.company}
+                                    sx={{ height: 40 }}
+                                  />
+                                ) : (
+                                  <Box
+                                    sx={{
+
+                                      borderRadius: 1,
+                                      width: 50,
+                                      height: 40,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}
+                                  >
+                                    <Typography variant="h5" component="span">
+                                      🚗
+                                    </Typography>
+                                  </Box>
+                                )}
+                                <Box>
+                                  <Typography variant="subtitle1" fontWeight="bold">
+                                    {isCensored ? 'Sigorta Şirketi' : quote.company}
+                                  </Typography>
+                                </Box>
+                              </>
+                            );
+                          })()}
+                        </CompanyLogoWrapper>
+                      </Box>
+                      {/* Price Section */}
+                      <Box sx={{ flex: 3.5, minWidth: 0, mb: { xs: 2, md: 0 } }}>
+                        <PriceTag>
+                          {isWaiting ? (
+                            <>
+                              <Skeleton variant="text" width={120} height={36} />
+                              <Skeleton variant="text" width={90} height={24} />
+                            </>
+                          ) : (
+                            <>
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                <Typography
+                                  variant="h5"
+                                  color="primary.main"
+                                  fontWeight="700"
+                                  sx={{ mr: 1 }}
+                                >
+                                  {currentPremium?.formattedGrossPremium
+                                    ? `${currentPremium.formattedGrossPremium} ₺`
+                                    : 'Fiyat Yok'}
+                                </Typography>
+
+                                {currentPremium?.installmentNumber && currentPremium.installmentNumber > 1 && (
+                                  <Chip
+                                    size="small"
+                                    label={`${currentPremium.installmentNumber} Taksit`}
+                                    color="default"
+                                    variant="outlined"
+                                    sx={{ height: 20, fontSize: '0.7rem' }}
+                                  />
+                                )}
+                              </Box>
+                              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <InstallmentButton size="small">
+                                  <Select
+                                    value={quote.selectedInstallmentNumber}
+                                    onChange={(e) => handleInstallmentChange(quote.id, e.target.value as number)}
+                                    renderValue={(value) => (
+                                      <Typography variant="body2">
+                                        {value === 1 ? 'Peşin Ödeme' : `${value} Taksit`}
+                                      </Typography>
+                                    )}
+                                    IconComponent={ExpandMoreIcon}
+                                    sx={{
+                                      fontSize: '0.8rem',
+                                      '.MuiSvgIcon-root': { fontSize: '1rem' }
+                                    }}
+                                  >
+                                    {quote.premiums.map((premium) => (
+                                      <MenuItem
+                                        key={premium.installmentNumber}
+                                        value={premium.installmentNumber}
+                                      >
+                                        <Typography variant="body2">
+                                          {premium.installmentNumber === 1
+                                            ? `Peşin: ${premium.formattedGrossPremium} ₺`
+                                            : `${premium.installmentNumber} Taksit: ${premium.formattedGrossPremium} ₺`}
+                                        </Typography>
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+                                </InstallmentButton>
+                                <Tooltip title="Vergi ve harçlar dahil toplam fiyat">
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ ml: 1, display: 'flex', alignItems: 'center' }}
+                                  >
+                                    <InfoOutlinedIcon fontSize="inherit" sx={{ mr: 0.5 }} />
+                                    Vergiler Dahil
+                                  </Typography>
+                                </Tooltip>
+                              </Box>
+                            </>
+                          )}
+                        </PriceTag>
+                      </Box>
+                      {/* Features & Actions Section */}
+                      <Box sx={{ flex: 5, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                        <Box>
+                          {!isWaiting && (() => {
+                            const displayMode = getProductDisplayMode('tss', quote.productId);
+                            const isCensored = displayMode === 'CENSORED_CONTACT';
+
+                            return (
+                              <Stack direction="row" spacing={1} flexWrap="wrap">
+                                {!isCensored && (
+                                  <DocumentButton
+                                    variant="text"
+                                    startIcon={<FileText size={16} />}
+                                    color="primary"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewDocument(proposalId || '', quote.id);
+                                    }}
+                                  >
+                                    Teklif Belgesi
+                                  </DocumentButton>
+                                )}
+                                <DocumentButton
+                                  variant="text"
+                                  startIcon={<InfoOutlinedIcon fontSize="small" />}
+                                  color="primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenModal(quote);
+                                  }}
+                                >
+                                  Teminatlar
+                                </DocumentButton>
+                              </Stack>
+                            );
+                          })()}
+                        </Box>
+                        {!isFailed && !isWaiting && (() => {
+                          const displayMode = getProductDisplayMode('tss', quote.productId);
+                          const isFullAccess = displayMode === 'FULL_ACCESS';
+
+                          if (isFullAccess) {
+                            return (
+                              <PurchaseButton
+                                variant="outlined"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePurchase(quote.id);
+                                }}
+                                sx={{
+                                  color: 'text.primary',
+                                  borderColor: 'divider',
+                                  '&:hover': {
+                                    color: agencyConfig.theme.primaryColor,
+                                    borderColor: agencyConfig.theme.primaryColor,
+                                    bgcolor: alpha(agencyConfig.theme.primaryColor, 0.05),
+                                    transform: 'translateY(-1px)',
+                                  },
+                                }}
+                              >
+                                Satın Al
+                              </PurchaseButton>
+                            );
+                          } else {
+                            return (
+                              <PurchaseButton
+                                variant="outlined"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(`tel:${agencyConfig?.contact?.phone?.primary?.replace(/\s/g, '') || '05330864001'}`, '_self');
+                                }}
+                                sx={{
+                                  color: 'text.primary',
+                                  borderColor: 'divider',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  padding: '8px 16px',
+                                  minHeight: 'auto',
+                                  '&:hover': {
+                                    color: agencyConfig.theme.primaryColor,
+                                    borderColor: agencyConfig.theme.primaryColor,
+                                    bgcolor: alpha(agencyConfig.theme.primaryColor, 0.05),
+                                    transform: 'translateY(-1px)',
+                                  },
+                                }}
+                              >
+                                <Typography variant="button" sx={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'none' }}>
+                                  Bize Ulaşın
+                                </Typography>
+                                <Typography variant="caption" sx={{ fontSize: '0.75rem', opacity: 0.8, mt: 0.5 }}>
+                                  {agencyConfig?.contact?.phone?.primary || '+90 533 086 40 01'}
+                                </Typography>
+                              </PurchaseButton>
+                            );
+                          }
+                        })()}
+                      </Box>
+                    </Box>
+
+                    {isFailed && (
+                      <Alert
+                        severity="error"
+                        variant="outlined"
+                        icon={<AlertCircle size={24} />}
+                        sx={{
+                          mt: 2,
+                          borderRadius: 2
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {quote.errorMessage || 'Bu teklif şu anda kullanılamıyor. Lütfen başka bir teklif seçin.'}
+                        </Typography>
+                      </Alert>
+                    )}
+                  </CardContent>
+                </StyledQuoteCard>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+
+      {/* Information Section */}
+      <Box sx={{ mt: 4, p: 2, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="body2" color="text.secondary">
+          <Box component="span" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <InfoOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
+            <Typography variant="subtitle2" component="span">Tamamlayıcı Sağlık Sigortası Hakkında</Typography>
+          </Box>
+          Tamamlayıcı Sağlık Sigortası, SGK kapsamı dışında kalan sağlık harcamalarınızı karşılar. Hastane yatışı, ayakta tedavi, ilaç, tahlil ve check-up gibi sağlık hizmetlerini güvence altına alır. Size ve ailenize en uygun TSS teklifini seçerek hemen satın alabilirsiniz.
+        </Typography>
+      </Box>
+
+
+
+      {/* "Önceki Adıma Dön" butonu kaldırıldı */}
+
+      {/* Teminat Detayları Dialog */}
+      <Dialog
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        aria-labelledby="guarantee-dialog-title"
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 2, sm: 3 },
+            overflow: 'hidden',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            m: { xs: 1, sm: 2 },
+            height: { xs: '90vh', sm: 'auto' },
+            maxHeight: { xs: '90vh', sm: '90vh' }
+          }
+        }}
+      >
+        <DialogTitle
+          id="guarantee-dialog-title"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: { xs: 1, sm: 1.5 },
+            bgcolor: 'background.paper',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            py: { xs: 1, sm: 1.5 },
+            px: { xs: 1.5, sm: 3 },
+            minHeight: 'auto'
+          }}
+        >
+          <ShieldCheck size={20} />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="h6" component="span" sx={{ fontSize: { xs: '0.9rem', sm: '1.1rem' } }}>
+              {selectedQuoteForModal?.company}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" component="div" sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
+              Teminat Detayları
+            </Typography>
+          </Box>
+
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseModal}
+            sx={{
+              position: 'absolute',
+              right: { xs: 8, sm: 16 },
+              top: { xs: 8, sm: 16 },
+              color: (theme) => theme.palette.grey[500],
+              p: 0.5
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent dividers sx={{ p: 0 }}>
+          {selectedQuoteForModal?.insuranceCompanyGuarantees &&
+            selectedQuoteForModal.insuranceCompanyGuarantees.length > 0 ? (
+            <Box>
+              <Box sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 1.5, sm: 2 }, bgcolor: alpha(theme.palette.primary.main, 0.03) }}>
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  justifyContent: 'space-between',
+                  alignItems: { xs: 'flex-start', sm: 'center' },
+                  flexWrap: 'wrap',
+                  gap: { xs: 1, sm: 2 }
+                }}>
+                  <Box sx={{ flex: 1, minWidth: { xs: 'auto', sm: 240 } }}>
+                    <CompanyLogoWrapper>
+                      {selectedQuoteForModal.logo ? (
+                        <Box
+                          component="img"
+                          src={selectedQuoteForModal.logo}
+                          alt={selectedQuoteForModal.company}
+                          sx={{ height: { xs: 32, sm: 40 } }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+
+                            borderRadius: 1,
+                            width: { xs: 40, sm: 50 },
+                            height: { xs: 32, sm: 40 },
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Typography variant="h5" component="span">
+                            🏥
+                          </Typography>
+                        </Box>
+                      )}
+                      <Box>
+                        <Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                          {selectedQuoteForModal.company}
+                        </Typography>
+                        {selectedQuoteForModal.coverageGroupName && (
                           <Chip
-                            label={quote.coverageGroupName}
+                            label={selectedQuoteForModal.coverageGroupName}
                             size="small"
+                            variant="outlined"
                             sx={{
-                              position: 'absolute',
-                              top: -12,
-                              left: sortOption === 'price' &&
-                                    quotes.filter(q => q.state === 'ACTIVE').length > 1 &&
-                                    best ? 140 : 16,
-                              fontWeight: 'medium',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                              zIndex: 1,
                               backgroundColor: '#ef2027',
                               color: 'white',
                               '& .MuiChip-label': {
-                                color: 'white'
-                              }
-                            }}
-                          />
-                        )}
-
-                        <CardContent sx={{ p: 2.5 }}>
-                          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 , alignItems: 'center'}}>
-                            {/* Company & Logo Section */}
-                            <Box sx={{ flex: 3.5, minWidth: 0, mb: { xs: 2, md: 0 } }}>
-                              <CompanyLogoWrapper>
-                                {(() => {
-                                  const displayMode = getProductDisplayMode('tss', quote.productId);
-                                  const isCensored = displayMode === 'CENSORED_CONTACT';
-                                  
-                                  return (
-                                    <>
-                                      {isCensored ? (
-                                        <Box 
-                                          sx={{ 
-                                             
-                                            borderRadius: 1,
-                                            width: 50,
-                                            height: 40,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                          }}
-                                        >
-                                          <Shield 
-                                            size={40} 
-                                            color={agencyConfig?.theme?.primaryColor || theme.palette.primary.main} 
-                                            stroke={agencyConfig?.theme?.primaryColor || theme.palette.primary.main}
-                                            strokeWidth={2}
-                                          />
-                                        </Box>
-                                      ) : quote.logo ? (
-                                        <Box
-                                          component="img"
-                                          src={quote.logo}
-                                          alt={quote.company}
-                                          sx={{ height: 40 }}
-                                        />
-                                      ) : (
-                                        <Box
-                                          sx={{
-                                            
-                                            borderRadius: 1,
-                                            width: 50,
-                                            height: 40,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                          }}
-                                        >
-                                          <Typography variant="h5" component="span">
-                                            🚗
-                                          </Typography>
-                                        </Box>
-                                      )}
-                                      <Box>
-                                        <Typography variant="subtitle1" fontWeight="bold">
-                                          {isCensored ? 'Sigorta Şirketi' : quote.company}
-                                        </Typography>
-                                      </Box>
-                                    </>
-                                  );
-                                })()}
-                              </CompanyLogoWrapper>
-                            </Box>
-                            {/* Price Section */}
-                            <Box sx={{ flex: 3.5, minWidth: 0, mb: { xs: 2, md: 0 } }}>
-                              <PriceTag>
-                                {isWaiting ? (
-                                    <>
-                                      <Skeleton variant="text" width={120} height={36} />
-                                      <Skeleton variant="text" width={90} height={24} />
-                                    </>
-                                ) : (
-                                    <>
-                                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                                        <Typography
-                                            variant="h5"
-                                            color="primary.main"
-                                            fontWeight="700"
-                                            sx={{ mr: 1 }}
-                                        >
-                                          {currentPremium?.formattedGrossPremium
-                                              ? `${currentPremium.formattedGrossPremium} ₺`
-                                              : 'Fiyat Yok'}
-                                        </Typography>
-
-                                        {currentPremium?.installmentNumber && currentPremium.installmentNumber > 1 && (
-                                            <Chip
-                                                size="small"
-                                                label={`${currentPremium.installmentNumber} Taksit`}
-                                                color="default"
-                                                variant="outlined"
-                                                sx={{ height: 20, fontSize: '0.7rem' }}
-                                            />
-                                        )}
-                                      </Box>
-                                      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-                                        <InstallmentButton size="small">
-                                          <Select
-                                              value={quote.selectedInstallmentNumber}
-                                              onChange={(e) => handleInstallmentChange(quote.id, e.target.value as number)}
-                                              renderValue={(value) => (
-                                                  <Typography variant="body2">
-                                                    {value === 1 ? 'Peşin Ödeme' : `${value} Taksit`}
-                                                  </Typography>
-                                              )}
-                                              IconComponent={ExpandMoreIcon}
-                                              sx={{
-                                                fontSize: '0.8rem',
-                                                '.MuiSvgIcon-root': { fontSize: '1rem' }
-                                              }}
-                                          >
-                                            {quote.premiums.map((premium) => (
-                                                <MenuItem
-                                                    key={premium.installmentNumber}
-                                                    value={premium.installmentNumber}
-                                                >
-                                                  <Typography variant="body2">
-                                                    {premium.installmentNumber === 1
-                                                        ? `Peşin: ${premium.formattedGrossPremium} ₺`
-                                                        : `${premium.installmentNumber} Taksit: ${premium.formattedGrossPremium} ₺`}
-                                                  </Typography>
-                                                </MenuItem>
-                                            ))}
-                                          </Select>
-                                        </InstallmentButton>
-                                        <Tooltip title="Vergi ve harçlar dahil toplam fiyat">
-                                          <Typography
-                                              variant="caption"
-                                              color="text.secondary"
-                                              sx={{ ml: 1, display: 'flex', alignItems: 'center' }}
-                                          >
-                                            <InfoOutlinedIcon fontSize="inherit" sx={{ mr: 0.5 }} />
-                                            Vergiler Dahil
-                                          </Typography>
-                                        </Tooltip>
-                                      </Box>
-                                    </>
-                                )}
-                              </PriceTag>
-                            </Box>
-                            {/* Features & Actions Section */}
-                            <Box sx={{ flex: 5, minWidth: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                              <Box>
-                                {!isWaiting && (() => {
-                                  const displayMode = getProductDisplayMode('tss', quote.productId);
-                                  const isCensored = displayMode === 'CENSORED_CONTACT';
-                                  
-                                  return (
-                                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                                      {!isCensored && (
-                                        <DocumentButton
-                                          variant="text"
-                                          startIcon={<FileText size={16} />}
-                                          color="primary"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleViewDocument(proposalId || '', quote.id);
-                                          }}
-                                        >
-                                          Teklif Belgesi
-                                        </DocumentButton>
-                                      )}
-                                      <DocumentButton
-                                        variant="text"
-                                        startIcon={<InfoOutlinedIcon fontSize="small" />}
-                                        color="primary"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleOpenModal(quote);
-                                        }}
-                                      >
-                                        Teminatlar
-                                      </DocumentButton>
-                                    </Stack>
-                                  );
-                                })()}
-                              </Box>
-                              {!isFailed && !isWaiting && (() => {
-                                const displayMode = getProductDisplayMode('tss', quote.productId);
-                                const isFullAccess = displayMode === 'FULL_ACCESS';
-                                
-                                if (isFullAccess) {
-                                  return (
-                                    <PurchaseButton
-                                      variant="outlined"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handlePurchase(quote.id);
-                                      }}
-                                      sx={{
-                                        color: 'text.primary',
-                                        borderColor: 'divider',
-                                        '&:hover': {
-                                          color: agencyConfig.theme.primaryColor,
-                                          borderColor: agencyConfig.theme.primaryColor,
-                                          bgcolor: alpha(agencyConfig.theme.primaryColor, 0.05),
-                                          transform: 'translateY(-1px)',
-                                        },
-                                      }}
-                                    >
-                                      Satın Al
-                                    </PurchaseButton>
-                                  );
-                                } else {
-                                  return (
-                                    <PurchaseButton
-                                      variant="outlined"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.open(`tel:${agencyConfig?.contact?.phone?.primary?.replace(/\s/g, '') || '44422377'}`, '_self');
-                                      }}
-                                      sx={{
-                                        color: 'text.primary',
-                                        borderColor: 'divider',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        padding: '8px 16px',
-                                        minHeight: 'auto',
-                                        '&:hover': {
-                                          color: agencyConfig.theme.primaryColor,
-                                          borderColor: agencyConfig.theme.primaryColor,
-                                          bgcolor: alpha(agencyConfig.theme.primaryColor, 0.05),
-                                          transform: 'translateY(-1px)',
-                                        },
-                                      }}
-                                    >
-                                      <Typography variant="button" sx={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'none' }}>
-                                        Bize Ulaşın
-                                      </Typography>
-                                      <Typography variant="caption" sx={{ fontSize: '0.75rem', opacity: 0.8, mt: 0.5 }}>
-                                        {agencyConfig?.contact?.phone?.primary || '444 22 37'}
-                                      </Typography>
-                                    </PurchaseButton>
-                                  );
-                                }
-                              })()}
-                            </Box>
-                          </Box>
-
-                          {isFailed && (
-                              <Alert
-                                  severity="error"
-                                  variant="outlined"
-                                  icon={<AlertCircle size={24} />}
-                                  sx={{
-                                    mt: 2,
-                                    borderRadius: 2
-                                  }}
-                              >
-                                <Typography variant="body2">
-                                  {quote.errorMessage || 'Bu teklif şu anda kullanılamıyor. Lütfen başka bir teklif seçin.'}
-                                </Typography>
-                              </Alert>
-                          )}
-                        </CardContent>
-                      </StyledQuoteCard>
-                    </Box>
-                );
-              })}
-            </Box>
-        )}
-
-        {/* Information Section */}
-        <Box sx={{ mt: 4, p: 2, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="body2" color="text.secondary">
-            <Box component="span" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <InfoOutlinedIcon fontSize="small" sx={{ mr: 1 }} />
-              <Typography variant="subtitle2" component="span">Tamamlayıcı Sağlık Sigortası Hakkında</Typography>
-            </Box>
-            Tamamlayıcı Sağlık Sigortası, SGK kapsamı dışında kalan sağlık harcamalarınızı karşılar. Hastane yatışı, ayakta tedavi, ilaç, tahlil ve check-up gibi sağlık hizmetlerini güvence altına alır. Size ve ailenize en uygun TSS teklifini seçerek hemen satın alabilirsiniz.
-          </Typography>
-        </Box>
-
-
-
-        {/* "Önceki Adıma Dön" butonu kaldırıldı */}
-
-        {/* Teminat Detayları Dialog */}
-        <Dialog
-          open={isModalOpen}
-          onClose={handleCloseModal}
-          aria-labelledby="guarantee-dialog-title"
-          maxWidth="md"
-          fullWidth
-          PaperProps={{ 
-            sx: { 
-              borderRadius: { xs: 2, sm: 3 },
-              overflow: 'hidden',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-              m: { xs: 1, sm: 2 },
-              height: { xs: '90vh', sm: 'auto' },
-              maxHeight: { xs: '90vh', sm: '90vh' }
-            } 
-          }}
-        >
-          <DialogTitle 
-            id="guarantee-dialog-title"
-            sx={{ 
-              display: 'flex',
-              alignItems: 'center',
-              gap: { xs: 1, sm: 1.5 },
-              bgcolor: 'background.paper',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              py: { xs: 1, sm: 1.5 },
-              px: { xs: 1.5, sm: 3 },
-              minHeight: 'auto'
-            }}
-          >
-            <ShieldCheck size={20} />
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="h6" component="span" sx={{ fontSize: { xs: '0.9rem', sm: '1.1rem' } }}>
-                {selectedQuoteForModal?.company}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" component="div" sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
-                Teminat Detayları
-              </Typography>
-            </Box>
-            
-            <IconButton
-              aria-label="close"
-              onClick={handleCloseModal}
-              sx={{
-                position: 'absolute',
-                right: { xs: 8, sm: 16 },
-                top: { xs: 8, sm: 16 },
-                color: (theme) => theme.palette.grey[500],
-                p: 0.5
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </DialogTitle>
-          
-          <DialogContent dividers sx={{ p: 0 }}>
-            {selectedQuoteForModal?.insuranceCompanyGuarantees &&
-            selectedQuoteForModal.insuranceCompanyGuarantees.length > 0 ? (
-              <Box>
-                <Box sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 1.5, sm: 2 }, bgcolor: alpha(theme.palette.primary.main, 0.03) }}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    justifyContent: 'space-between', 
-                    alignItems: { xs: 'flex-start', sm: 'center' }, 
-                    flexWrap: 'wrap', 
-                    gap: { xs: 1, sm: 2 } 
-                  }}>
-                    <Box sx={{ flex: 1, minWidth: { xs: 'auto', sm: 240 } }}>
-                      <CompanyLogoWrapper>
-                        {selectedQuoteForModal.logo ? (
-                          <Box
-                            component="img"
-                            src={selectedQuoteForModal.logo}
-                            alt={selectedQuoteForModal.company}
-                            sx={{ height: { xs: 32, sm: 40 } }}
-                          />
-                        ) : (
-                          <Box 
-                            sx={{ 
-                               
-                              borderRadius: 1,
-                              width: { xs: 40, sm: 50 },
-                              height: { xs: 32, sm: 40 },
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <Typography variant="h5" component="span">
-                              🏥
-                            </Typography>
-                          </Box>
-                        )}
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                            {selectedQuoteForModal.company}
-                          </Typography>
-                          {selectedQuoteForModal.coverageGroupName && (
-                            <Chip
-                              label={selectedQuoteForModal.coverageGroupName}
-                              size="small"
-                              variant="outlined"
-                              sx={{
-                                backgroundColor: '#ef2027',
                                 color: 'white',
-                                '& .MuiChip-label': {
-                                  color: 'white',
-                                  fontSize: { xs: '0.7rem', sm: '0.75rem' }
-                                },
-                                mt: 0.5,
-                                height: { xs: 20, sm: 24 }
-                              }}
-                            />
-                          )}
-                        </Box>
-                      </CompanyLogoWrapper>
-                    </Box>
-                    <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, mt: { xs: 1, sm: 0 } }}>
-                      <Typography variant="h6" color="primary.main" fontWeight="bold" sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
-                        {getSelectedPremium(selectedQuoteForModal)?.formattedGrossPremium} ₺
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
-                        {getSelectedPremium(selectedQuoteForModal)?.installmentNumber === 1 
-                          ? 'Peşin Ödeme' 
-                          : `${getSelectedPremium(selectedQuoteForModal)?.installmentNumber} Taksit`}
-                      </Typography>
-                    </Box>
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                              },
+                              mt: 0.5,
+                              height: { xs: 20, sm: 24 }
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </CompanyLogoWrapper>
+                  </Box>
+                  <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, mt: { xs: 1, sm: 0 } }}>
+                    <Typography variant="h6" color="primary.main" fontWeight="bold" sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
+                      {getSelectedPremium(selectedQuoteForModal)?.formattedGrossPremium} ₺
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
+                      {getSelectedPremium(selectedQuoteForModal)?.installmentNumber === 1
+                        ? 'Peşin Ödeme'
+                        : `${getSelectedPremium(selectedQuoteForModal)?.installmentNumber} Taksit`}
+                    </Typography>
                   </Box>
                 </Box>
-                              
-                {/* Desktop Table */}
-                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                  <TableContainer>
-                    <Table stickyHeader aria-label="teminat tablosu">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell sx={{ 
-                            fontWeight: 'bold', 
-                            fontSize: '0.875rem',
-                            py: 2
-                          }}>
-                            Teminat Adı
-                          </TableCell>
-                          <TableCell align="right" sx={{ 
-                            fontWeight: 'bold', 
-                            fontSize: '0.875rem',
-                            py: 2
-                          }}>
-                            Limit / Değer
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {selectedQuoteForModal.insuranceCompanyGuarantees
-                          ?.filter(guarantee => {
-                            // "Belirsiz" değerleri filtrele
-                            const value = formatGuaranteeValue(guarantee);
-                            return value !== 'Belirsiz';
-                          })
-                          .sort((a, b) => a.label.localeCompare(b.label))
-                          .map((guarantee) => (
-                          <TableRow 
+              </Box>
+
+              {/* Desktop Table */}
+              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                <TableContainer>
+                  <Table stickyHeader aria-label="teminat tablosu">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{
+                          fontWeight: 'bold',
+                          fontSize: '0.875rem',
+                          py: 2
+                        }}>
+                          Teminat Adı
+                        </TableCell>
+                        <TableCell align="right" sx={{
+                          fontWeight: 'bold',
+                          fontSize: '0.875rem',
+                          py: 2
+                        }}>
+                          Limit / Değer
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {selectedQuoteForModal.insuranceCompanyGuarantees
+                        ?.filter(guarantee => {
+                          // "Belirsiz" değerleri filtrele
+                          const value = formatGuaranteeValue(guarantee);
+                          return value !== 'Belirsiz';
+                        })
+                        .sort((a, b) => a.label.localeCompare(b.label))
+                        .map((guarantee) => (
+                          <TableRow
                             key={guarantee.insuranceGuaranteeId}
-                            sx={{ 
+                            sx={{
                               '&:hover': { bgcolor: alpha(theme.palette.action.hover, 0.1) },
                             }}
                           >
                             <TableCell component="th" scope="row" sx={{ py: 1.5 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <VerifiedOutlinedIcon 
-                                  fontSize="small" 
-                                  color="primary" 
-                                  sx={{ mr: 1, opacity: 0.7 }} 
+                                <VerifiedOutlinedIcon
+                                  fontSize="small"
+                                  color="primary"
+                                  sx={{ mr: 1, opacity: 0.7 }}
                                 />
                                 {guarantee.label}
                               </Box>
@@ -1523,43 +1622,43 @@ export default function QuoteComparisonStep({
                             </TableCell>
                           </TableRow>
                         ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+
+              {/* Mobile Cards */}
+              <Box sx={{ display: { xs: 'block', sm: 'none' }, p: 1 }}>
+                {/* Mobile Header */}
+                <Box sx={{
+                  p: 1.5,
+                  mb: 1,
+                  borderRadius: 1,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider'
+                }}>
+                  <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: '0.875rem' }}>
+                    Teminat Adı
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: '0.875rem' }}>
+                    Limit / Değer
+                  </Typography>
                 </Box>
 
-                {/* Mobile Cards */}
-                <Box sx={{ display: { xs: 'block', sm: 'none' }, p: 1 }}>
-                  {/* Mobile Header */}
-                  <Box sx={{ 
-                    p: 1.5, 
-                    mb: 1, 
-                    borderRadius: 1,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider'
-                  }}>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: '0.875rem' }}>
-                      Teminat Adı
-                    </Typography>
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: '0.875rem' }}>
-                      Limit / Değer
-                    </Typography>
-                  </Box>
-                  
-                  {selectedQuoteForModal.insuranceCompanyGuarantees
-                    ?.filter(guarantee => {
-                      // "Belirsiz" değerleri filtrele
-                      const value = formatGuaranteeValue(guarantee);
-                      return value !== 'Belirsiz';
-                    })
-                    .sort((a, b) => a.label.localeCompare(b.label))
-                    .map((guarantee) => (
-                    <Card 
+                {selectedQuoteForModal.insuranceCompanyGuarantees
+                  ?.filter(guarantee => {
+                    // "Belirsiz" değerleri filtrele
+                    const value = formatGuaranteeValue(guarantee);
+                    return value !== 'Belirsiz';
+                  })
+                  .sort((a, b) => a.label.localeCompare(b.label))
+                  .map((guarantee) => (
+                    <Card
                       key={guarantee.insuranceGuaranteeId}
-                      sx={{ 
+                      sx={{
                         mb: 0.5,
                         p: 1.5,
                         '&:hover': { bgcolor: alpha(theme.palette.action.hover, 0.1) },
@@ -1567,14 +1666,14 @@ export default function QuoteComparisonStep({
                     >
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-                          <VerifiedOutlinedIcon 
-                            fontSize="small" 
-                            color="primary" 
-                            sx={{ mr: 1, opacity: 0.7, flexShrink: 0 }} 
+                          <VerifiedOutlinedIcon
+                            fontSize="small"
+                            color="primary"
+                            sx={{ mr: 1, opacity: 0.7, flexShrink: 0 }}
                           />
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
+                          <Typography
+                            variant="body2"
+                            sx={{
                               fontSize: '0.8rem',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -1584,10 +1683,10 @@ export default function QuoteComparisonStep({
                             {guarantee.label}
                           </Typography>
                         </Box>
-                        <Typography 
-                          variant="body2" 
-                          fontWeight="medium" 
-                          sx={{ 
+                        <Typography
+                          variant="body2"
+                          fontWeight="medium"
+                          sx={{
                             fontSize: '0.8rem',
                             ml: 1,
                             flexShrink: 0
@@ -1598,72 +1697,72 @@ export default function QuoteComparisonStep({
                       </Box>
                     </Card>
                   ))}
-                </Box>
               </Box>
-            ) : (
-              <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="body1" color="text.secondary" align="center">
-                  Bu teklif için detaylı teminat bilgisi bulunmamaktadır.
-                </Typography>
-              </Box>
-            )}
-          </DialogContent>
-          
-          <DialogActions sx={{ 
-            p: { xs: 1.5, sm: 2 }, 
-            flexDirection: { xs: 'column', sm: 'row' },
-            justifyContent: 'space-between',
-            gap: { xs: 1.5, sm: 0 }
-          }}>
-            <Typography variant="caption" color="text.secondary" sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
-              Teminat detayları sigorta şirketinin teklif belgesinden ve servislerinden alınan değerler aracılığıyla sunulmaktadır. Daha detaylı sorularınız için{' '}
-              <a 
-                href={`tel:${agencyConfig.contact?.phone?.primary?.replace(/\s/g, '') || '44422377'}`}
-                style={{ 
-                  color: agencyConfig.theme.primaryColor, 
-                  textDecoration: 'none',
-                  fontWeight: 600
-                }}
-              >
-                {agencyConfig.contact?.phone?.primary || '444 22 37'}
-              </a>
-              {' '}numaralı telefon numarasından müşteri temsilcilerimize ulaşabilirsiniz.
-            </Typography>
-            
-            <Box>
-              <Button
-                variant="outlined"
-                onClick={handleCloseModal}
-                sx={{
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  borderColor: agencyConfig.theme.primaryColor,
-                  color: agencyConfig.theme.primaryColor,
-                  '&:hover': {
-                    borderColor: agencyConfig.theme.primaryColor,
-                    bgcolor: alpha(agencyConfig.theme.primaryColor, 0.05),
-                  },
-                  width: { xs: '100%', sm: '160px' },
-                  whiteSpace: 'nowrap',
-                  fontSize: '0.875rem',
-                  fontWeight: 600
-                }}
-              >
-                Kapat
-              </Button>
             </Box>
-          </DialogActions>
-        </Dialog>
+          ) : (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary" align="center">
+                Bu teklif için detaylı teminat bilgisi bulunmamaktadır.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
 
-        {/* Quote Comparison Modal */}
-        <QuoteComparisonModal
-          open={isComparisonModalOpen}
-          onClose={() => setIsComparisonModalOpen(false)}
-          quotes={convertTssQuotesToComparisonFormat(quotes.filter(q => q.state === 'ACTIVE'))}
-          title="TSS"
-          maxQuotes={3}
-        />
-      </>
+        <DialogActions sx={{
+          p: { xs: 1.5, sm: 2 },
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between',
+          gap: { xs: 1.5, sm: 0 }
+        }}>
+          <Typography variant="caption" color="text.secondary" sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+            Teminat detayları sigorta şirketinin teklif belgesinden ve servislerinden alınan değerler aracılığıyla sunulmaktadır. Daha detaylı sorularınız için{' '}
+            <a
+              href={`tel:${agencyConfig.contact?.phone?.primary?.replace(/\s/g, '') || '05330864001'}`}
+              style={{
+                color: agencyConfig.theme.primaryColor,
+                textDecoration: 'none',
+                fontWeight: 600
+              }}
+            >
+              {agencyConfig.contact?.phone?.primary || '+90 533 086 40 01'}
+            </a>
+            {' '}numaralı telefon numarasından müşteri temsilcilerimize ulaşabilirsiniz.
+          </Typography>
+
+          <Box>
+            <Button
+              variant="outlined"
+              onClick={handleCloseModal}
+              sx={{
+                borderRadius: 2,
+                px: 3,
+                py: 1,
+                borderColor: agencyConfig.theme.primaryColor,
+                color: agencyConfig.theme.primaryColor,
+                '&:hover': {
+                  borderColor: agencyConfig.theme.primaryColor,
+                  bgcolor: alpha(agencyConfig.theme.primaryColor, 0.05),
+                },
+                width: { xs: '100%', sm: '160px' },
+                whiteSpace: 'nowrap',
+                fontSize: '0.875rem',
+                fontWeight: 600
+              }}
+            >
+              Kapat
+            </Button>
+          </Box>
+        </DialogActions>
+      </Dialog>
+
+      {/* Quote Comparison Modal */}
+      <QuoteComparisonModal
+        open={isComparisonModalOpen}
+        onClose={() => setIsComparisonModalOpen(false)}
+        quotes={convertTssQuotesToComparisonFormat(quotes.filter(q => q.state === 'ACTIVE'))}
+        title="TSS"
+        maxQuotes={3}
+      />
+    </>
   );
 }
