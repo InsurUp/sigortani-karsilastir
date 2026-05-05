@@ -412,10 +412,9 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
           if (isCoreDataComplete) {
             const currentCustId = getCustomerIdFromAuthStorage();
             if (currentCustId) {
-              localStorage.setItem('tarsimProposalId', currentCustId);
+              localStorage.setItem('ozelsaglikProposalId', currentCustId);
             }
-     
-            onNext();
+            await handleCreateRequestInPersonalInfo(accessToken || undefined);
           } else {
             setShowAdditionalInfo(true);
           }
@@ -499,8 +498,8 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       
       // İlk stepte girilen email ve job değerlerini localStorage'a kaydet
       if (!showAdditionalInfo && values.email && values.job !== Job.Unknown) {
-        localStorage.setItem('tarsimInitialEmail', values.email);
-        localStorage.setItem('tarsimInitialJob', values.job.toString());
+        localStorage.setItem('ozelsaglikInitialEmail', values.email);
+        localStorage.setItem('ozelsaglikInitialJob', values.job.toString());
       }
       
       try {
@@ -552,13 +551,13 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
         if (values.birthDate) updatePayload.birthDate = values.birthDate;
         
         // Email ve job'u localStorage'dan al (ilk stepte kaydedilmiş)
-        const emailFromLocalStorage = localStorage.getItem('tarsimInitialEmail');
+        const emailFromLocalStorage = localStorage.getItem('ozelsaglikInitialEmail');
         if (emailFromLocalStorage) {
           updatePayload.primaryEmail = emailFromLocalStorage;
         }
         
         // Job'u localStorage'dan al ve Unknown değilse gönder
-        const jobFromLocalStorage = localStorage.getItem('tarsimInitialJob');
+        const jobFromLocalStorage = localStorage.getItem('ozelsaglikInitialJob');
         if (jobFromLocalStorage && parseInt(jobFromLocalStorage) !== Job.Unknown) {
           updatePayload.job = parseInt(jobFromLocalStorage);
         }
@@ -582,11 +581,10 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
 
         // Set proposalIdForKasko using the customerId from auth-storage (which is currentCustomerId)
         if (currentCustomerId) {
-            localStorage.setItem('tarsimProposalId', currentCustomerId);
+            localStorage.setItem('ozelsaglikProposalId', currentCustomerId);
         } else {
         }
-
-        onNext();
+        await handleCreateRequestInPersonalInfo(accessToken || undefined);
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Bir hata oluştu');
       } finally {
@@ -665,8 +663,8 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
           }
           
           // setUser çağrısında customerIdToUse kullan ve email'i localStorage'dan da al
-          const storedEmail = localStorage.getItem('tarsimInitialEmail');
-          const storedJob = localStorage.getItem('tarsimInitialJob');
+          const storedEmail = localStorage.getItem('ozelsaglikInitialEmail');
+          const storedJob = localStorage.getItem('ozelsaglikInitialJob');
           const finalEmailForUser = meData.primaryEmail || storedEmail || '';
           setUser({
             id: customerIdToUse, 
@@ -713,11 +711,9 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
             }
           }
           
-          onNext();
-
-          // Otomatik talep oluştur
-              await handleCreateRequestInPersonalInfo(verifyData.accessToken);
-              return; // Early return to prevent further processing
+          setShowVerification(false);
+          await handleCreateRequestInPersonalInfo(verifyData.accessToken);
+          return; // Early return to prevent further processing
           }
       } else {
           setShowAdditionalInfo(true); 
@@ -772,8 +768,8 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       const currentProfile = await currentProfileResponse.json() as CustomerProfile;
       
       // Email ve job'u localStorage'dan al (ilk stepte kaydedilmiş)
-      const emailFromLocalStorage = localStorage.getItem('tarsimInitialEmail');
-      const jobFromLocalStorage = localStorage.getItem('tarsimInitialJob');
+      const emailFromLocalStorage = localStorage.getItem('ozelsaglikInitialEmail');
+      const jobFromLocalStorage = localStorage.getItem('ozelsaglikInitialJob');
       
       // Mevcut profil verilerini koru ve sadece gerekli alanları güncelle
       const updatePayload: any = {
@@ -801,7 +797,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       
       const customerIdForProposal = getCustomerIdFromAuthStorage() || finalUpdatedProfile.id; 
       if (customerIdForProposal) {
-        localStorage.setItem('tarsimProposalId', customerIdForProposal); 
+        localStorage.setItem('ozelsaglikProposalId', customerIdForProposal); 
       } else {
       }
       
@@ -845,7 +841,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       const currentCustomerId = getCustomerIdFromAuthStorage();
       if (!currentCustomerId) {
         // Hata durumunu localStorage'a kaydet ve RequestStep'te göster
-        localStorage.setItem('tarsimRequestError', 'Müşteri bilgisi bulunamadı. Lütfen önceki adımları kontrol edin.');
+        localStorage.setItem('ozelsaglikRequestError', 'Müşteri bilgisi bulunamadı. Lütfen önceki adımları kontrol edin.');
         onNext();
         return;
       }
@@ -854,7 +850,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       const currentToken = tokenToUse || accessToken;
       if (!currentToken) {
         // Hata durumunu localStorage'a kaydet ve RequestStep'te göster
-        localStorage.setItem('tarsimRequestError', 'Kimlik doğrulama sorunu. Lütfen sayfayı yenileyin.');
+        localStorage.setItem('ozelsaglikRequestError', 'Kimlik doğrulama sorunu. Lütfen sayfayı yenileyin.');
         onNext();
         return;
       }
@@ -862,7 +858,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       const requestPayload = {
         customerId: currentCustomerId,
         customerAssetReference: null,
-        productBranch: "SAGLIK",
+        productBranch: "OZEL_SAGLIK",
         channel: "OFFLINE_PROPOSAL_FORM"
       };
 
@@ -889,7 +885,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
             
             // Özel hata mesajlarını kontrol et
             if (apiError.includes('zaten açık bir yeni satış fırsatı talebi bulunmaktadır')) {
-              errorMessage = 'Bu müşteri için zaten açık bir Tarsim Sigortası talebi bulunmaktadır. Mevcut talebin sonuçlanmasını bekleyiniz.'; 
+              errorMessage = 'Bu müşteri için zaten açık bir Özel Sağlık Sigortası talebi bulunmaktadır. Mevcut talebin sonuçlanmasını bekleyiniz.'; 
             } else {
               errorMessage = apiError;
             }
@@ -904,7 +900,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
         }
         
         // Hata durumunu localStorage'a kaydet ve RequestStep'te göster
-        localStorage.setItem('tarsimRequestError', errorMessage);
+        localStorage.setItem('ozelsaglikRequestError', errorMessage);
         onNext();
         return;
       }
@@ -912,14 +908,14 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       const responseData = await response.json();
       
       // Başarı durumunu localStorage'a kaydet
-      localStorage.setItem('tarsimRequestSuccess', 'true');
-      localStorage.removeItem('tarsimRequestError');
+      localStorage.setItem('ozelsaglikRequestSuccess', 'true');
+      localStorage.removeItem('ozelsaglikRequestError');
 
       onNext();
       
     } catch (error) {
       // Hata durumunu localStorage'a kaydet ve RequestStep'te göster
-      localStorage.setItem('tarsimRequestError', error instanceof Error ? error.message : 'Talep oluşturulurken bir hata oluştu');
+      localStorage.setItem('ozelsaglikRequestError', error instanceof Error ? error.message : 'Talep oluşturulurken bir hata oluştu');
       onNext();
     } finally {
       setIsLoading(false);
@@ -1334,10 +1330,10 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-            Tarsim Sigortası
+            Özel Sağlık Sigortası
           </Typography>
           <Typography sx={{ mb: 3, fontSize: '1rem', color: 'text.secondary' }}>
-            Kurumsal müşterilerimize Tarsim sigortası hizmeti verememekteyiz.<br /> 
+            Kurumsal müşterilerimize Özel Sağlık sigortası hizmeti verememekteyiz.<br /> 
             <Box component="span" sx={{ display: 'block', mt: 2, textAlign: 'center' }}>
             <span> 
                 <Link href="/kasko-teklif" sx={{ fontWeight: 700, color: '#111', textDecoration: 'underline', mx: 0.5 }} target="_blank">Kasko,</Link>

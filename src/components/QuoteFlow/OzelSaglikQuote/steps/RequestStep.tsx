@@ -46,7 +46,7 @@ interface RequestStepProps {
 }
 
 const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepProps) => {
-  const { customerId, accessToken, user, logout } = useAuthStore();
+  const { accessToken, user, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requestCreated, setRequestCreated] = useState(false);
@@ -61,6 +61,39 @@ const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepPro
     logout();
     localStorage.clear();
     window.location.reload();
+  };
+
+  const resolveCustomerId = async () => {
+    const storeCustomerId = useAuthStore.getState().customerId;
+    if (storeCustomerId) {
+      return storeCustomerId;
+    }
+
+    try {
+      const authStorageRaw = localStorage.getItem('auth-storage');
+      if (authStorageRaw) {
+        const authStorage = JSON.parse(authStorageRaw);
+        const persistedCustomerId = authStorage?.state?.customerId;
+        if (persistedCustomerId) {
+          useAuthStore.getState().setCustomerId(persistedCustomerId);
+          return persistedCustomerId;
+        }
+      }
+    } catch (error) {
+    }
+
+    const meResponse = await fetchWithAuth(API_ENDPOINTS.CUSTOMER_ME);
+    if (!meResponse.ok) {
+      return null;
+    }
+
+    const meData = await meResponse.json() as { id?: string };
+    if (meData?.id) {
+      useAuthStore.getState().setCustomerId(meData.id);
+      return meData.id;
+    }
+
+    return null;
   };
 
   useEffect(() => {
@@ -87,14 +120,16 @@ const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepPro
   }, []);
 
   const handleCreateRequest = async () => {
-    if (!customerId) {
-      setError('Müşteri bilgisi bulunamadı. Lütfen önceki adımları kontrol edin.');
+    const currentAccessToken = accessToken || useAuthStore.getState().accessToken;
+    if (!currentAccessToken) {
+      setError('Oturum bilgisi bulunamadı. Lütfen sayfayı yenileyin.');
       setRequestResult('error');
       return;
     }
 
-    if (!accessToken) {
-      setError('Oturum bilgisi bulunamadı. Lütfen sayfayı yenileyin.');
+    const currentCustomerId = await resolveCustomerId();
+    if (!currentCustomerId) {
+      setError('Müşteri bilgisi bulunamadı. Lütfen önceki adımları kontrol edin.');
       setRequestResult('error');
       return;
     }
@@ -106,9 +141,9 @@ const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepPro
 
     try {
       const requestPayload = {
-        customerId: customerId,
+        customerId: currentCustomerId,
         customerAssetReference: null,
-        productBranch: "SAGLIK",
+        productBranch: "OZEL_SAGLIK",
         channel: "OFFLINE_PROPOSAL_FORM"
       };
 
@@ -117,7 +152,7 @@ const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepPro
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${currentAccessToken}`,
         },
         body: JSON.stringify(requestPayload),
       });

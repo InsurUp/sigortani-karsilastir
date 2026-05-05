@@ -9,3 +9,4 @@ export * from './banner/Banner'
 export * from './campaign/CampaingCard'
 export * from './campaign/CampaignSlider'
 export { default as TitleDescription } from './TitleDescription/TitleDescription';
+export { default as ProductRequestForm } from './ProductRequestForm';

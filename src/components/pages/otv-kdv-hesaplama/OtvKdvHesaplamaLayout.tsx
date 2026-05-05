@@ -8,10 +8,9 @@ export function OtvKdvHesaplamaLayout() {
     <main>
       <Banner text="ÖTV ve KDV Hesapla!" />
       <OtvKdvHesaplamaForm />
+      <CTASection />
       <OtvKdvBilgiIcerik />
       <CTASection />
     </main>
   )
 }
-
-

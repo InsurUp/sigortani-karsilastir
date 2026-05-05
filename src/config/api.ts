@@ -75,6 +75,7 @@ export const API_ENDPOINTS = {
   
   // General/Company endpoints
   COMPANIES: `/api/insurance-companies`,
+  CONTACT_FORM: `/api/contact-form`,
   
   // Policy endpoints
   POLICIES: '/api/policies',

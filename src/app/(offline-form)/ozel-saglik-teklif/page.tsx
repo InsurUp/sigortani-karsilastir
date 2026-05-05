@@ -4,29 +4,29 @@ import { CircularProgress, Box, Typography } from '@mui/material';
 import OzelSaglikQuotePage from '@/components/QuoteFlow/OzelSaglikQuote/OzelSaglikQuotePage';
 import { getSiteUrl, getSiteName } from '@/utils/site';
 
-
 export const metadata: Metadata = {
-  title: `Özel Sağlık Sigortası Teklif Al - Tarımınızı Güvence Altına Alın | ${getSiteName()}`,
-  description: "Tarım ürünlerinizi, seralarınızı ve hayvanlarınızı doğal afetler, hastalıklar ve beklenmedik risklere karşı özel sağlık sigortası ile güvence altına alın. En uygun teklifleri hemen karşılaştırın.",
+  title: `Özel Sağlık Sigortası Teklif Al | ${getSiteName()}`,
+  description:
+    'Özel sağlık sigortası için teklif talebinizi hızlıca oluşturun. Bilgilerinizi paylaşın, uzman ekibimiz en uygun seçeneklerle sizinle iletişime geçsin.',
   metadataBase: new URL(getSiteUrl()),
   alternates: {
-    canonical: `${getSiteUrl()}/ozel-saglik-teklif`
+    canonical: `${getSiteUrl()}/ozel-saglik-teklif`,
   },
   openGraph: {
-    title: `Özel Sağlık Sigortası Teklif Al - Tarımınızı Güvence Altına Alın | ${getSiteName()}`,
-    description: "Tarım ürünlerinizi, seralarınızı ve hayvanlarınızı doğal afetler, hastalıklar ve beklenmedik risklere karşı özel sağlık sigortası ile güvence altına alın. En uygun teklifleri hemen karşılaştırın.",
+    title: `Özel Sağlık Sigortası Teklif Al | ${getSiteName()}`,
+    description:
+      'Özel sağlık sigortası için teklif talebinizi hızlıca oluşturun. Bilgilerinizi paylaşın, uzman ekibimiz en uygun seçeneklerle sizinle iletişime geçsin.',
     url: `${getSiteUrl()}/ozel-saglik-teklif`,
-    type: "website"
+    type: 'website',
   },
   twitter: {
-    title: `Özel Sağlık Sigortası Teklif Al - Tarımınızı Güvence Altına Alın | ${getSiteName()}`,
-    description: "Tarım ürünlerinizi, seralarınızı ve hayvanlarınızı doğal afetler, hastalıklar ve beklenmedik risklere karşı özel sağlık sigortası ile güvence altına alın. En uygun teklifleri hemen karşılaştırın.",
-    card: "summary_large_image"
-  }
+    title: `Özel Sağlık Sigortası Teklif Al | ${getSiteName()}`,
+    description:
+      'Özel sağlık sigortası için teklif talebinizi hızlıca oluşturun. Bilgilerinizi paylaşın, uzman ekibimiz en uygun seçeneklerle sizinle iletişime geçsin.',
+    card: 'summary_large_image',
+  },
 };
 
-
-// Loading component
 function LoadingFallback() {
   return (
     <Box
@@ -47,10 +47,10 @@ function LoadingFallback() {
   );
 }
 
-export default function TarsimTeklifPage() {
+export default function OzelSaglikTeklifPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <OzelSaglikQuotePage />
     </Suspense>
   );
-} 
+}

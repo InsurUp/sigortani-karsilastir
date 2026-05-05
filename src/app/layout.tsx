@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
-import Script from "next/script";
 
 import "./globals.css";
 import { Header, Footer } from "@/components/common";
+import CookieNotification from "@/components/ui/CookieNotification";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,6 +51,7 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
+        <CookieNotification />
       </body>
     </html>
   );

@@ -1,63 +1,75 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useAgencyConfig } from '../../context/AgencyConfigProvider';
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+const COOKIE_CONSENT_KEY = "cookieConsentStatus";
+
+type CookieConsentStatus = "accepted" | "rejected";
 
 const CookieNotification = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const { theme } = useAgencyConfig();
 
   useEffect(() => {
-    // Check localStorage if user has already seen the notification
-    const hasSeenNotification = localStorage.getItem('cookieNotificationSeen');
-    
-    if (!hasSeenNotification) {
+    const savedConsent = localStorage.getItem(COOKIE_CONSENT_KEY);
+
+    if (!savedConsent) {
       setIsVisible(true);
     }
   }, []);
 
-  const handleClose = () => {
+  const saveConsent = (status: CookieConsentStatus) => {
+    localStorage.setItem(COOKIE_CONSENT_KEY, status);
+    localStorage.setItem("cookieConsentUpdatedAt", new Date().toISOString());
     setIsVisible(false);
-    // Set flag in localStorage so it doesn't appear again
-    localStorage.setItem('cookieNotificationSeen', 'true');
   };
 
-  if (!isVisible) return null;
+  if (!isVisible) {
+    return null;
+  }
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 max-w-sm md:max-w-md">
-      <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4">
-        <div className="flex items-start">
-          <div className="flex-1 pr-4">
-            <p className="text-sm text-gray-700">
-              Sitemizde, size daha iyi hizmet verebilmek ve işlevsellik gereği çerezler kullanıyoruz. 
-              Çerezleri nasıl kullandığımızı incelemek ve çerezleri nasıl kontrol edebileceğinizi öğrenmek için{' '}
-              <Link 
-                to="/cerez-politikasi" 
-                className="font-medium"
-                style={{
-                  color: theme.primaryColor,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-              >
-                Çerez Politikası
-              </Link>
-              'nı inceleyebilirsiniz.
+    <section
+      aria-label="Çerez tercihleri"
+      className="fixed inset-x-0 bottom-0 z-[100] px-4 pb-4 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[440px] sm:px-0 sm:pb-0"
+    >
+      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_16px_48px_rgba(15,23,42,0.18)]">
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-base font-semibold text-slate-950">Çerez tercihleri</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Deneyiminizi iyileştirmek ve zorunlu site işlevlerini çalıştırmak için çerezlerden yararlanıyoruz.
+              Tercihinizi dilediğiniz zaman tarayıcı ayarlarınızdan değiştirebilirsiniz.
             </p>
           </div>
-          <button
-            type="button"
-            className="flex-shrink-0 text-gray-400 hover:text-gray-600 focus:outline-none"
-            onClick={handleClose}
-            aria-label="Kapat"
+
+          <Link
+            href="/cerez-politikasi"
+            className="inline-flex text-sm font-semibold text-[#ed1c24] underline-offset-4 hover:underline"
           >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
+            Çerez Politikasını İncele
+          </Link>
+
+          <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => saveConsent("rejected")}
+              className="inline-flex h-10 items-center justify-center rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              Reddet
+            </button>
+            <button
+              type="button"
+              onClick={() => saveConsent("accepted")}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-[#ed1c24] px-4 text-sm font-semibold text-white transition hover:bg-[#c9161d]"
+            >
+              Kabul Et
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
-export default CookieNotification; 
+export default CookieNotification;

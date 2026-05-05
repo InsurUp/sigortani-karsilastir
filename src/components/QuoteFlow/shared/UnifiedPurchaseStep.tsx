@@ -16,14 +16,18 @@ import {
   TextField,
   Typography,
   Alert,
+  Dialog,
+  DialogContent,
+  DialogTitle,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useFormik } from 'formik';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import * as yup from 'yup';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { fetchWithAuth } from '../../../services/fetchWithAuth';
-import { API_BASE_URL } from '../../../config/api';
+import { API_ENDPOINTS } from '../../../config/api';
 
 interface PremiumData {
   installmentNumber: number;
@@ -67,6 +71,16 @@ interface UnifiedPurchaseStepProps {
     proposalId: string;
   };
 }
+
+interface ThreeDSFormState {
+  redirectUrl: string;
+  formParameters: Record<string, string>;
+  method: 'POST' | 'GET';
+  merchantPaymentId?: string;
+}
+
+const LOCAL_PAYMENT_PURCHASE_ENDPOINT = '/api/payment/purchase';
+const THREE_DS_IFRAME_NAME = 'insurup-3ds-frame';
 
 const validationSchema = yup.object({
   cardNumber: yup
@@ -133,7 +147,9 @@ export default function UnifiedPurchaseStep({
   branch,
   localStorageKeys 
 }: UnifiedPurchaseStepProps) {
+  const router = useRouter();
   const token = useAuthStore((state) => state.accessToken);
+  const threeDSFormRef = useRef<HTMLFormElement | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [offerDetailsAccepted, setOfferDetailsAccepted] = useState(false);
   const [preInfoFormAccepted, setPreInfoFormAccepted] = useState(false);
@@ -143,6 +159,8 @@ export default function UnifiedPurchaseStep({
   const [isSendingPreInfoForm, setIsSendingPreInfoForm] = useState(false);
   const [cardHolderSameAsInsured, setCardHolderSameAsInsured] = useState(true);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const [threeDSForm, setThreeDSForm] = useState<ThreeDSFormState | null>(null);
+  const [isThreeDSOpen, setIsThreeDSOpen] = useState(false);
 
   useEffect(() => {
     // LocalStorage'dan selectedQuoteForPurchase anahtarını kullan
@@ -158,7 +176,6 @@ export default function UnifiedPurchaseStep({
           parsedQuote.selectedInstallmentNumber = parseInt(selectedInstallment, 10);
         }
         
-        console.log(`Seçilen ${branch} teklifi:`, parsedQuote);
         setSelectedQuoteData(parsedQuote);
       } catch (error) {
         console.error('selectedQuoteForPurchase parse edilemedi:', error);
@@ -176,6 +193,59 @@ export default function UnifiedPurchaseStep({
       setCurrentPremium(premiumDetails);
     }
   }, [selectedQuoteData]);
+
+  useEffect(() => {
+    const handleThreeDSMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      const message = event.data as { type?: string; success?: boolean; resultUrl?: string };
+      if (!message || typeof message !== 'object' || message.type !== '3d-secure-result') return;
+
+      const resultUrl = new URL(message.resultUrl || '/purchase/PaymentResult', window.location.origin);
+      resultUrl.searchParams.set('success', message.success ? 'true' : 'false');
+      resultUrl.searchParams.set('type', branch);
+
+      const proposalId = propProposalId || selectedQuoteData?.proposalId || localStorage.getItem('currentProposalId');
+      const productId =
+        propProductId ||
+        selectedQuoteData?.proposalProductId ||
+        localStorage.getItem('currentProductId') ||
+        selectedQuoteData?.id;
+
+      if (proposalId) resultUrl.searchParams.set('proposalId', proposalId);
+      if (productId) resultUrl.searchParams.set('proposalProductId', productId);
+      if (threeDSForm?.merchantPaymentId) {
+        resultUrl.searchParams.set('merchantPaymentId', threeDSForm.merchantPaymentId);
+      }
+
+      setIsThreeDSOpen(false);
+      setThreeDSForm(null);
+      setIsProcessing(false);
+      router.push(`${resultUrl.pathname}${resultUrl.search}`);
+    };
+
+    window.addEventListener('message', handleThreeDSMessage);
+    return () => window.removeEventListener('message', handleThreeDSMessage);
+  }, [
+    branch,
+    propProductId,
+    propProposalId,
+    router,
+    selectedQuoteData?.id,
+    selectedQuoteData?.proposalId,
+    selectedQuoteData?.proposalProductId,
+    threeDSForm?.merchantPaymentId,
+  ]);
+
+  useEffect(() => {
+    if (!isThreeDSOpen || !threeDSForm) return;
+
+    const submitTimer = window.setTimeout(() => {
+      threeDSFormRef.current?.submit();
+    }, 150);
+
+    return () => window.clearTimeout(submitTimer);
+  }, [isThreeDSOpen, threeDSForm]);
 
   const formik = useFormik({
     initialValues: {
@@ -210,9 +280,6 @@ export default function UnifiedPurchaseStep({
   );
   
   // Debug için console log
-  console.log('DEBUG - Company:', selectedQuoteData?.company);
-  console.log('DEBUG - Company ID:', selectedQuoteData?.insuranceCompanyId);
-  console.log('DEBUG - isCardlessRedirect:', isCardlessRedirect);
   const showCardForm = !isCardlessRedirect;
 
   const renderPaymentForm = () => {
@@ -403,11 +470,7 @@ export default function UnifiedPurchaseStep({
     try {
       setErrorMessage(null);
       setIsProcessing(true);
-      console.log(`Selected Quote Data (${branch}):`, selectedQuoteData);
-      console.log('Token:', token);
-      console.log(`${branch} DEBUG - insuranceCompanyId:`, selectedQuoteData?.insuranceCompanyId);
-      console.log(`${branch} DEBUG - isCardlessRedirect:`, isCardlessRedirect);
-      console.log(`${branch} DEBUG - Payment Mode:`, isCardlessRedirect ? 'insurance-company-redirect' : '3d-secure');
+      setRedirectUrl(null);
 
       if (!token) {
         setErrorMessage('Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
@@ -434,8 +497,25 @@ export default function UnifiedPurchaseStep({
       if (!isCardlessRedirect) {
         // 3D Secure ödemesi (kart bilgisi gerekli)
         const [expiryMonth, expiryYear] = formik.values.expiryDate.split('/');
-        const paymentData: any = {
-          $type: "3d-secure",
+        const callbackUrl = new URL('/purchase/Callback', window.location.origin);
+        callbackUrl.searchParams.set('type', branch);
+        callbackUrl.searchParams.set('proposalId', proposalId);
+        callbackUrl.searchParams.set('proposalProductId', productId);
+
+        const paymentData: {
+          proposalId: string;
+          proposalProductId: string;
+          installmentNumber: number;
+          callbackUrl: string;
+          card: {
+            number: string;
+            cvc: string;
+            expiryMonth: string;
+            expiryYear: string;
+            holderName: string;
+          };
+          identityNumber?: string;
+        } = {
           card: {
             number: formik.values.cardNumber,
             cvc: formik.values.cvv,
@@ -446,7 +526,7 @@ export default function UnifiedPurchaseStep({
           proposalId: proposalId,
           proposalProductId: productId,
           installmentNumber: selectedQuoteData.selectedInstallmentNumber,
-          callbackUrl: `${window.location.origin}/odeme-sonuc?type=${branch}`,
+          callbackUrl: callbackUrl.toString(),
         };
 
         // Eğer kart sahibi sigortalı ile aynı değilse ve TCKN girilmişse, identityNumber'ı ekle
@@ -454,17 +534,14 @@ export default function UnifiedPurchaseStep({
           paymentData.identityNumber = formik.values.cardHolderIdentityNumber;
         }
 
-        const response = await fetchWithAuth(
-          `${API_BASE_URL}/api/proposals/${proposalId}/products/${productId}/purchase/async`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(paymentData),
-          }
-        );
+        const response = await fetch(LOCAL_PAYMENT_PURCHASE_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(paymentData),
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
@@ -472,23 +549,25 @@ export default function UnifiedPurchaseStep({
         }
 
         const data = await response.json();
-        console.log('3D Secure Payment Response:', data);
 
         if (!data.redirectUrl) {
           throw new Error("3D Secure yönlendirme URL'si bulunamadı");
         }
 
         // URL'i state'e kaydet ve kullanıcıya göster
-        setRedirectUrl(data.redirectUrl);
+        setThreeDSForm({
+          redirectUrl: data.redirectUrl,
+          formParameters: data.formParameters || {},
+          method: data.method === 'GET' ? 'GET' : 'POST',
+          merchantPaymentId: data.merchantPaymentId,
+        });
+        setIsThreeDSOpen(true);
         
         // 3 saniye sonra otomatik yönlendir
-        setTimeout(() => {
-          window.location.href = data.redirectUrl;
-        }, 3000);
       } else {
         // Insurance company redirect ödemesi (diğer şirketler) - kart bilgisi yok
         const response = await fetchWithAuth(
-          `${API_BASE_URL}/api/proposals/${proposalId}/products/${productId}/purchase/async`,
+          API_ENDPOINTS.PROPOSAL_PRODUCT_PURCHASE_ASYNC(proposalId, productId),
           {
             method: 'POST',
             headers: {
@@ -511,7 +590,6 @@ export default function UnifiedPurchaseStep({
         }
 
         const data = await response.json();
-        console.log('Insurance Redirect Response:', data);
         
         if (!data.redirectUrl) {
           throw new Error("Yönlendirme URL'si bulunamadı");
@@ -545,7 +623,7 @@ export default function UnifiedPurchaseStep({
       }
 
       const response = await fetchWithAuth(
-        `${API_BASE_URL}/api/proposals/${proposalId}/products/${productId}/information-form-document`,
+        API_ENDPOINTS.PROPOSAL_PREINFO_FORM(proposalId, productId),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -714,6 +792,77 @@ export default function UnifiedPurchaseStep({
           )}
         </Button>
       </Box>
+
+      <Dialog
+        open={isThreeDSOpen}
+        onClose={() => {
+          setIsThreeDSOpen(false);
+          setThreeDSForm(null);
+          setIsProcessing(false);
+        }}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            height: { xs: '90vh', md: 760 },
+            borderRadius: '8px',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+          }}
+        >
+          <Typography variant="h6">3D Secure Dogrulama</Typography>
+          <Button
+            size="small"
+            onClick={() => {
+              setIsThreeDSOpen(false);
+              setThreeDSForm(null);
+              setIsProcessing(false);
+            }}
+          >
+            Kapat
+          </Button>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
+          {threeDSForm && (
+            <form
+              ref={threeDSFormRef}
+              action={threeDSForm.redirectUrl}
+              method={threeDSForm.method}
+              target={THREE_DS_IFRAME_NAME}
+              style={{ display: 'none' }}
+            >
+              {Object.entries(threeDSForm.formParameters).map(([name, value]) => (
+                <input key={name} type="hidden" name={name} value={value} />
+              ))}
+            </form>
+          )}
+          <Box sx={{ px: 3, pb: 2 }}>
+            <Alert severity="info">
+              Bankanizin 3D Secure ekraninda dogrulamayi tamamlayin.
+            </Alert>
+          </Box>
+          <Box
+            component="iframe"
+            title="3D Secure"
+            name={THREE_DS_IFRAME_NAME}
+            sx={{
+              border: 0,
+              width: '100%',
+              flex: 1,
+              minHeight: { xs: 520, md: 600 },
+            }}
+            sandbox="allow-forms allow-scripts allow-same-origin allow-top-navigation-by-user-activation allow-popups"
+            allow="payment *"
+          />
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

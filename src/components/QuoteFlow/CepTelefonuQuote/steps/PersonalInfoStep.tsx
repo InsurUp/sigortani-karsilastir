@@ -412,9 +412,9 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
           if (isCoreDataComplete) {
             const currentCustId = getCustomerIdFromAuthStorage();
             if (currentCustId) {
-              localStorage.setItem('hayatProposalId', currentCustId);
+              localStorage.setItem('ceptelefonuProposalId', currentCustId);
             }
-            onNext();
+            await handleCreateRequestInPersonalInfo(accessToken || undefined);
           } else {
             setShowAdditionalInfo(true);
           }
@@ -498,8 +498,8 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       
       // İlk stepte girilen email ve job değerlerini localStorage'a kaydet
       if (!showAdditionalInfo && values.email && values.job !== Job.Unknown) {
-        localStorage.setItem('hayatInitialEmail', values.email);
-        localStorage.setItem('hayatInitialJob', values.job.toString());
+        localStorage.setItem('ceptelefonuInitialEmail', values.email);
+        localStorage.setItem('ceptelefonuInitialJob', values.job.toString());
       }
       
       try {
@@ -551,13 +551,13 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
         if (values.birthDate) updatePayload.birthDate = values.birthDate;
         
         // Email ve job'u localStorage'dan al (ilk stepte kaydedilmiş)
-        const emailFromLocalStorage = localStorage.getItem('hayatInitialEmail');
+        const emailFromLocalStorage = localStorage.getItem('ceptelefonuInitialEmail');
         if (emailFromLocalStorage) {
           updatePayload.primaryEmail = emailFromLocalStorage;
         }
         
         // Job'u localStorage'dan al ve Unknown değilse gönder
-        const jobFromLocalStorage = localStorage.getItem('hayatInitialJob');
+        const jobFromLocalStorage = localStorage.getItem('ceptelefonuInitialJob');
         if (jobFromLocalStorage && parseInt(jobFromLocalStorage) !== Job.Unknown) {
           updatePayload.job = parseInt(jobFromLocalStorage);
         }
@@ -581,11 +581,10 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
 
         // Set proposalIdForKasko using the customerId from auth-storage (which is currentCustomerId)
         if (currentCustomerId) {
-            localStorage.setItem('hayatProposalId', currentCustomerId);
+            localStorage.setItem('ceptelefonuProposalId', currentCustomerId);
         } else {
         }
-
-        onNext();
+        await handleCreateRequestInPersonalInfo(accessToken || undefined);
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Bir hata oluştu');
       } finally {
@@ -664,8 +663,8 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
           }
           
           // setUser çağrısında customerIdToUse kullan ve email'i localStorage'dan da al
-          const storedEmail = localStorage.getItem('hayatInitialEmail');
-        const storedJob = localStorage.getItem('hayatInitialJob');
+          const storedEmail = localStorage.getItem('ceptelefonuInitialEmail');
+        const storedJob = localStorage.getItem('ceptelefonuInitialJob');
           const finalEmailForUser = meData.primaryEmail || storedEmail || '';
           setUser({
             id: customerIdToUse, 
@@ -712,11 +711,9 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
             }
           }
           
-          onNext();
-
-          // Otomatik talep oluştur
-              await handleCreateRequestInPersonalInfo(verifyData.accessToken);
-              return; // Early return to prevent further processing
+          setShowVerification(false);
+          await handleCreateRequestInPersonalInfo(verifyData.accessToken);
+          return; // Early return to prevent further processing
           }
       } else {
           setShowAdditionalInfo(true); 
@@ -771,8 +768,8 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       const currentProfile = await currentProfileResponse.json() as CustomerProfile;
       
       // Email ve job'u localStorage'dan al (ilk stepte kaydedilmiş)
-      const emailFromLocalStorage = localStorage.getItem('hayatInitialEmail');
-      const jobFromLocalStorage = localStorage.getItem('hayatInitialJob');
+      const emailFromLocalStorage = localStorage.getItem('ceptelefonuInitialEmail');
+      const jobFromLocalStorage = localStorage.getItem('ceptelefonuInitialJob');
       
       // Mevcut profil verilerini koru ve sadece gerekli alanları güncelle
       const updatePayload: any = {
@@ -800,7 +797,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       
       const customerIdForProposal = getCustomerIdFromAuthStorage() || finalUpdatedProfile.id; 
       if (customerIdForProposal) {
-        localStorage.setItem('hayatProposalId', customerIdForProposal);
+        localStorage.setItem('ceptelefonuProposalId', customerIdForProposal);
       } else {
       }
       
@@ -832,8 +829,8 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       // Müşteri bilgileri güncellendikten sonra talep oluştur
       // Step geçişi - analytics step event (manuel form doldurma)
       pushToDataLayer({
-        event: "hayat_formsubmit",
-        form_name: "hayat_step1"
+        event: "ceptelefonu_formsubmit",
+        form_name: "ceptelefonu_step1"
       });
       
       await handleCreateRequestInPersonalInfo(accessToken || undefined);
@@ -850,7 +847,7 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       const currentCustomerId = getCustomerIdFromAuthStorage();
       if (!currentCustomerId) {
         // Hata durumunu localStorage'a kaydet ve RequestStep'te göster
-        localStorage.setItem('hayatRequestError', 'Müşteri bilgisi bulunamadı. Lütfen önceki adımları kontrol edin.');
+        localStorage.setItem('ceptelefonuRequestError', 'Müşteri bilgisi bulunamadı. Lütfen önceki adımları kontrol edin.');
         onNext();
         return;
       }
@@ -859,72 +856,104 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
       const currentToken = tokenToUse || accessToken;
       if (!currentToken) {
         // Hata durumunu localStorage'a kaydet ve RequestStep'te göster
-        localStorage.setItem('hayatRequestError', 'Kimlik doğrulama sorunu. Lütfen sayfayı yenileyin.');
+        localStorage.setItem('ceptelefonuRequestError', 'Kimlik doğrulama sorunu. Lütfen sayfayı yenileyin.');
         onNext();
         return;
       }
 
-      const requestPayload = {
-        customerId: currentCustomerId,
-        customerAssetReference: null,
-        productBranch: "AKILLI_TELEFON",
-        channel: "OFFLINE_PROPOSAL_FORM"
-      };
+      const productBranches = ['AKILLI_TELEFON', 'CEP_TELEFONU'] as const;
+      let requestSucceeded = false;
 
+      for (const productBranch of productBranches) {
+        const requestPayload = {
+          customerId: currentCustomerId,
+          customerAssetReference: null,
+          productBranch,
+          channel: "OFFLINE_PROPOSAL_FORM"
+        };
 
-      const response = await fetchWithAuth(API_ENDPOINTS.CASES_NEW_SALE_OPPORTUNITY, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentToken}`,
-        },
-        body: JSON.stringify(requestPayload),
-      });
+        const response = await fetchWithAuth(API_ENDPOINTS.CASES_NEW_SALE_OPPORTUNITY, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`,
+          },
+          body: JSON.stringify(requestPayload),
+        });
 
-      if (!response.ok) {
+        if (response.ok) {
+          await response.json();
+          requestSucceeded = true;
+          break;
+        }
+
         const errorText = await response.text();
-        
-        // API'den gelen hata mesajını parse et
         let errorMessage = `Talep oluşturulamadı: ${response.status} ${response.statusText}`;
-        
+        let apiError = '';
+
         try {
           const errorData = JSON.parse(errorText);
           if (errorData.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-            const apiError = errorData.errors[0]; 
-            
-            // Özel hata mesajlarını kontrol et
+            apiError = errorData.errors[0];
+
             if (apiError.includes('zaten açık bir yeni satış fırsatı talebi bulunmaktadır')) {
-              errorMessage = 'Bu müşteri için zaten açık bir Hayat Sigortası talebi bulunmaktadır. Mevcut talebin sonuçlanmasını bekleyiniz.';
+              errorMessage = 'Bu müşteri için zaten açık bir Cep Telefonu Sigortası talebi bulunmaktadır. Mevcut talebin sonuçlanmasını bekleyiniz.';
             } else {
               errorMessage = apiError;
             }
           }
         } catch (parseError) {
         }
-        
+
+        if (errorMessage.includes('zaten açık')) {
+          localStorage.setItem('ceptelefonuRequestError', errorMessage);
+          onNext();
+          return;
+        }
+
         if (response.status === 401) {
-          errorMessage = 'Oturum süreniz dolmuş. Lütfen sayfayı yenileyin ve tekrar deneyin.';
-        } else if (response.status === 400 && !errorMessage.includes('zaten açık')) {
+          localStorage.setItem('ceptelefonuRequestError', 'Oturum süreniz dolmuş. Lütfen sayfayı yenileyin ve tekrar deneyin.');
+          onNext();
+          return;
+        }
+
+        const isLastBranch = productBranch === productBranches[productBranches.length - 1];
+        const shouldTryFallback =
+          !isLastBranch &&
+          (response.status === 400 ||
+            response.status === 404 ||
+            apiError.toLowerCase().includes('productbranch') ||
+            apiError.toLowerCase().includes('invalid') ||
+            apiError.toLowerCase().includes('unsupported'));
+
+        if (shouldTryFallback) {
+          continue;
+        }
+
+        if (response.status === 400 && !errorMessage.includes('zaten açık')) {
           errorMessage = 'Geçersiz talep bilgileri. Lütfen bilgilerinizi kontrol edin.';
         }
-        
-        // Hata durumunu localStorage'a kaydet ve RequestStep'te göster
-        localStorage.setItem('hayatRequestError', errorMessage);
+
+        localStorage.setItem('ceptelefonuRequestError', errorMessage);
         onNext();
         return;
       }
 
-      const responseData = await response.json();
+      if (!requestSucceeded) {
+        localStorage.setItem('ceptelefonuRequestError', 'Talep oluşturulurken bir hata oluştu');
+        onNext();
+        return;
+      }
       
       // Başarı durumunu localStorage'a kaydet
-      localStorage.setItem('hayatRequestSuccess', 'true');
-      localStorage.removeItem('hayatRequestError');
+      localStorage.setItem('ceptelefonuRequestSuccess', 'true');
+      localStorage.removeItem('ceptelefonuRequestError');
 
       onNext();
       
     } catch (error) {
       // Hata durumunu localStorage'a kaydet ve RequestStep'te göster
-      localStorage.setItem('hayatRequestError', error instanceof Error ? error.message : 'Talep oluşturulurken bir hata oluştu');
+      localStorage.setItem('ceptelefonuRequestError', error instanceof Error ? error.message : 'Talep oluşturulurken bir hata oluştu');
       onNext();
     } finally {
       setIsLoading(false);
@@ -1339,10 +1368,10 @@ const PersonalInfoStep = ({ onNext, onBack, isFirstStep, isLastStep }: PersonalI
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-              Hayat Sigortası
+              Cep Telefonu Sigortası
           </Typography>
           <Typography sx={{ mb: 3, fontSize: '1rem', color: 'text.secondary' }}>
-            Kurumsal müşterilerimize Hayat sigortası hizmeti verememekteyiz.<br /> 
+            Kurumsal müşterilerimize Cep Telefonu sigortası hizmeti verememekteyiz.<br /> 
             <Box component="span" sx={{ display: 'block', mt: 2, textAlign: 'center' }}>
             <span> 
                 <Link href="/kasko-teklif" sx={{ fontWeight: 700, color: '#111', textDecoration: 'underline', mx: 0.5 }} target="_blank">Kasko,</Link>

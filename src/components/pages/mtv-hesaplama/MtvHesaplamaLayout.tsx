@@ -8,10 +8,9 @@ export function MtvHesaplamaLayout() {
     <main>
       <Banner text="Araç MTV Hesapla!" />
       <MtvHesaplamaForm />
+      <CTASection />
       <MtvBilgiIcerik />
       <CTASection />
     </main>
   )
 }
-
-

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getProductData, defaultProductData } from '@/data'
 import { useParams } from 'next/navigation'
+import { resolveOfflineFormConfig } from '@/constants/offlineForms'
 
 interface ProductCTAProps {
   productSlug?: string;
@@ -18,6 +19,8 @@ function ProductCTA({ productSlug }: ProductCTAProps) {
   // Ürün datasını getir
   const productData = getProductData(slug) || defaultProductData;
   const { name } = productData;
+  const quoteFormConfig = resolveOfflineFormConfig(productData.slug, productData.name)?.config;
+  const quoteHref = quoteFormConfig?.targetPath || '/urunler';
 
   // Dinamik CTA içerikleri
   const getCTAContent = (productName: string) => {
@@ -74,7 +77,7 @@ function ProductCTA({ productSlug }: ProductCTAProps) {
       </p>
       <div className="flex justify-center mt-8" style={{ marginTop: 30 }}>
         <Link
-          href={`/urunler/${slug}/teklif`}
+          href={quoteHref}
           className="bg-[#ED1D24] text-white text-[14px] font-semibold px-5 py-2 rounded-full transition-all hover:bg-[#c4161b] cursor-pointer active:scale-95"
           style={{ paddingTop: 10, paddingBottom: 10, paddingLeft: 20, paddingRight: 20 }}
         >
