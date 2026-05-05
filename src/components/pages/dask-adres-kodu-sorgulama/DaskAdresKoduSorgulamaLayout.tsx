@@ -8,10 +8,9 @@ export function DaskAdresKoduSorgulamaLayout() {
     <main>
       <Banner text="DASK Adres Kodu Sorgulama" />
       <DaskAdresKoduSorgulamaForm />
+      <CTASection />
       <DaskAdresKoduBilgiIcerik />
       <CTASection />
     </main>
   )
 }
-
-

@@ -3,6 +3,9 @@
 import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPhone, faEnvelope, faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons'
+import { API_ENDPOINTS } from '@/config/api'
+import { agencyConfig } from '@/config/agencyConfig'
+import { fetchWithAuth } from '@/services/fetchWithAuth'
 
 interface ContactFormData {
   name: string
@@ -24,6 +27,9 @@ const ContactForm: React.FC = () => {
     kvkk: false,
     commercial: false
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null)
+  const [submitMessage, setSubmitMessage] = useState('')
 
   // Focus stateleri
   const [focus, setFocus] = useState({
@@ -50,10 +56,80 @@ const ContactForm: React.FC = () => {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const splitFullName = (fullName: string) => {
+    const parts = fullName.trim().split(/\s+/).filter(Boolean)
+    const firstName = parts.shift() || ''
+    const lastName = parts.join(' ')
+
+    return { firstName, lastName }
+  }
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Form gönderme işlemi burada yapılacak
-    console.log('Form data:', formData)
+    setSubmitStatus(null)
+    setSubmitMessage('')
+
+    const { firstName, lastName } = splitFullName(formData.name)
+    const payload = {
+      firstName,
+      lastName,
+      email: formData.email.trim(),
+      phoneNumber: formData.phone.trim(),
+      subject: formData.subject.trim(),
+      message: formData.message.trim(),
+      agentId: agencyConfig.agency.id,
+    }
+
+    if (!payload.firstName || !payload.email || !payload.phoneNumber || !payload.message) {
+      setSubmitStatus('error')
+      setSubmitMessage('Lutfen zorunlu alanlari doldurun.')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetchWithAuth(API_ENDPOINTS.CONTACT_FORM, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        let errorMessage = `Mesaj gonderilemedi: ${response.status} ${response.statusText}`
+
+        try {
+          const errorData = JSON.parse(errorText)
+          errorMessage = errorData.message || errorData.error || errorData.errors?.[0] || errorMessage
+        } catch {
+          if (errorText) {
+            errorMessage = errorText
+          }
+        }
+
+        throw new Error(errorMessage)
+      }
+
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: 'Diğer',
+        message: '',
+        kvkk: false,
+        commercial: false
+      })
+      setSubmitStatus('success')
+      setSubmitMessage('Mesajiniz basariyla gonderildi.')
+    } catch (error) {
+      setSubmitStatus('error')
+      setSubmitMessage(error instanceof Error ? error.message : 'Mesaj gonderilirken bir hata olustu.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -111,7 +187,7 @@ const ContactForm: React.FC = () => {
 
             {/* Sağ Panel - Form */}
             <div className="p-8 lg:p-12 col-span-3">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleContactSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Ad Soyad */}
                   <div className="relative h-14">
@@ -279,12 +355,26 @@ const ContactForm: React.FC = () => {
                   </div>
                 </div>
                 {/* Gönder Butonu */}
+                {submitMessage && (
+                  <div
+                    className={`rounded-lg px-4 py-3 text-sm ${
+                      submitStatus === 'success'
+                        ? 'bg-green-50 text-green-700'
+                        : 'bg-red-50 text-red-700'
+                    }`}
+                    role={submitStatus === 'error' ? 'alert' : 'status'}
+                  >
+                    {submitMessage}
+                  </div>
+                )}
                 <div className="flex justify-end mt-4">
                   <button
                     type="submit"
-                    className="text-white px-8 py-3 rounded-lg font-medium bg-[#262163] transition-all duration-200 shadow-lg hover:shadow-xl"
+                    disabled={isSubmitting}
+                    aria-busy={isSubmitting}
+                    className="text-white px-8 py-3 rounded-lg font-medium bg-[#262163] transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Gönder
+                    {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
                   </button>
                 </div>
               </form>

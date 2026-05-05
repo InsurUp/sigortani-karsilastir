@@ -46,7 +46,7 @@ interface RequestStepProps {
 }
 
 const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepProps) => {
-  const { customerId, accessToken, user, logout } = useAuthStore();
+  const { accessToken, user, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requestCreated, setRequestCreated] = useState(false);
@@ -61,6 +61,39 @@ const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepPro
     logout();
     localStorage.clear();
     window.location.reload();
+  };
+
+  const resolveCustomerId = async () => {
+    const storeCustomerId = useAuthStore.getState().customerId;
+    if (storeCustomerId) {
+      return storeCustomerId;
+    }
+
+    try {
+      const authStorageRaw = localStorage.getItem('auth-storage');
+      if (authStorageRaw) {
+        const authStorage = JSON.parse(authStorageRaw);
+        const persistedCustomerId = authStorage?.state?.customerId;
+        if (persistedCustomerId) {
+          useAuthStore.getState().setCustomerId(persistedCustomerId);
+          return persistedCustomerId;
+        }
+      }
+    } catch (error) {
+    }
+
+    const meResponse = await fetchWithAuth(API_ENDPOINTS.CUSTOMER_ME);
+    if (!meResponse.ok) {
+      return null;
+    }
+
+    const meData = await meResponse.json() as { id?: string };
+    if (meData?.id) {
+      useAuthStore.getState().setCustomerId(meData.id);
+      return meData.id;
+    }
+
+    return null;
   };
 
   useEffect(() => {
@@ -87,14 +120,16 @@ const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepPro
   }, []);
 
   const handleCreateRequest = async () => {
-    if (!customerId) {
-      setError('Müşteri bilgisi bulunamadı. Lütfen önceki adımları kontrol edin.');
+    const currentAccessToken = accessToken || useAuthStore.getState().accessToken;
+    if (!currentAccessToken) {
+      setError('Oturum bilgisi bulunamadı. Lütfen sayfayı yenileyin.');
       setRequestResult('error');
       return;
     }
 
-    if (!accessToken) {
-      setError('Oturum bilgisi bulunamadı. Lütfen sayfayı yenileyin.');
+    const currentCustomerId = await resolveCustomerId();
+    if (!currentCustomerId) {
+      setError('Müşteri bilgisi bulunamadı. Lütfen önceki adımları kontrol edin.');
       setRequestResult('error');
       return;
     }
@@ -105,61 +140,84 @@ const RequestStep = ({ onNext, onBack, isFirstStep, isLastStep }: RequestStepPro
     setRequestCreated(false);
 
     try {
-      const requestPayload = {
-        customerId: customerId,
-        customerAssetReference: null,
-        productBranch: "AKILLI_TELEFON",
-        channel: "OFFLINE_PROPOSAL_FORM"
-      };
+      const productBranches = ['AKILLI_TELEFON', 'CEP_TELEFONU'] as const;
+      let requestSucceeded = false;
 
+      for (const productBranch of productBranches) {
+        const requestPayload = {
+          customerId: currentCustomerId,
+          customerAssetReference: null,
+          productBranch,
+          channel: "OFFLINE_PROPOSAL_FORM"
+        };
 
-      const response = await fetchWithAuth(API_ENDPOINTS.CASES_NEW_SALE_OPPORTUNITY, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(requestPayload),
-      });
+        const response = await fetchWithAuth(API_ENDPOINTS.CASES_NEW_SALE_OPPORTUNITY, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentAccessToken}`,
+          },
+          body: JSON.stringify(requestPayload),
+        });
 
-      if (!response.ok) {
+        if (response.ok) {
+          await response.json();
+          requestSucceeded = true;
+          break;
+        }
+
         const errorText = await response.text();
-        
-        // API'den gelen hata mesajını parse etmeye çalış
         let errorMessage = `Talep oluşturulamadı: ${response.status} ${response.statusText}`;
-        
+        let apiError = '';
+
         try {
           const errorData = JSON.parse(errorText);
           if (errorData.errors && Array.isArray(errorData.errors) && errorData.errors.length > 0) {
-            const apiError = errorData.errors[0];
-            
-            // Özel hata mesajlarını kontrol et
+            apiError = errorData.errors[0];
+
             if (apiError.includes('zaten açık bir yeni satış fırsatı talebi bulunmaktadır')) {
               setRequestResult('existing');
               setIsLoading(false);
-              return; // Don't throw error for existing request
-            } else {
-              errorMessage = apiError;
-              setRequestResult('error');
+              return;
             }
+
+            errorMessage = apiError;
           }
         } catch (parseError) {
-          // JSON parse hatası durumunda default mesaj kullan
           setRequestResult('error');
         }
-        
+
         if (response.status === 401) {
           errorMessage = 'Oturum süreniz dolmuş. Lütfen sayfayı yenileyin ve tekrar deneyin.';
           setRequestResult('error');
-        } else if (response.status === 400 && !errorMessage.includes('zaten açık')) {
-          errorMessage = 'Geçersiz talep bilgileri. Lütfen bilgilerinizi kontrol edin.';
-          setRequestResult('error');
+          throw new Error(errorMessage);
         }
-        
+
+        const isLastBranch = productBranch === productBranches[productBranches.length - 1];
+        const shouldTryFallback =
+          !isLastBranch &&
+          (response.status === 400 ||
+            response.status === 404 ||
+            apiError.toLowerCase().includes('productbranch') ||
+            apiError.toLowerCase().includes('invalid') ||
+            apiError.toLowerCase().includes('unsupported'));
+
+        if (shouldTryFallback) {
+          continue;
+        }
+
+        if (response.status === 400 && !errorMessage.includes('zaten açık')) {
+          errorMessage = 'Geçersiz talep bilgileri. Lütfen bilgilerinizi kontrol edin.';
+        }
+
+        setRequestResult('error');
         throw new Error(errorMessage);
       }
 
-      const responseData = await response.json();
+      if (!requestSucceeded) {
+        setRequestResult('error');
+        throw new Error('Talep oluşturulurken bir hata oluştu');
+      }
   
       setRequestCreated(true);
       setRequestResult('success');

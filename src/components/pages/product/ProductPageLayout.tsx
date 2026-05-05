@@ -2,9 +2,11 @@ import React from 'react'
 import Image from 'next/image'
 import { heroCards } from '@/data/mainpage';
 import ProductCard from '@/components/common/ProductCard';
+import ProductRequestForm from '@/components/common/ProductRequestForm';
 
 function ProductPageLayout() {
     return (
+        <>
         <section className='product-page bg-[#D9EDFA]/40 md:py-[120px] py-[50px]'>
             <div className="container mx-auto px-4">
                 {/* Başlık */}
@@ -49,9 +51,18 @@ function ProductPageLayout() {
                             </div>
                         ))}
                     </div>
+
                 </div>
             </div>
         </section>
+        <section className="bg-white py-[50px] md:py-[80px]">
+            <div className="container mx-auto px-4">
+                <div className="max-w-xl mx-auto">
+                    <ProductRequestForm />
+                </div>
+            </div>
+        </section>
+        </>
     )
 }
 

@@ -4,29 +4,29 @@ import { CircularProgress, Box, Typography } from '@mui/material';
 import CepTelefonuQuotePage from '@/components/QuoteFlow/CepTelefonuQuote/CepTelefonuQuotePage';
 import { getSiteUrl, getSiteName } from '@/utils/site';
 
-
 export const metadata: Metadata = {
-  title: `Cep Telefonu Sigortası Teklif Al - Güvende Kalın | ${getSiteName()}`,
-  description: "Sevdiklerinizi ve geleceğinizi güvence altına almak için en avantajlı cep telefonu sigortası tekliflerini karşılaştırın. Hemen online başvuru yapın.",
+  title: `Cep Telefonu Sigortası Teklif Al | ${getSiteName()}`,
+  description:
+    'Cep telefonu sigortası için teklif talebinizi hızlıca oluşturun. Cihazınız için uygun koruma seçenekleriyle uzman ekibimiz sizinle iletişime geçsin.',
   metadataBase: new URL(getSiteUrl()),
   alternates: {
-    canonical: `${getSiteUrl()}/cep-telefonu-teklif`
+    canonical: `${getSiteUrl()}/cep-telefonu-teklif`,
   },
   openGraph: {
-    title: `Cep Telefonu Sigortası Teklif Al - Güvende Kalın | ${getSiteName()}`,
-    description: "Sevdiklerinizi ve geleceğinizi güvence altına almak için en avantajlı cep telefonu sigortası tekliflerini karşılaştırın. Hemen online başvuru yapın.",
+    title: `Cep Telefonu Sigortası Teklif Al | ${getSiteName()}`,
+    description:
+      'Cep telefonu sigortası için teklif talebinizi hızlıca oluşturun. Cihazınız için uygun koruma seçenekleriyle uzman ekibimiz sizinle iletişime geçsin.',
     url: `${getSiteUrl()}/cep-telefonu-teklif`,
-    type: "website"
+    type: 'website',
   },
   twitter: {
-    title: `Cep Telefonu Sigortası Teklif Al - Güvende Kalın | ${getSiteName()}`,
-    description: "Sevdiklerinizi ve geleceğinizi güvence altına almak için en avantajlı cep telefonu sigortası tekliflerini karşılaştırın. Hemen online başvuru yapın.",
-    card: "summary_large_image"
-  }
+    title: `Cep Telefonu Sigortası Teklif Al | ${getSiteName()}`,
+    description:
+      'Cep telefonu sigortası için teklif talebinizi hızlıca oluşturun. Cihazınız için uygun koruma seçenekleriyle uzman ekibimiz sizinle iletişime geçsin.',
+    card: 'summary_large_image',
+  },
 };
 
-
-// Loading component
 function LoadingFallback() {
   return (
     <Box
@@ -47,10 +47,10 @@ function LoadingFallback() {
   );
 }
 
-export default function HayatTeklifPage() {
+export default function CepTelefonuTeklifPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <CepTelefonuQuotePage />
     </Suspense>
   );
-} 
+}

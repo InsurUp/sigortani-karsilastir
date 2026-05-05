@@ -8,10 +8,9 @@ export function KaskoDegerHesaplamaLayout() {
     <main>
       <Banner text="Araç Kasko Değer Hesaplama" />
       <KaskoDegerHesaplamaForm />
+      <CTASection />
       <KaskoDegerBilgiIcerik />
       <CTASection />
     </main>
   )
 }
-
-

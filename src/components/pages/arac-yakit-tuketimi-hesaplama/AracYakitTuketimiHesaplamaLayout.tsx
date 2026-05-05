@@ -8,10 +8,9 @@ export function AracYakitTuketimiHesaplamaLayout() {
     <main>
       <Banner text="Yakıt Tüketimi Hesaplama!" />
       <YakıtTuketimiHesaplamaForm />
+      <CTASection />
       <YakıtTuketimiBilgiIcerik />
       <CTASection />
     </main>
   )
 }
-
-
