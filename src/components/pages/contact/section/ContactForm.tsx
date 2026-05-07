@@ -99,15 +99,11 @@ const ContactForm: React.FC = () => {
 
       if (!response.ok) {
         const errorText = await response.text()
-        let errorMessage = 'Mesajınız gönderilemedi. Lütfen daha sonra tekrar deneyin.'
+        let errorMessage = `Mesaj gonderilemedi: ${response.status} ${response.statusText}`
 
         try {
           const errorData = JSON.parse(errorText)
-          if (response.status === 409 && errorData.codes?.includes('RESOURCE_INVALID_STATE_GENERIC')) {
-            errorMessage = 'Şu anda bu işlem gerçekleştirilemiyor. Lütfen daha sonra tekrar deneyin veya bizimle telefon/e-posta yoluyla iletişime geçin.'
-          } else {
-            errorMessage = errorData.detail || errorData.message || errorData.error || errorData.errors?.[0] || errorMessage
-          }
+          errorMessage = errorData.message || errorData.error || errorData.errors?.[0] || errorMessage
         } catch {
           if (errorText) {
             errorMessage = errorText
