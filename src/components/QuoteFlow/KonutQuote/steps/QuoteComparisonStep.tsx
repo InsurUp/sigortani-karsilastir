@@ -277,23 +277,125 @@ const KONUT_GUARANTEE_LABELS: Record<string, string> = {
   hukuksalKoruma: 'Hukuksal Koruma'
 };
 
-// Değer tipine göre metin oluşturan yardımcı fonksiyon
-const formatKonutCoverageValue = (value: any): string | null => {
-  if (!value || typeof value !== 'object') return null;
+const COVERAGE_STATUS_LABELS: Record<string, string | null> = {
+  INCLUDED: 'Dahil',
+  NOT_INCLUDED: 'Dahil Değil',
+  LIMITLESS: 'Limitsiz',
+  HIGHEST_LIMIT: 'Rayiç',
+  NONE: 'Yok',
+  DEFINED: 'Dahil',
+  UNDEFINED: null,
+  BILINMIYOR: null,
+  BELIRSIZ: null,
+};
 
-  const type = value.$type;
-  if (type === 'UNDEFINED') return null;
-  if (type === 'INCLUDED') return 'Dahil';
-  if (type === 'NOT_INCLUDED') return 'Dahil Değil';
-  if (type === 'LIMITLESS') return 'Limitsiz';
+const normalizeCoverageKeyLabel = (key: string): string =>
+  key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 
-  if (value.text) return value.text;
-  if (value.value !== undefined && value.value !== null) {
-    if (value.$type === 'PERCENT') return `%${value.value}`;
-    return value.value.toLocaleString('tr-TR') + ' ₺';
+const formatStatusLikeValue = (value: string): string | null => {
+  const normalized = value.trim().toUpperCase();
+  if (!normalized) return null;
+  if (normalized in COVERAGE_STATUS_LABELS) return COVERAGE_STATUS_LABELS[normalized];
+
+  return value
+    .replace(/_/g, ' ')
+    .toLocaleLowerCase('tr-TR')
+    .replace(/(^|\s)\S/g, (letter) => letter.toLocaleUpperCase('tr-TR'));
+};
+
+const formatKonutAmount = (value: number, type?: string): string => {
+  if (type === 'PERCENT') return `%${value}`;
+
+  return `${value.toLocaleString('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} ₺`;
+};
+
+const extractKonutAmount = (value: unknown): number => {
+  if (typeof value === 'number') return value;
+  if (!value || typeof value !== 'object') return 0;
+
+  const record = value as Record<string, unknown>;
+  const amountCandidate = record.amount ?? record.value ?? record.limit ?? record.limitAmount;
+  return typeof amountCandidate === 'number' ? amountCandidate : 0;
+};
+
+// InsurScan PDF coverage can arrive as typed objects, primitives, or backend-ready guarantee rows.
+const formatKonutCoverageValue = (value: unknown): string | null => {
+  if (value === undefined || value === null || value === '') return null;
+
+  if (typeof value === 'string') return formatStatusLikeValue(value);
+  if (typeof value === 'number') return formatKonutAmount(value);
+  if (typeof value === 'boolean') return value ? 'Dahil' : 'Dahil Değil';
+
+  if (Array.isArray(value)) {
+    const values = value.map((item) => formatKonutCoverageValue(item)).filter(Boolean);
+    return values.length > 0 ? values.join(', ') : null;
   }
 
-  return 'Dahil';
+  if (typeof value !== 'object') return null;
+
+  const record = value as Record<string, unknown>;
+  const type = typeof record.$type === 'string' ? record.$type.toUpperCase() : undefined;
+  if (type && type in COVERAGE_STATUS_LABELS) return COVERAGE_STATUS_LABELS[type] ?? null;
+
+  if (record.valueText) return String(record.valueText);
+  if (record.text) return String(record.text);
+  if (record.description) return String(record.description);
+  if (record.name) return String(record.name);
+  if (record.value !== undefined && record.value !== null) {
+    if (typeof record.value === 'number') return formatKonutAmount(record.value, type);
+    const formattedValue = formatKonutCoverageValue(record.value);
+    if (formattedValue) return formattedValue;
+  }
+
+  const amount = extractKonutAmount(value);
+  if (amount) return formatKonutAmount(amount, type);
+
+  const nestedValues = Object.entries(record)
+    .filter(([key]) => !['$type', 'type', 'currency', 'productBranch'].includes(key))
+    .map(([key, nestedValue]) => {
+      const formattedValue = formatKonutCoverageValue(nestedValue);
+      return formattedValue ? `${normalizeCoverageKeyLabel(key)}: ${formattedValue}` : null;
+    })
+    .filter(Boolean);
+
+  return nestedValues.length > 0 ? nestedValues.join(' / ') : null;
+};
+
+const isDisplayableKonutCoverageValue = (value: unknown): boolean => {
+  return formatKonutCoverageValue(value) !== null;
+};
+
+const normalizeKonutGuarantees = (guarantees: unknown): Guarantee[] => {
+  if (!Array.isArray(guarantees)) return [];
+
+  return guarantees.reduce<Guarantee[]>((acc, guarantee, index) => {
+    if (!guarantee || typeof guarantee !== 'object') return acc;
+
+    const record = guarantee as Record<string, unknown>;
+    const label = record.label || record.name || record.title;
+    if (!label) return acc;
+
+    const valueText =
+      formatKonutCoverageValue(record.valueText) ||
+      formatKonutCoverageValue(record.value) ||
+      formatKonutCoverageValue(record.limit) ||
+      formatKonutCoverageValue(record.coverageValue);
+    const amount = extractKonutAmount(record);
+
+    if (!valueText && !amount) return acc;
+
+    acc.push({
+      insuranceGuaranteeId: String(record.insuranceGuaranteeId || record.id || index + 1),
+      label: String(label),
+      valueText,
+      amount,
+    });
+
+    return acc;
+  }, []);
 };
 
 const convertKonutCoverageToGuarantees = (coverage: KonutCoverage | null): Guarantee[] => {
@@ -310,13 +412,13 @@ const convertKonutCoverageToGuarantees = (coverage: KonutCoverage | null): Guara
     const formattedValue = formatKonutCoverageValue(value);
 
     if (formattedValue) {
-      const label = KONUT_GUARANTEE_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+      const label = KONUT_GUARANTEE_LABELS[key] || normalizeCoverageKeyLabel(key);
 
       guarantees.push({
         insuranceGuaranteeId: (guaranteeId++).toString(),
         label,
         valueText: formattedValue,
-        amount: typeof value.value === 'number' ? value.value : 0
+        amount: extractKonutAmount(value)
       });
     }
   });
@@ -460,8 +562,10 @@ export default function QuoteComparisonStep({
       const initialSelectedInstallment = formattedPremiums.length > 0 ? formattedPremiums[0].installmentNumber : 1;
 
       // --- Backend'den gelen hazır teminatları kontrol et ---
-      if (quote.insuranceCompanyGuarantees && quote.insuranceCompanyGuarantees.length > 0) {
-        const guarantees = quote.insuranceCompanyGuarantees;
+      const normalizedBackendGuarantees = normalizeKonutGuarantees(quote.insuranceCompanyGuarantees);
+
+      if (normalizedBackendGuarantees.length > 0) {
+        const guarantees = normalizedBackendGuarantees;
 
         // Ana teminat tutarını bul (konut için bina bedeli)
         const mainCoverage = guarantees.find(g =>
@@ -506,20 +610,9 @@ export default function QuoteComparisonStep({
           if (!src) continue;
           const val = src[key];
 
-          // Geçerli bir değer mi kontrol et
-          if (val !== undefined && val !== null) {
-            // Eğer bir nesneyse ($type içeren), UNDEFINED değilse al
-            if (typeof val === 'object' && val.$type) {
-              if (val.$type !== 'UNDEFINED') {
-                mergedCoverage[key] = val;
-                break;
-              }
-            }
-            // Eğer basit bir değerse, boş değilse al
-            else if (val !== '') {
-              mergedCoverage[key] = val;
-              break;
-            }
+          if (isDisplayableKonutCoverageValue(val)) {
+            mergedCoverage[key] = val;
+            break;
           }
         }
 

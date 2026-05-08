@@ -272,42 +272,6 @@ export const agencyConfig = {
           }
         },
         {
-          name: "Türkiye Sigorta",
-          insuranceCompanyId: 116,
-          products: {
-            kasko: [
-              {
-                id: 3113,
-                displayMode: "FULL_ACCESS"
-              }
-            ],
-            trafik: [
-              {
-                id: 2404,
-                displayMode: "FULL_ACCESS"
-              }
-            ],
-            tss: [
-              {
-                id: 2308,
-                displayMode: "FULL_ACCESS"
-              }
-            ],
-            dask: [
-              {
-                id: 2406,
-                displayMode: "FULL_ACCESS"
-              }
-            ],
-            konut: [
-              {
-                id: 3294,
-                displayMode: "FULL_ACCESS"
-              }
-            ]
-          }
-        },
-        {
           name: "HDI",
           insuranceCompanyId: 54,
           products: {

@@ -183,6 +183,14 @@ function Header() {
                               </div>
                             </div>
                           </div>
+                          <div className="mt-4 border-t border-slate-200 pt-4">
+                            <Link
+                              href="/urunler"
+                              className="block rounded-lg bg-secondary px-3 py-2 text-center text-sm font-semibold text-white transition-all duration-200 hover:bg-opacity-90"
+                            >
+                              Tüm Ürünleri Gör
+                            </Link>
+                          </div>
                           </div>
                         </div>
                       )}
@@ -396,6 +404,15 @@ function Header() {
                                   </li>
                                 ))
                               )}
+                              <li>
+                                <Link
+                                  href="/urunler"
+                                  className="block rounded-lg bg-secondary px-3 py-2 text-center text-sm font-semibold text-white transition-all duration-200 hover:bg-opacity-90"
+                                  onClick={() => setIsMenuOpen(false)}
+                                >
+                                  Tüm Ürünleri Gör
+                                </Link>
+                              </li>
                             </ul>
                           )}
 

@@ -257,24 +257,126 @@ const TSS_GUARANTEE_LABELS: Record<string, string> = {
 };
 
 // Değer tipine göre metin oluşturan yardımcı fonksiyon
-const formatTssCoverageValue = (value: any): string | null => {
-  if (!value || typeof value !== 'object') return null;
+const COVERAGE_STATUS_LABELS: Record<string, string | null> = {
+  INCLUDED: 'Dahil',
+  NOT_INCLUDED: 'Dahil Değil',
+  LIMITLESS: 'Limitsiz',
+  HIGHEST_LIMIT: 'Rayiç',
+  NONE: 'Yok',
+  DEFINED: 'Dahil',
+  UNDEFINED: null,
+  BILINMIYOR: null,
+  BELIRSIZ: null,
+};
 
-  const type = value.$type;
-  if (type === 'UNDEFINED') return null;
-  if (type === 'INCLUDED') return 'Dahil';
-  if (type === 'NOT_INCLUDED') return 'Dahil Değil';
-  if (type === 'LIMITLESS') return 'Limitsiz';
+const normalizeCoverageKeyLabel = (key: string): string =>
+  key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 
-  if (value.text) return value.text;
-  if (value.value !== undefined && value.value !== null) {
-    if (typeof value.value === 'number') {
-      return value.value.toLocaleString('tr-TR') + (value.currency === 'TURKISH_LIRA' ? ' ₺' : '');
-    }
-    return String(value.value);
+const formatStatusLikeValue = (value: string): string | null => {
+  const normalized = value.trim().toUpperCase();
+  if (!normalized) return null;
+  if (normalized in COVERAGE_STATUS_LABELS) return COVERAGE_STATUS_LABELS[normalized];
+
+  return value
+    .replace(/_/g, ' ')
+    .toLocaleLowerCase('tr-TR')
+    .replace(/(^|\s)\S/g, (letter) => letter.toLocaleUpperCase('tr-TR'));
+};
+
+const formatTssAmount = (value: number, currency?: string): string => {
+  const suffix = currency === 'TURKISH_LIRA' || currency === 'TRY' || currency === 'TL' ? ' ₺' : '';
+  return `${value.toLocaleString('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}${suffix}`;
+};
+
+const extractTssAmount = (value: unknown): number => {
+  if (typeof value === 'number') return value;
+  if (!value || typeof value !== 'object') return 0;
+
+  const record = value as Record<string, unknown>;
+  const amountCandidate = record.amount ?? record.value ?? record.limit ?? record.limitAmount;
+  return typeof amountCandidate === 'number' ? amountCandidate : 0;
+};
+
+// InsurScan PDF coverage can arrive as typed objects, primitives, or backend-ready guarantee rows.
+const formatTssCoverageValue = (value: unknown): string | null => {
+  if (value === undefined || value === null || value === '') return null;
+
+  if (typeof value === 'string') return formatStatusLikeValue(value);
+  if (typeof value === 'number') return formatTssAmount(value);
+  if (typeof value === 'boolean') return value ? 'Dahil' : 'Dahil Değil';
+
+  if (Array.isArray(value)) {
+    const values = value.map((item) => formatTssCoverageValue(item)).filter(Boolean);
+    return values.length > 0 ? values.join(', ') : null;
   }
 
-  return 'Dahil'; // Fallback for other non-undefined types
+  if (typeof value !== 'object') return null;
+
+  const record = value as Record<string, unknown>;
+  const type = typeof record.$type === 'string' ? record.$type.toUpperCase() : undefined;
+  if (type && type in COVERAGE_STATUS_LABELS) return COVERAGE_STATUS_LABELS[type] ?? null;
+
+  if (record.valueText) return String(record.valueText);
+  if (record.text) return String(record.text);
+  if (record.description) return String(record.description);
+  if (record.name) return String(record.name);
+  if (record.value !== undefined && record.value !== null) {
+    if (typeof record.value === 'number') {
+      return formatTssAmount(record.value, typeof record.currency === 'string' ? record.currency : undefined);
+    }
+    const formattedValue = formatTssCoverageValue(record.value);
+    if (formattedValue) return formattedValue;
+  }
+
+  const amount = extractTssAmount(value);
+  if (amount) return formatTssAmount(amount, typeof record.currency === 'string' ? record.currency : undefined);
+
+  const nestedValues = Object.entries(record)
+    .filter(([key]) => !['$type', 'type', 'currency', 'productBranch'].includes(key))
+    .map(([key, nestedValue]) => {
+      const formattedValue = formatTssCoverageValue(nestedValue);
+      return formattedValue ? `${normalizeCoverageKeyLabel(key)}: ${formattedValue}` : null;
+    })
+    .filter(Boolean);
+
+  return nestedValues.length > 0 ? nestedValues.join(' / ') : null;
+};
+
+const isDisplayableTssCoverageValue = (value: unknown): boolean => {
+  return formatTssCoverageValue(value) !== null;
+};
+
+const normalizeTssGuarantees = (guarantees: unknown): Guarantee[] => {
+  if (!Array.isArray(guarantees)) return [];
+
+  return guarantees.reduce<Guarantee[]>((acc, guarantee, index) => {
+    if (!guarantee || typeof guarantee !== 'object') return acc;
+
+    const record = guarantee as Record<string, unknown>;
+    const label = record.label || record.name || record.title;
+    if (!label) return acc;
+
+    const valueText =
+      formatTssCoverageValue(record.valueText) ||
+      formatTssCoverageValue(record.value) ||
+      formatTssCoverageValue(record.limit) ||
+      formatTssCoverageValue(record.coverageValue);
+    const amount = extractTssAmount(record);
+
+    if (!valueText && !amount) return acc;
+
+    acc.push({
+      insuranceGuaranteeId: String(record.insuranceGuaranteeId || record.id || index + 1),
+      label: String(label),
+      valueText,
+      amount,
+    });
+
+    return acc;
+  }, []);
 };
 
 // TSS Coverage'ı Guarantee array'ine dönüştürme fonksiyonu
@@ -285,39 +387,52 @@ const convertTssCoverageToGuarantees = (coverage: TssCoverage | null): Guarantee
   let guaranteeId = 1;
 
   // 1. Hastane Ağı (Özel işleme)
-  if (coverage.hastaneAgi && coverage.hastaneAgi !== 'UNDEFINED' && coverage.hastaneAgi !== 'BILINMIYOR') {
+  if (isDisplayableTssCoverageValue(coverage.hastaneAgi)) {
     const hastaneAgiLabels: Record<string, string> = {
       'STANDART_KAPSAM': 'Standart Kapsam',
       'GENIS_KAPSAM': 'Geniş Kapsam',
       'DAR_KAPSAM': 'Dar Kapsam'
     };
+    const valueText = typeof coverage.hastaneAgi === 'string'
+      ? hastaneAgiLabels[coverage.hastaneAgi] || formatTssCoverageValue(coverage.hastaneAgi)
+      : formatTssCoverageValue(coverage.hastaneAgi);
 
-    guarantees.push({
-      insuranceGuaranteeId: guaranteeId.toString(),
-      label: 'Hastane Ağı',
-      valueText: hastaneAgiLabels[coverage.hastaneAgi] || coverage.hastaneAgi,
-      amount: 0
-    });
-    guaranteeId++;
+    if (valueText) {
+      guarantees.push({
+        insuranceGuaranteeId: guaranteeId.toString(),
+        label: 'Hastane Ağı',
+        valueText,
+        amount: 0
+      });
+      guaranteeId++;
+    }
   }
 
   // 2. Sağlık Paketi / Tedavi Şekli (Özel işleme)
   if (coverage.saglikPaketi && typeof coverage.saglikPaketi === 'object') {
     const { tedaviSekli, ayaktaYillikTedaviSayisi } = coverage.saglikPaketi;
 
-    if (tedaviSekli && tedaviSekli !== 'UNDEFINED' && tedaviSekli !== 'BILINMIYOR') {
+    let hasSaglikPaketiDetail = false;
+
+    if (isDisplayableTssCoverageValue(tedaviSekli)) {
       const tedaviSekliLabels: Record<string, string> = {
         'YATARAK': 'Yatarak Tedavi',
         'AYAKTA': 'Ayakta Tedavi',
         'YATARAK_AYAKTA': 'Yatarak ve Ayakta Tedavi'
       };
+      const valueText = typeof tedaviSekli === 'string'
+        ? tedaviSekliLabels[tedaviSekli] || formatTssCoverageValue(tedaviSekli)
+        : formatTssCoverageValue(tedaviSekli);
 
-      guarantees.push({
-        insuranceGuaranteeId: (guaranteeId++).toString(),
-        label: 'Tedavi Şekli',
-        valueText: tedaviSekliLabels[tedaviSekli] || tedaviSekli,
-        amount: 0
-      });
+      if (valueText) {
+        guarantees.push({
+          insuranceGuaranteeId: (guaranteeId++).toString(),
+          label: 'Tedavi Şekli',
+          valueText,
+          amount: 0
+        });
+        hasSaglikPaketiDetail = true;
+      }
     }
 
     if (ayaktaYillikTedaviSayisi !== null && ayaktaYillikTedaviSayisi !== undefined && ayaktaYillikTedaviSayisi > 0) {
@@ -327,6 +442,19 @@ const convertTssCoverageToGuarantees = (coverage: TssCoverage | null): Guarantee
         valueText: `${ayaktaYillikTedaviSayisi.toLocaleString('tr-TR')} kez`,
         amount: ayaktaYillikTedaviSayisi
       });
+      hasSaglikPaketiDetail = true;
+    }
+
+    if (!hasSaglikPaketiDetail) {
+      const valueText = formatTssCoverageValue(coverage.saglikPaketi);
+      if (valueText) {
+        guarantees.push({
+          insuranceGuaranteeId: (guaranteeId++).toString(),
+          label: 'Sağlık Paketi',
+          valueText,
+          amount: 0
+        });
+      }
     }
   }
 
@@ -347,7 +475,7 @@ const convertTssCoverageToGuarantees = (coverage: TssCoverage | null): Guarantee
           insuranceGuaranteeId: (guaranteeId++).toString(),
           label: label,
           valueText: formattedValue,
-          amount: typeof value.value === 'number' ? value.value : 0
+          amount: extractTssAmount(value)
         });
       }
     }
@@ -467,8 +595,10 @@ export default function QuoteComparisonStep({
       const initialSelectedInstallment = formattedPremiums.length > 0 ? formattedPremiums[0].installmentNumber : 1;
 
       // --- Backend'den gelen hazır teminatları kontrol et ---
-      if (quote.insuranceCompanyGuarantees && quote.insuranceCompanyGuarantees.length > 0) {
-        const guarantees = quote.insuranceCompanyGuarantees;
+      const normalizedBackendGuarantees = normalizeTssGuarantees(quote.insuranceCompanyGuarantees);
+
+      if (normalizedBackendGuarantees.length > 0) {
+        const guarantees = normalizedBackendGuarantees;
         const features = guarantees.map((g) => g.label);
 
         return {
@@ -503,20 +633,9 @@ export default function QuoteComparisonStep({
           if (!src) continue;
           const val = src[key];
 
-          // Geçerli bir değer mi kontrol et
-          if (val !== undefined && val !== null) {
-            // Eğer bir nesneyse ($type içeren), UNDEFINED veya BILINMIYOR değilse al
-            if (typeof val === 'object' && val.$type) {
-              if (val.$type !== 'UNDEFINED' && val.$type !== 'BILINMIYOR') {
-                mergedCoverage[key] = val;
-                break;
-              }
-            }
-            // Eğer basit bir değerse (string vb.), UNDEFINED veya BILINMIYOR değilse al
-            else if (val !== 'UNDEFINED' && val !== 'BILINMIYOR') {
-              mergedCoverage[key] = val;
-              break;
-            }
+          if (isDisplayableTssCoverageValue(val)) {
+            mergedCoverage[key] = val;
+            break;
           }
         }
 
